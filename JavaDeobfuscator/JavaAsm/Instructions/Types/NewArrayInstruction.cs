@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace JavaDeobfuscator.JavaAsm.Instructions.Types
+{
+    internal class NewArrayInstruction : Instruction
+    {
+        public override Opcode Opcode => Opcode.NEWARRAY;
+
+        public NewArrayTypeCode ArrayType { get; set; }
+    }
+
+    internal enum NewArrayTypeCode
+    {
+        Boolean = 4,
+        Character,
+        Float,
+        Double,
+        Byte,
+        Short,
+        Integer,
+        Long
+    }
+}
