@@ -18,5 +18,10 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
                 Opcode.IF_ICMPLE, Opcode.IF_ACMPEQ, Opcode.IF_ACMPNE, Opcode.GOTO, Opcode.JSR, Opcode.IFNULL, Opcode.IFNONNULL);
             Opcode = opcode;
         }
+
+        public override string ToString()
+        {
+            return $"{Opcode} L{Target.Index}";
+        }
     }
 }

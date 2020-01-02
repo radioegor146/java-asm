@@ -16,5 +16,10 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
             opcode.CheckInAndThrow(nameof(opcode), Opcode.BIPUSH, Opcode.SIPUSH);
             Opcode = opcode;
         }
+
+        public override string ToString()
+        {
+            return $"{Opcode} {Value}";
+        }
     }
 }

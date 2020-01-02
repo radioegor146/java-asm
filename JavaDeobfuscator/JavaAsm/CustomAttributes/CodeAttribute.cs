@@ -50,7 +50,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                 Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.StartPc);
                 Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.EndPc);
                 Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.HandlerPc);
-                Binary.BigEndian.Write(attributeDataStream, writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(exceptionTableEntry.CatchType.Name))));
+                Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.CatchType.Name == null ? 0 : 
+                    writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(exceptionTableEntry.CatchType.Name))));
             }
 
             if (Attributes.Count > ushort.MaxValue)
@@ -82,14 +83,24 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
             var exceptionTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.ExceptionTable.Capacity = exceptionTableSize;
             for (var i = 0; i < exceptionTableSize; i++)
-                attribute.ExceptionTable.Add(new CodeAttribute.ExceptionTableEntry { 
+            {
+                var exceptionTableEntry = new CodeAttribute.ExceptionTableEntry
+                {
                     StartPc = Binary.BigEndian.ReadUInt16(attributeDataStream),
                     EndPc = Binary.BigEndian.ReadUInt16(attributeDataStream),
-                    HandlerPc = Binary.BigEndian.ReadUInt16(attributeDataStream),
-                    CatchType = new ClassName(readerState.ConstantPool
-                        .GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream))
-                        .Name.String)
-                });
+                    HandlerPc = Binary.BigEndian.ReadUInt16(attributeDataStream)
+                };
+                var catchTypeIndex = Binary.BigEndian.ReadUInt16(attributeDataStream);
+
+                if (catchTypeIndex != 0)
+                {
+                    exceptionTableEntry.CatchType = new ClassName(readerState.ConstantPool
+                        .GetEntry<ClassEntry>(catchTypeIndex)
+                        .Name.String);
+                }
+
+                attribute.ExceptionTable.Add(exceptionTableEntry);
+            }
 
             var attributesCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.Attributes.Capacity = attributesCount;

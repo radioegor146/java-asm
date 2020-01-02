@@ -13,6 +13,11 @@ namespace JavaDeobfuscator.JavaAsm
             Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
+        public override string ToString()
+        {
+            return Name.Replace("/", ".");
+        }
+
         protected bool Equals(ClassName other)
         {
             return Name == other.Name;

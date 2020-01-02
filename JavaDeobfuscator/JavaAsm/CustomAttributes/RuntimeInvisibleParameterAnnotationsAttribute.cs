@@ -12,7 +12,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class ParameterAnnotations
     {
-        public List<AnnotationNode> Annotations { get; set; }
+        public List<AnnotationNode> Annotations { get; set; } = new List<AnnotationNode>();
     }
 
     internal class RuntimeInvisibleParameterAnnotationsAttribute : CustomAttribute

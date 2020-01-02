@@ -41,7 +41,12 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
         public string InnerName { get; set; }
 
-        public AccessModifiers Access { get; set; }
+        public ClassAccessModifiers Access { get; set; }
+
+        public override string ToString()
+        {
+            return $"{AccessModifiersExtensions.ToString(Access)} {InnerClassName?.ToString() ?? "null"} {OuterClassName?.ToString() ?? "null"} {InnerName?.ToString() ?? "null"}";
+        }
     }
 
     internal class InnerClassesAttributeFactory : ICustomAttributeFactory<InnerClassesAttribute>
@@ -68,7 +73,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                 if (innerNameIndex != 0)
                     innerClass.InnerName = readerState.ConstantPool
                         .GetEntry<Utf8Entry>(innerNameIndex).String;
-                innerClass.Access = (AccessModifiers) Binary.BigEndian.ReadUInt16(attributeDataStream);
+                innerClass.Access = (ClassAccessModifiers) Binary.BigEndian.ReadUInt16(attributeDataStream);
                 attribute.Classes.Add(innerClass);
 
             }

@@ -21,5 +21,9 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
                 Opcode.INVOKESPECIAL);
             Opcode = opcode;
         }
+        public override string ToString()
+        {
+            return $"{Opcode} {Owner}.{Name}{Descriptor}";
+        }
     }
 }

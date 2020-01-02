@@ -13,7 +13,7 @@ namespace JavaDeobfuscator.JavaAsm
 
         public ushort MinorVersion { get; set; }
 
-        public AccessModifiers Access { get; set; }
+        public ClassAccessModifiers Access { get; set; }
 
         public ClassName Name { get; set; }
 
@@ -75,6 +75,11 @@ namespace JavaDeobfuscator.JavaAsm
                 if (attribute != null)
                     InnerClasses = (attribute.ParsedAttribute as InnerClassesAttribute)?.Classes;
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{AccessModifiersExtensions.ToString(Access)} {Name}";
         }
     }
 }

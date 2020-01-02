@@ -21,5 +21,10 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
                 Opcode.PUTSTATIC);
             Opcode = opcode;
         }
+
+        public override string ToString()
+        {
+            return $"{Opcode} {Owner}.{Name} {Descriptor}";
+        }
     }
 }

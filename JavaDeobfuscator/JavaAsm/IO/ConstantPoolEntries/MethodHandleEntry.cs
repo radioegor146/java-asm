@@ -104,4 +104,24 @@ namespace JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries
             }
         }
     }
+
+    public static class ReferenceKindTypeExtensions
+    {
+        public static bool IsMethodReference(this MethodHandleEntry.ReferenceKindType referenceKindType)
+        {
+            return referenceKindType == MethodHandleEntry.ReferenceKindType.InvokeReference ||
+                   referenceKindType == MethodHandleEntry.ReferenceKindType.InvokeSpecial ||
+                   referenceKindType == MethodHandleEntry.ReferenceKindType.InvokeStatic ||
+                   referenceKindType == MethodHandleEntry.ReferenceKindType.InvokeVirtual ||
+                   referenceKindType == MethodHandleEntry.ReferenceKindType.NewInvokeSpecial;
+        }
+
+        public static bool IsFieldReference(this MethodHandleEntry.ReferenceKindType referenceKindType)
+        {
+            return referenceKindType == MethodHandleEntry.ReferenceKindType.GetField ||
+                   referenceKindType == MethodHandleEntry.ReferenceKindType.GetStatic ||
+                   referenceKindType == MethodHandleEntry.ReferenceKindType.PutField ||
+                   referenceKindType == MethodHandleEntry.ReferenceKindType.PutStatic;
+        }
+    }
 }

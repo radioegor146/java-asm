@@ -27,7 +27,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
             {
                 Owner = state.ClassNode,
 
-                Access = (AccessModifiers) Binary.BigEndian.ReadUInt16(stream),
+                Access = (FieldAccessModifiers) Binary.BigEndian.ReadUInt16(stream),
                 Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String,
                 Descriptor = TypeDescriptor.Parse(state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String)
             };
@@ -45,7 +45,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
             {
                 Owner = state.ClassNode,
 
-                Access = (AccessModifiers)Binary.BigEndian.ReadUInt16(stream),
+                Access = (MethodAccessModifiers)Binary.BigEndian.ReadUInt16(stream),
                 Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String,
                 Descriptor = MethodDescriptor.Parse(state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String)
             };
@@ -73,7 +73,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
             constantPool.Read(stream);
             state.ConstantPool = constantPool;
 
-            result.Access = (AccessModifiers) Binary.BigEndian.ReadUInt16(stream);
+            result.Access = (ClassAccessModifiers) Binary.BigEndian.ReadUInt16(stream);
             
             result.Name = new ClassName(constantPool.GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(stream)).Name.String);
             result.SuperName = new ClassName(constantPool.GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(stream)).Name.String);

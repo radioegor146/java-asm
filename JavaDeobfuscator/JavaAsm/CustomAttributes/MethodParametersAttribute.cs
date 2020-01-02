@@ -13,7 +13,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
         {
             public string Name { get; set; }
 
-            public AccessModifiers Access { get; set; }
+            public ClassAccessModifiers Access { get; set; }
         }
 
         public List<Parameter> Parameters { get; set; } = new List<Parameter>();
@@ -49,7 +49,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                 attribute.Parameters.Add(new MethodParametersAttribute.Parameter
                 {
                     Name = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).String,
-                    Access = (AccessModifiers) Binary.BigEndian.ReadUInt16(attributeDataStream)
+                    Access = (ClassAccessModifiers) Binary.BigEndian.ReadUInt16(attributeDataStream)
                 });
 
             if (attributeDataStream.Position != attributeDataStream.Length)

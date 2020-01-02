@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.IO;
+using System.IO.Compression;
 using JavaDeobfuscator.JavaAsm.IO;
 
 namespace JavaDeobfuscator
@@ -8,15 +10,20 @@ namespace JavaDeobfuscator
     {
         private static void Main(string[] args)
         {
+            foreach (var entry in ZipFile.OpenRead("test4.jar").Entries)
             {
-                using var inputFileStream = new FileStream("NarratorWindows.class", FileMode.Open);
-                var result = ClassFile.ParseClass(inputFileStream);
-                using var outputFileStream = new FileStream("NarratorWindows-1.class", FileMode.Create);
-                ClassFile.WriteClass(outputFileStream, result);
-            }
-            {
-                using var inputFileStream = new FileStream("NarratorWindows-1.class", FileMode.Open);
-                var result = ClassFile.ParseClass(inputFileStream);
+                if (!entry.FullName.EndsWith(".class"))
+                    continue;
+                using var entryStream = entry.Open();
+                var result = ClassFile.ParseClass(entryStream);
+                try
+                {
+                    // Console.WriteLine(result);
+                } 
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to parse {entry.FullName}: {e}");
+                }
             }
         }
     }

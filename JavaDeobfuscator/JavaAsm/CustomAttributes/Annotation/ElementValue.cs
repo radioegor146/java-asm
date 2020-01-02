@@ -72,7 +72,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes.Annotation
                     elementValue.ConstValue = readerState.ConstantPool.GetEntry<LongEntry>(Binary.BigEndian.ReadUInt16(stream)).Value;
                     break;
                 case ElementValueTag.String:
-                    elementValue.ConstValue = readerState.ConstantPool.GetEntry<StringEntry>(Binary.BigEndian.ReadUInt16(stream)).Value.String;
+                    elementValue.ConstValue = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String;
                     break;
                 case ElementValueTag.Enum:
                     elementValue.EnumConstValue = new EnumConstValueType
@@ -92,7 +92,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes.Annotation
                     break;
                 case ElementValueTag.Array:
                     var arraySize = Binary.BigEndian.ReadUInt16(stream);
-                    elementValue.ArrayValue.Capacity = arraySize;
+                    elementValue.ArrayValue = new List<ElementValue>(arraySize);
                     for (var i = 0; i < arraySize; i++)
                         elementValue.ArrayValue.Add(Parse(stream, readerState));
                     break;

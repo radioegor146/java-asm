@@ -14,7 +14,7 @@ namespace JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries
 
         public LongEntry(Stream stream)
         {
-            Value = Binary.BigEndian.ReadInt32(stream);
+            Value = Binary.BigEndian.ReadInt64(stream);
         }
 
         public override EntryTag Tag => EntryTag.Long;

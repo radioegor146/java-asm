@@ -12,7 +12,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
 
         public int LowValue { get; set; }
 
-        public int HighValue => LowValue + Labels.Count;
+        public int HighValue { get; set; }
 
         public List<Label> Labels { get; set; } = new List<Label>();
     }

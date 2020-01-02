@@ -9,12 +9,17 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
     {
         public override Opcode Opcode { get; }
 
-        public TypeDescriptor Descriptor { get; set; }
+        public ClassName Type { get; set; }
 
         public TypeInstruction(Opcode opcode)
         {
             opcode.CheckInAndThrow(nameof(opcode), Opcode.NEW, Opcode.ANEWARRAY, Opcode.CHECKCAST, Opcode.INSTANCEOF);
             Opcode = opcode;
+        }
+
+        public override string ToString()
+        {
+            return $"{Opcode} {Type}";
         }
     }
 }

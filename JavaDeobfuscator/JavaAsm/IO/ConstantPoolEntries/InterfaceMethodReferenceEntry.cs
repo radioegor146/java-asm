@@ -2,7 +2,7 @@
 
 namespace JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries
 {
-    public class InterfaceMethodReferenceEntry : ReferenceEntry
+    public class InterfaceMethodReferenceEntry : MethodReferenceEntry
     {
         public InterfaceMethodReferenceEntry(ClassEntry @class, NameAndTypeEntry nameAndType) : base(@class, nameAndType) { }
 

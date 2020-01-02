@@ -29,5 +29,10 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
                 Opcode.MONITORENTER, Opcode.MONITOREXIT);
             Opcode = opcode;
         }
+
+        public override string ToString()
+        {
+            return $"{Opcode}";
+        }
     }
 }

@@ -17,5 +17,10 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
                 Opcode.ISTORE, Opcode.LSTORE, Opcode.FSTORE, Opcode.DSTORE, Opcode.ASTORE, Opcode.RET);
             Opcode = opcode;
         }
+
+        public override string ToString()
+        {
+            return $"{Opcode} {VariableIndex}";
+        }
     }
 }

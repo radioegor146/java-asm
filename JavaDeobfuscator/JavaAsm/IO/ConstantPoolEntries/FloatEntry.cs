@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using BinaryEncoding;
 
 namespace JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries
 {
@@ -13,8 +15,7 @@ namespace JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries
 
         public FloatEntry(Stream stream)
         {
-            using var reader = new BinaryReader(stream);
-            Value = reader.ReadSingle();
+            Value = BitConverter.Int32BitsToSingle(Binary.BigEndian.ReadInt32(stream));
         }
 
         public override EntryTag Tag => EntryTag.Float;
@@ -23,8 +24,7 @@ namespace JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries
 
         public override void Write(Stream stream)
         {
-            using var writer = new BinaryWriter(stream);
-            writer.Write(Value);
+            Binary.BigEndian.Write(stream, BitConverter.SingleToInt32Bits(Value));
         }
 
         public override void PutToConstantPool(ConstantPool constantPool) { }

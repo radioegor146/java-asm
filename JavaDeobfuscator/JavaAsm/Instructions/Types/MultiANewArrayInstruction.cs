@@ -8,8 +8,13 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
     {
         public override Opcode Opcode => Opcode.MULTIANEWARRAY;
 
-        public TypeDescriptor Descriptor { get; set; }
+        public ClassName Type { get; set; }
 
         public byte Dimensions { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Opcode} {Type} {Dimensions}";
+        }
     }
 }

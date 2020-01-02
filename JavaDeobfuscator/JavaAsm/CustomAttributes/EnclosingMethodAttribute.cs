@@ -17,7 +17,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
         public override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); 
         }
     }
 
@@ -29,13 +29,21 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                 throw new ArgumentOutOfRangeException($"Attribute length is incorrect for EnclosingMethod: {attributeNode.Data.Length} != {sizeof(ushort) * 2}");
 
             using var attributeDataStream = new MemoryStream(attributeNode.Data);
+
             var attribute = new EnclosingMethodAttribute
             {
                 Class = new ClassName(readerState.ConstantPool
-                    .GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).Name.String),
-                MethodName = readerState.ConstantPool.GetEntry<NameAndTypeEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).Name.String,
-                MethodDescriptor = MethodDescriptor.Parse(readerState.ConstantPool.GetEntry<NameAndTypeEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).Descriptor.String)
+                    .GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).Name.String)
             };
+
+            var nameAndTypeEntryIndex = Binary.BigEndian.ReadUInt16(attributeDataStream);
+
+            if (nameAndTypeEntryIndex != 0)
+            {
+                var nameAndTypeEntry = readerState.ConstantPool.GetEntry<NameAndTypeEntry>(nameAndTypeEntryIndex);
+                attribute.MethodName = nameAndTypeEntry.Name.String;
+                attribute.MethodDescriptor = MethodDescriptor.Parse(nameAndTypeEntry.Descriptor.String);
+            }
 
             return attribute;
         }

@@ -26,7 +26,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
 
         public T GetEntry<T>(ushort id) where T : Entry
         {
-            return (T)entries[id - 1];
+            return (T) entries[id - 1];
         }
 
         public void Read(Stream stream)
@@ -34,7 +34,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
             var size = Binary.BigEndian.ReadUInt16(stream);
             for (var i = 0; i < size - 1; i++)
             {
-                var tag = (EntryTag)stream.ReadByte();
+                var tag = (EntryTag) stream.ReadByte();
                 var entry = tag switch
                 {
                     EntryTag.Class => (Entry)new ClassEntry(stream),
@@ -54,10 +54,26 @@ namespace JavaDeobfuscator.JavaAsm.IO
                     _ => throw new ArgumentOutOfRangeException(nameof(tag))
                 };
                 entries.Add(entry);
+                if (entry is LongEntry || entry is DoubleEntry)
+                {
+                    entries.Add(new LongDoublePlaceholderEntry());
+                    i++;
+                }
             }
 
             foreach (var entry in entries)
                 entry.ProcessFromConstantPool(this);
+        }
+
+        private class LongDoublePlaceholderEntry : Entry
+        {
+            public override EntryTag Tag => throw new Exception("You shouldn't access that entry");
+
+            public override void ProcessFromConstantPool(ConstantPool constantPool) { }
+
+            public override void Write(Stream stream) { }
+
+            public override void PutToConstantPool(ConstantPool constantPool) { }
         }
 
         public void Write(Stream stream)

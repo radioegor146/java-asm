@@ -11,7 +11,7 @@ namespace JavaDeobfuscator.JavaAsm
         public ClassNode Owner { get; set; }
 
 
-        public AccessModifiers Access { get; set; }
+        public FieldAccessModifiers Access { get; set; }
 
         public string Name { get; set; }
 
@@ -55,6 +55,11 @@ namespace JavaDeobfuscator.JavaAsm
                 (GetAttribute(PredefinedAttributeNames.ConstantValue)?.ParsedAttribute as
                     ConstantValueAttribute)?.Value;
             IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
+        }
+
+        public override string ToString()
+        {
+            return $"{AccessModifiersExtensions.ToString(Access)} {Descriptor} {Name}";
         }
     }
 }

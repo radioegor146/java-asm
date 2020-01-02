@@ -9,5 +9,10 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
         public override Opcode Opcode => Opcode.None;
 
         public ushort Line { get; set; }
+
+        public override string ToString()
+        {
+            return $"LINE {Line}";
+        }
     }
 }

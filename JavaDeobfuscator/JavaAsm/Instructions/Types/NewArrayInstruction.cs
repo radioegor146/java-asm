@@ -9,6 +9,11 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
         public override Opcode Opcode => Opcode.NEWARRAY;
 
         public NewArrayTypeCode ArrayType { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Opcode} {ArrayType}";
+        }
     }
 
     internal enum NewArrayTypeCode

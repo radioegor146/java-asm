@@ -11,12 +11,12 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
         {
             public InstructionListEnumerator(Instruction start)
             {
-                Start = start;
+                Current = Start = start;
             }
 
             public bool MoveNext()
             {
-                if (Current == null)
+                if (Current?.Next == null)
                     return false;
                 Current = Current.Next;
                 return true;
@@ -40,66 +40,66 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
 
         public Instruction Last { get; private set; }
 
-        public void Add(Instruction insnNode)
+        public void Add(Instruction instruction)
         {
-            insnNode = (Instruction) insnNode.Clone();
-            insnNode.OwnerList = this;
-            insnNode.Next = null;
+            instruction = (Instruction) instruction.Clone();
+            instruction.OwnerList = this;
+            instruction.Next = null;
             if (First == null)
-                First = insnNode;
-            insnNode.Previous = Last;
-            Last = insnNode;
-            if (insnNode.Previous != null)
-                insnNode.Previous.Next = insnNode;
+                First = instruction;
+            instruction.Previous = Last;
+            Last = instruction;
+            if (instruction.Previous != null)
+                instruction.Previous.Next = instruction;
         }
 
-        public void InsertBefore(Instruction insnNode, Instruction toInsert)
+        public void InsertBefore(Instruction instruction, Instruction toInsert)
         {
-            if (insnNode.OwnerList != this)
+            if (instruction.OwnerList != this)
                 throw new ArgumentException("Position instruction does not belong to that list");
             toInsert = (Instruction) toInsert.Clone();
             toInsert.OwnerList = this;
-            toInsert.Next = insnNode;
-            toInsert.Previous = insnNode.Previous;
+            toInsert.Next = instruction;
+            toInsert.Previous = instruction.Previous;
 
             if (toInsert.Previous != null)
                 toInsert.Previous.Next = toInsert;
             toInsert.Next.Previous = toInsert;
 
-            if (ReferenceEquals(insnNode, First))
+            if (ReferenceEquals(instruction, First))
                 First = toInsert;
         }
 
-        public void InsertAfter(Instruction insnNode, Instruction toInsert)
+        public void InsertAfter(Instruction instruction, Instruction toInsert)
         {
-            if (insnNode.OwnerList != this)
+            if (instruction.OwnerList != this)
                 throw new ArgumentException("Position instruction does not belong to that list");
             toInsert = (Instruction) toInsert.Clone();
             toInsert.OwnerList = this;
-            toInsert.Previous = insnNode;
-            toInsert.Next = insnNode.Next;
+            toInsert.Previous = instruction;
+            toInsert.Next = instruction.Next;
 
             if (toInsert.Next != null)
                 toInsert.Next.Previous = toInsert;
             toInsert.Previous.Next = toInsert;
 
-            if (ReferenceEquals(insnNode, Last))
+            if (ReferenceEquals(instruction, Last))
                 Last = toInsert;
         }
 
-        public void Remove(Instruction insnNode)
+        public void Remove(Instruction instruction)
         {
-            if (insnNode.OwnerList != this)
+            if (instruction.OwnerList != this)
                 throw new ArgumentException("Position instruction does not belong to that list");
-            insnNode.OwnerList = null;
-            if (insnNode.Next != null)
-                insnNode.Next.Previous = insnNode.Previous;
-            if (insnNode.Previous != null)
-                insnNode.Previous.Next = insnNode.Next;
-            if (ReferenceEquals(insnNode, First))
-                First = insnNode.Next;
-            if (ReferenceEquals(insnNode, Last))
-                Last = insnNode.Previous;
+            instruction.OwnerList = null;
+            if (instruction.Next != null)
+                instruction.Next.Previous = instruction.Previous;
+            if (instruction.Previous != null)
+                instruction.Previous.Next = instruction.Next;
+            if (ReferenceEquals(instruction, First))
+                First = instruction.Next;
+            if (ReferenceEquals(instruction, Last))
+                Last = instruction.Previous;
         }
 
         public IEnumerator<Instruction> GetEnumerator()
