@@ -11,7 +11,17 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
         public override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            throw new NotImplementedException();
+            var result = new byte[2];
+            Binary.BigEndian.Set(Value switch
+            {
+                long longValue => writerState.ConstantPool.Find(new LongEntry(longValue)),
+                float floatValue => writerState.ConstantPool.Find(new FloatEntry(floatValue)),
+                double doubleValue => writerState.ConstantPool.Find(new DoubleEntry(doubleValue)),
+                int integerValue => writerState.ConstantPool.Find(new IntegerEntry(integerValue)),
+                string stringValue => writerState.ConstantPool.Find(new StringEntry(new Utf8Entry(stringValue))),
+                _ => throw new ArgumentOutOfRangeException($"Can't encode value of type {Value.GetType()}")
+            }, result);
+            return result;
         }
     }
 

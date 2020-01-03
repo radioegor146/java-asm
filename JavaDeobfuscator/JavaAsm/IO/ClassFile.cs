@@ -7,7 +7,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
 {
     internal class ClassFile
     {
-        private const uint magic = 0xCAFEBABE;
+        private const uint Magic = 0xCAFEBABE;
 
         public static AttributeNode ParseAttribute(Stream stream, ClassReaderState state, AttributeScope scope)
         {
@@ -63,7 +63,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
             var result = new ClassNode();
             state.ClassNode = result;
 
-            if (Binary.BigEndian.ReadUInt32(stream) != magic)
+            if (Binary.BigEndian.ReadUInt32(stream) != Magic)
                 throw new IOException("Wrong magic in class");
             
             result.MinorVersion = Binary.BigEndian.ReadUInt16(stream);
@@ -139,7 +139,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
 
         public static void WriteClass(Stream stream, ClassNode classNode)
         {
-            Binary.BigEndian.Write(stream, magic);
+            Binary.BigEndian.Write(stream, Magic);
             Binary.BigEndian.Write(stream, classNode.MinorVersion);
             Binary.BigEndian.Write(stream, (ushort) classNode.MajorVersion);
             var afterConstantPoolDataStream = new MemoryStream();

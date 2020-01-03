@@ -17,7 +17,23 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
         public override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            throw new NotImplementedException(); 
+            using var attributeDataStream = new MemoryStream();
+
+            Binary.BigEndian.Write(attributeDataStream,
+                writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(Class.Name))));
+
+            if (MethodName == null && MethodDescriptor == null)
+            {
+                Binary.BigEndian.Write(attributeDataStream, (ushort) 0);
+            } 
+            else
+            {
+                Binary.BigEndian.Write(attributeDataStream,
+                    writerState.ConstantPool.Find(new NameAndTypeEntry(new Utf8Entry(MethodName),
+                        new Utf8Entry(MethodDescriptor.ToString()))));
+            }
+
+            return attributeDataStream.ToArray();
         }
     }
 
@@ -38,12 +54,12 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
             var nameAndTypeEntryIndex = Binary.BigEndian.ReadUInt16(attributeDataStream);
 
-            if (nameAndTypeEntryIndex != 0)
-            {
-                var nameAndTypeEntry = readerState.ConstantPool.GetEntry<NameAndTypeEntry>(nameAndTypeEntryIndex);
-                attribute.MethodName = nameAndTypeEntry.Name.String;
-                attribute.MethodDescriptor = MethodDescriptor.Parse(nameAndTypeEntry.Descriptor.String);
-            }
+            if (nameAndTypeEntryIndex == 0) 
+                return attribute;
+
+            var nameAndTypeEntry = readerState.ConstantPool.GetEntry<NameAndTypeEntry>(nameAndTypeEntryIndex);
+            attribute.MethodName = nameAndTypeEntry.Name.String;
+            attribute.MethodDescriptor = MethodDescriptor.Parse(nameAndTypeEntry.Descriptor.String);
 
             return attribute;
         }

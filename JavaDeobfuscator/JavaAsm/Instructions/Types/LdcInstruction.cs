@@ -4,7 +4,7 @@ using System.Text;
 
 namespace JavaDeobfuscator.JavaAsm.Instructions.Types
 {
-    internal class LdcInsnNode : Instruction
+    internal class LdcInstruction : Instruction
     {
         public override Opcode Opcode => Opcode.LDC;
 

@@ -16,7 +16,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
         }
     }
 
-    internal enum NewArrayTypeCode
+    internal enum NewArrayTypeCode : byte
     {
         Boolean = 4,
         Character,

@@ -73,14 +73,15 @@ namespace JavaDeobfuscator.JavaAsm
                     { (PredefinedAttributeNames.RuntimeVisibleTypeAnnotations, AttributeScope.Method), new RuntimeVisibleTypeAnnotationsAttributeFactory() },
                     { (PredefinedAttributeNames.RuntimeVisibleTypeAnnotations, AttributeScope.Field), new RuntimeVisibleTypeAnnotationsAttributeFactory() },
                     { (PredefinedAttributeNames.RuntimeVisibleTypeAnnotations, AttributeScope.Code), new RuntimeVisibleTypeAnnotationsAttributeFactory() },
-                    { (PredefinedAttributeNames.AnnotationDefault, AttributeScope.Method), new AnnotationDefaultAttributeFactory() }
+                    { (PredefinedAttributeNames.AnnotationDefault, AttributeScope.Method), new AnnotationDefaultAttributeFactory() },
+                    { (PredefinedAttributeNames.BootstrapMethods, AttributeScope.Code), new BootstrapMethodsAttributeFactory() }
                 };
 
         public string Name { get; set; }
 
         public byte[] Data { get; set; }
 
-        public CustomAttribute ParsedAttribute { get; private set; }
+        public CustomAttribute ParsedAttribute { get; set; }
 
         public void Parse(AttributeScope scope, ClassReaderState readerState)
         { 

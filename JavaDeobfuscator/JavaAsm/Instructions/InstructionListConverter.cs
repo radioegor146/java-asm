@@ -12,6 +12,14 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
 {
     internal class InstructionListConverter
     {
+        private static AttributeNode GetAttribute(CodeAttribute codeAttribute, string name)
+        {
+            var attribute = codeAttribute.Attributes.FirstOrDefault(a => a.Name == name);
+            if (attribute != null)
+                codeAttribute.Attributes.Remove(attribute);
+            return attribute;
+        }
+
         public static void ParseInstructionList(MethodNode parseTo, ClassReaderState readerState, CodeAttribute codeAttribute)
         {
             parseTo.MaxStack = codeAttribute.MaxStack;
@@ -20,6 +28,9 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
 
             if (codeAttribute.Code.Length == 0)
                 return;
+
+            var bootstrapMethodsAttribute =
+                GetAttribute(codeAttribute, PredefinedAttributeNames.BootstrapMethods)?.ParsedAttribute as BootstrapMethodsAttribute;
 
             var instructions = new Dictionary<long, Instruction>();
             var labels = new Dictionary<long, Label>();
@@ -223,15 +234,16 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                         break;
 
                     case Opcode.INVOKEDYNAMIC:
-                        var callSiteSpecifier =
-                            readerState.ConstantPool.GetEntry<InvokeDynamicEntry>(
+                        var callSiteSpecifier = readerState.ConstantPool.GetEntry<InvokeDynamicEntry>(
                                 Binary.BigEndian.ReadUInt16(codeStream));
                         if (Binary.BigEndian.ReadUInt16(codeStream) != 0)
                             throw new ArgumentException("INVOKEDYNAMIC 3rd and 4th bytes != 0");
-                        // TODO
                         instructions.Add(currentPosition, new InvokeDynamicInstruction
                         {
-
+                            Name = callSiteSpecifier.NameAndType.Name.String,
+                            Descriptor = MethodDescriptor.Parse(callSiteSpecifier.NameAndType.Descriptor.String),
+                            BootstrapMethod = bootstrapMethodsAttribute.BootstrapMethods[callSiteSpecifier.BootstrapMethodAttributeIndex].BootstrapMethodReference,
+                            BootstrapMethodArgs = bootstrapMethodsAttribute.BootstrapMethods[callSiteSpecifier.BootstrapMethodAttributeIndex].Arguments,
                         });
                         break;
 
@@ -453,29 +465,18 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                         {
                             var constantPoolEntry =
                                 readerState.ConstantPool.GetEntry<Entry>((byte) codeStream.ReadByte());
-                            instructions.Add(currentPosition, new LdcInsnNode
+                            instructions.Add(currentPosition, new LdcInstruction
                             {
                                 Value = constantPoolEntry switch
                                 {
                                     IntegerEntry integerEntry => (object) integerEntry.Value,
                                     FloatEntry floatEntry => floatEntry.Value,
                                     StringEntry stringEntry => stringEntry.Value.String,
-                                    ClassEntry classEntry => new ClassName(classEntry.Name
-                                        .String),
-                                    MethodTypeEntry methodTypeEntry => MethodDescriptor.Parse(
-                                        methodTypeEntry.Descriptor.String),
-                                    MethodHandleEntry methodHandleEntry => new Handle
-                                    {
-                                        Descriptor = methodHandleEntry.ReferenceKind.IsFieldReference()
-                                            ? (IDescriptor) TypeDescriptor.Parse(methodHandleEntry.Reference.NameAndType
-                                                .Descriptor.String)
-                                            : (IDescriptor) MethodDescriptor.Parse(methodHandleEntry.Reference.NameAndType
-                                                .Descriptor.String),
-                                        Name = methodHandleEntry.Reference.NameAndType.Name.String,
-                                        Owner = new ClassName(methodHandleEntry.Reference.Class.Name.String)
-                                    },
+                                    ClassEntry classEntry => new ClassName(classEntry.Name.String),
+                                    MethodTypeEntry methodTypeEntry => MethodDescriptor.Parse(methodTypeEntry.Descriptor.String),
+                                    MethodHandleEntry methodHandleEntry => Handle.FromConstantPool(methodHandleEntry),
                                     _ => throw new ArgumentException(
-                                        $"Tried to {opcode} wrong type of CP entry: {constantPoolEntry.GetType()}")
+                                        $"Tried to {opcode} wrong type of CP entry: {constantPoolEntry.Tag}")
                                 }
                             });
                         }
@@ -485,7 +486,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                         {
                             var constantPoolEntry =
                                 readerState.ConstantPool.GetEntry<Entry>(Binary.BigEndian.ReadUInt16(codeStream));
-                            instructions.Add(currentPosition, new LdcInsnNode
+                            instructions.Add(currentPosition, new LdcInstruction
                             {
                                 Value = constantPoolEntry switch
                                 {
@@ -540,22 +541,229 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
 
             parseTo.Instructions = new InstructionList();
 
-            var instructionList = instructions.OrderBy(x => x.Key).ToList();
-            var labelList = labels.OrderBy(x => x.Key).ToList();
+            parseTo.TryCatches.Capacity = codeAttribute.ExceptionTable.Count;
 
+            foreach (var exceptionTableEntry in codeAttribute.ExceptionTable)
+            {
+                parseTo.TryCatches.Add(new TryCatchNode
+                {
+                    ExceptionClassName = exceptionTableEntry.CatchType,
+                    Start = labels.GetOrAdd(exceptionTableEntry.StartPc, new Label()),
+                    End = labels.GetOrAdd(exceptionTableEntry.EndPc, new Label()),
+                    Handler = labels.GetOrAdd(exceptionTableEntry.HandlerPc, new Label())
+                });
+            }
+
+            var instructionList = instructions.OrderBy(x => x.Key).ToList();
+
+            var labelList = labels.OrderBy(x => x.Key).ToList();
             var labelListPosition = 0;
+
+            var lineNumberTable = (GetAttribute(codeAttribute, PredefinedAttributeNames.LineNumberTable)?.ParsedAttribute
+                as LineNumberTableAttribute)?.LineNumberTable?.OrderBy(x => x.StartPc).ToList();
+            var lineNumberTablePosition = 0;
 
             foreach (var (position, instruction) in instructionList)
             {
                 while (labelListPosition < labelList.Count && position >= labelList[labelListPosition].Key)
                     parseTo.Instructions.Add(labelList[labelListPosition++].Value);
+                while (lineNumberTablePosition < lineNumberTable.Count &&
+                       position >= lineNumberTable[lineNumberTablePosition].StartPc)
+                    parseTo.Instructions.Add(new LineNumber
+                    {
+                        Line = lineNumberTable[lineNumberTablePosition++].LineNumber
+                    });
                 parseTo.Instructions.Add(instruction);
             }
         }
 
-        public static CodeAttribute GenerateCodeAttribute(MethodNode from, ClassWriterState writerState)
+        public static CodeAttribute GenerateCodeAttribute(MethodNode source, ClassWriterState writerState)
         {
-            return new CodeAttribute();
+            var codeAttribute = new CodeAttribute
+            {
+                Attributes = source.CodeAttributes,
+                MaxLocals = source.MaxLocals,
+                MaxStack = source.MaxStack
+            };
+
+            foreach (var instruction in source.Instructions)
+            {
+                switch (instruction)
+                {
+                    case FieldInstruction fieldInstruction:
+                        writerState.ConstantPool.Find(new FieldReferenceEntry(
+                            new ClassEntry(new Utf8Entry(fieldInstruction.Owner.Name)),
+                            new NameAndTypeEntry(new Utf8Entry(fieldInstruction.Name),
+                                new Utf8Entry(fieldInstruction.Descriptor.ToString()))));
+                        break;
+                    case MethodInstruction methodInstruction:
+                        writerState.ConstantPool.Find(new MethodReferenceEntry(
+                            new ClassEntry(new Utf8Entry(methodInstruction.Owner.Name)),
+                            new NameAndTypeEntry(new Utf8Entry(methodInstruction.Name),
+                                new Utf8Entry(methodInstruction.Descriptor.ToString()))));
+                        break;
+                    case TypeInstruction typeInstruction:
+                        writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(typeInstruction.Type.Name)));
+                        break;
+                    case LdcInstruction ldcInstruction:
+                        writerState.ConstantPool.Find(ldcInstruction.Value switch
+                        {
+                            int integerValue => (Entry) new IntegerEntry(integerValue),
+                            float floatValue => new FloatEntry(floatValue),
+                            string stringValue => new StringEntry(new Utf8Entry(stringValue)),
+                            long longValue => new LongEntry(longValue),
+                            double doubleValue => new DoubleEntry(doubleValue),
+                            Handle handle => handle.ToConstantPool(),
+                            MethodDescriptor methodDescriptor => new MethodTypeEntry(new Utf8Entry(methodDescriptor.ToString())),
+                            _ => throw new ArgumentOutOfRangeException($"Can't encode value of type {ldcInstruction.Value.GetType()}")
+                        });
+                        break;
+                    case MultiANewArrayInstruction multiANewArrayInstruction:
+                        writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(multiANewArrayInstruction.Type.Name)));
+                        break;
+                    case InvokeDynamicInstruction invokeDynamicInstruction:
+                        writerState.ConstantPool.Find(new InvokeDynamicEntry(0, // TODO
+                            new NameAndTypeEntry(new Utf8Entry(invokeDynamicInstruction.Name),
+                                new Utf8Entry(invokeDynamicInstruction.Descriptor.ToString()))));
+                        break;
+                    case IncrementInstruction _:
+                    case IntegerPushInstruction _:
+                    case JumpInstruction _:
+                    case LineNumber _:
+                    case Label _:
+                    case LookupSwitchInstruction _:
+                    case NewArrayInstruction _:
+                    case SimpleInstruction _:
+                    case TableSwitchInstruction _:
+                    case VariableInstruction _:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(instruction));
+                }
+            }
+
+            var labels = new Dictionary<Label, ushort>();
+            var lineNumbers = new List<LineNumberTableAttribute.LineNumberTableEntry>();
+
+            var currentPosition = 0;
+            foreach (var instruction in source.Instructions)
+            {
+                currentPosition += instruction.Opcode == Opcode.None ? 0 : sizeof(byte);
+                switch (instruction)
+                {
+                    case FieldInstruction _:
+                        currentPosition += sizeof(ushort);
+                        break;
+                    case MethodInstruction methodInstruction:
+                        currentPosition += sizeof(ushort) + (methodInstruction.Opcode == Opcode.INVOKEINTERFACE ? sizeof(ushort) : 0);
+                        break;
+                    case TypeInstruction _:
+                        currentPosition += sizeof(ushort);
+                        break;
+                    case IncrementInstruction incrementInstruction:
+                        currentPosition += incrementInstruction.VariableIndex > byte.MaxValue || incrementInstruction.Value > byte.MaxValue
+                                ? sizeof(ushort) * 2 + sizeof(byte)
+                                : sizeof(byte) * 2;
+                        break;
+                    case IntegerPushInstruction integerPushInstruction:
+                        currentPosition += integerPushInstruction.Opcode == Opcode.SIPUSH
+                            ? sizeof(ushort)
+                            : sizeof(byte);
+                        break;
+                    case JumpInstruction _:
+                        currentPosition += sizeof(ushort);
+                        break;
+                    case LdcInstruction ldcInstruction:
+                        if (ldcInstruction.Value is long || ldcInstruction.Value is double)
+                            currentPosition += sizeof(ushort);
+                        else
+                        {
+                            var constantPoolEntryIndex = ldcInstruction.Value switch
+                            {
+                                int integerValue => writerState.ConstantPool.Find(new IntegerEntry(integerValue)),
+                                float floatValue => writerState.ConstantPool.Find(new FloatEntry(floatValue)),
+                                string stringValue => writerState.ConstantPool.Find(
+                                    new StringEntry(new Utf8Entry(stringValue))),
+                                Handle handle => writerState.ConstantPool.Find(handle.ToConstantPool()),
+                                MethodDescriptor methodDescriptor => writerState.ConstantPool.Find(new MethodTypeEntry(new Utf8Entry(methodDescriptor.ToString()))),
+                                _ => throw new ArgumentOutOfRangeException(
+                                    $"Can't encode value of type {ldcInstruction.Value.GetType()}")
+                            };
+                            currentPosition += constantPoolEntryIndex > byte.MaxValue ? sizeof(ushort) : sizeof(byte);
+                        }
+                        break;
+                    case LineNumber lineNumber:
+                        lineNumbers.Add(new LineNumberTableAttribute.LineNumberTableEntry
+                        {
+                            LineNumber = lineNumber.Line,
+                            StartPc = (ushort) currentPosition
+                        });
+                        break;
+                    case Label label:
+                        labels.Add(label, (ushort) currentPosition);
+                        break;
+                    case LookupSwitchInstruction lookupSwitchInstruction:
+                        while (currentPosition % 4 != 0)
+                            currentPosition++;
+                        currentPosition += sizeof(int) + sizeof(int) + (sizeof(int) + sizeof(int)) * lookupSwitchInstruction.MatchLabels.Count;
+                        break;
+                    case MultiANewArrayInstruction _:
+                        currentPosition += sizeof(ushort) + sizeof(byte);
+                        break;
+                    case NewArrayInstruction _:
+                        currentPosition += sizeof(byte);
+                        break;
+                    case SimpleInstruction _:
+                        break;
+                    case TableSwitchInstruction tableSwitchInstruction:
+                        while (currentPosition % 4 != 0)
+                            currentPosition++;
+                        currentPosition += sizeof(int) * 3 + sizeof(int) * tableSwitchInstruction.Labels.Count;
+                        break;
+                    case VariableInstruction variableInstruction:
+                        if (variableInstruction.Opcode != Opcode.RET && variableInstruction.VariableIndex < 4)
+                            break;
+                        currentPosition += variableInstruction.VariableIndex > byte.MaxValue
+                            ? sizeof(ushort) + sizeof(byte)
+                            : sizeof(byte);
+                        break;
+                    case InvokeDynamicInstruction _:
+                        currentPosition += sizeof(ushort) + sizeof(ushort);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(instruction));
+                }
+
+                if (currentPosition > ushort.MaxValue)
+                    throw new ArgumentOutOfRangeException(nameof(currentPosition));
+            }
+
+            if (lineNumbers.Count > 0)
+            {
+                if (codeAttribute.Attributes.Any(x => x.Name == PredefinedAttributeNames.LineNumberTable))
+                    throw new ArgumentException("There is already a LineNumberTable attribute");
+                codeAttribute.Attributes.Add(new AttributeNode {
+                    Name = PredefinedAttributeNames.LineNumberTable,
+                    ParsedAttribute = new LineNumberTableAttribute
+                    {
+                        LineNumberTable = lineNumbers
+                    }
+                });
+            }
+
+            codeAttribute.ExceptionTable.Capacity = source.TryCatches.Count;
+            foreach (var tryCatchNode in source.TryCatches)
+            {
+                codeAttribute.ExceptionTable.Add(new CodeAttribute.ExceptionTableEntry
+                {
+                    CatchType = tryCatchNode.ExceptionClassName,
+                    StartPc = labels[tryCatchNode.Start],
+                    EndPc = labels[tryCatchNode.Start],
+                    HandlerPc = labels[tryCatchNode.Start],
+                });
+            }
+
+            return codeAttribute;
         }
     }
 

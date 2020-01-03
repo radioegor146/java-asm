@@ -2,24 +2,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using BinaryEncoding;
+using JavaDeobfuscator.JavaAsm.Instructions.Types;
 
 namespace JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries
 {
     public class MethodHandleEntry : Entry
     {
-        public enum ReferenceKindType : byte
-        {
-            GetField = 1,
-            GetStatic,
-            PutField,
-            PutStatic,
-            InvokeVirtual,
-            InvokeStatic,
-            InvokeSpecial,
-            NewInvokeSpecial,
-            InvokeReference
-        }
-
         public ReferenceKindType ReferenceKind { get; }
 
         public ReferenceEntry Reference { get; private set; }
@@ -107,21 +95,21 @@ namespace JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries
 
     public static class ReferenceKindTypeExtensions
     {
-        public static bool IsMethodReference(this MethodHandleEntry.ReferenceKindType referenceKindType)
+        public static bool IsMethodReference(this ReferenceKindType referenceKindType)
         {
-            return referenceKindType == MethodHandleEntry.ReferenceKindType.InvokeReference ||
-                   referenceKindType == MethodHandleEntry.ReferenceKindType.InvokeSpecial ||
-                   referenceKindType == MethodHandleEntry.ReferenceKindType.InvokeStatic ||
-                   referenceKindType == MethodHandleEntry.ReferenceKindType.InvokeVirtual ||
-                   referenceKindType == MethodHandleEntry.ReferenceKindType.NewInvokeSpecial;
+            return referenceKindType == ReferenceKindType.InvokeReference ||
+                   referenceKindType == ReferenceKindType.InvokeSpecial ||
+                   referenceKindType == ReferenceKindType.InvokeStatic ||
+                   referenceKindType == ReferenceKindType.InvokeVirtual ||
+                   referenceKindType == ReferenceKindType.NewInvokeSpecial;
         }
 
-        public static bool IsFieldReference(this MethodHandleEntry.ReferenceKindType referenceKindType)
+        public static bool IsFieldReference(this ReferenceKindType referenceKindType)
         {
-            return referenceKindType == MethodHandleEntry.ReferenceKindType.GetField ||
-                   referenceKindType == MethodHandleEntry.ReferenceKindType.GetStatic ||
-                   referenceKindType == MethodHandleEntry.ReferenceKindType.PutField ||
-                   referenceKindType == MethodHandleEntry.ReferenceKindType.PutStatic;
+            return referenceKindType == ReferenceKindType.GetField ||
+                   referenceKindType == ReferenceKindType.GetStatic ||
+                   referenceKindType == ReferenceKindType.PutField ||
+                   referenceKindType == ReferenceKindType.PutStatic;
         }
     }
 }
