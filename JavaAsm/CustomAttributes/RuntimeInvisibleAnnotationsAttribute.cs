@@ -16,7 +16,7 @@ namespace JavaAsm.CustomAttributes
             using var attributeDataStream = new MemoryStream();
 
             if (Annotations.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Number of annotations is too big: {Annotations.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(Annotations.Count), $"Number of annotations is too big: {Annotations.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (ushort)Annotations.Count);
             foreach (var annotation in Annotations)
                 annotation.Write(attributeDataStream, writerState);

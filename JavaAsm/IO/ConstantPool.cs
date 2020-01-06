@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BinaryEncoding;
@@ -48,9 +49,9 @@ namespace JavaAsm.IO
                 var entry = tag switch
                 {
                     EntryTag.Class => (Entry)new ClassEntry(stream),
-                    EntryTag.FieldRef => new FieldReferenceEntry(stream),
-                    EntryTag.MethodRef => new MethodReferenceEntry(stream),
-                    EntryTag.InterfaceMethodRef => new InterfaceMethodReferenceEntry(stream),
+                    EntryTag.FieldReference => new FieldReferenceEntry(stream),
+                    EntryTag.MethodReference => new MethodReferenceEntry(stream),
+                    EntryTag.InterfaceMethodReference => new InterfaceMethodReferenceEntry(stream),
                     EntryTag.String => new StringEntry(stream),
                     EntryTag.Integer => new IntegerEntry(stream),
                     EntryTag.Float => new FloatEntry(stream),
@@ -63,6 +64,7 @@ namespace JavaAsm.IO
                     EntryTag.InvokeDynamic => new InvokeDynamicEntry(stream),
                     _ => throw new ArgumentOutOfRangeException(nameof(tag))
                 };
+                Debug.Assert(entry.Tag == tag);
                 entries.Add(entry);
                 if (!(entry is LongEntry) && !(entry is DoubleEntry)) 
                     continue;
@@ -88,7 +90,7 @@ namespace JavaAsm.IO
         public void Write(Stream stream)
         {
             if (entries.Count > ushort.MaxValue)
-                throw new ArgumentException($"Too many entries: {entries.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(entries.Count), $"Too many entries: {entries.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(stream, (ushort)(entries.Count + 1));
             foreach (var entry in entries.Where(entry => !(entry is LongDoublePlaceholderEntry)))
             {

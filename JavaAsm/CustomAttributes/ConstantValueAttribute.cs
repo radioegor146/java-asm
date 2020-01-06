@@ -20,7 +20,7 @@ namespace JavaAsm.CustomAttributes
                 double doubleValue => writerState.ConstantPool.Find(new DoubleEntry(doubleValue)),
                 int integerValue => writerState.ConstantPool.Find(new IntegerEntry(integerValue)),
                 string stringValue => writerState.ConstantPool.Find(new StringEntry(new Utf8Entry(stringValue))),
-                _ => throw new ArgumentOutOfRangeException($"Can't encode value of type {Value.GetType()}")
+                _ => throw new ArgumentOutOfRangeException(nameof(Value), $"Can't encode value of type {Value.GetType()}")
             }, result);
             return result;
         }
@@ -39,7 +39,7 @@ namespace JavaAsm.CustomAttributes
                         DoubleEntry doubleEntry => doubleEntry.Value,
                         IntegerEntry integerEntry => integerEntry.Value,
                         StringEntry stringEntry => stringEntry.Value.String,
-                        _ => throw new ArgumentOutOfRangeException(
+                        _ => throw new ArgumentOutOfRangeException(nameof(entry),
                             $"Can't use constant pool entry of type {entry.GetType()} as constant value")
                     }
             };

@@ -29,7 +29,7 @@ namespace JavaAsm.CustomAttributes
             using var attributeDataStream = new MemoryStream();
 
             if (LocalVariableTypeTable.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Local variable table is too big: {LocalVariableTypeTable.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(LocalVariableTypeTable.Count), $"Local variable type table is too big: {LocalVariableTypeTable.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (ushort)LocalVariableTypeTable.Count);
             foreach (var localVariableTypeTableEntry in LocalVariableTypeTable)
             {

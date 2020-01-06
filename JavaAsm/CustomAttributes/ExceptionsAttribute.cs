@@ -16,7 +16,7 @@ namespace JavaAsm.CustomAttributes
             using var attributeDataStream = new MemoryStream();
 
             if (ExceptionTable.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(
+                throw new ArgumentOutOfRangeException(nameof(ExceptionTable.Count),
                     $"Exception table size too big: {ExceptionTable.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (ushort) ExceptionTable.Count);
             foreach (var exceptionClassName in ExceptionTable)

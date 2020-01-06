@@ -16,7 +16,7 @@ namespace JavaAsm.CustomAttributes
             using var attributeDataStream = new MemoryStream();
 
             if (Classes.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Local variable table is too big: {Classes.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(Classes.Count), $"Too many inner classes: {Classes.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (ushort)Classes.Count);
             foreach (var innerClass in Classes)
             {

@@ -24,7 +24,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
         internal override void Write(Stream stream, ClassWriterState writerState)
         {
             if (Table.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Table is too big: {Table.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(Table.Count), $"Table is too big: {Table.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(stream, (ushort) Table.Count);
             foreach (var entry in Table)
             {

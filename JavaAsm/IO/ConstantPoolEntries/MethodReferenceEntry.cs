@@ -6,7 +6,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
     {
         public MethodReferenceEntry(ClassEntry @class, NameAndTypeEntry nameAndType) : base(@class, nameAndType) { }
 
-        public override EntryTag Tag => EntryTag.MethodRef;
+        public override EntryTag Tag => EntryTag.MethodReference;
 
         public MethodReferenceEntry(Stream stream) : base(stream) { }
     }

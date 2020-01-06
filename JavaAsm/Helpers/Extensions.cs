@@ -11,7 +11,7 @@ namespace JavaAsm.Helpers
         public static void CheckInAndThrow<T>(this T value, string valueName, params T[] values)
         {
             if (!values.Contains(value))
-                throw new ArgumentOutOfRangeException($"{valueName} is not in [{string.Join(", ", values)}]");
+                throw new ArgumentOutOfRangeException(nameof(valueName), $"{valueName} is not in [{string.Join(", ", values)}]");
         }
 
         public static bool TryAdd<T>(this ICollection<T> collection, T value)

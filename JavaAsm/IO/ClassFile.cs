@@ -107,7 +107,7 @@ namespace JavaAsm.IO
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(attribute.Name)));
             attribute.Data = attribute.ParsedAttribute?.Save(state, scope) ?? attribute.Data;
             if (attribute.Data.LongLength > uint.MaxValue)
-                throw new ArgumentOutOfRangeException($"Attribute data length too big: {attribute.Data.LongLength} > {uint.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(attribute.Data.LongLength), $"Attribute data length too big: {attribute.Data.LongLength} > {uint.MaxValue}");
             Binary.BigEndian.Write(stream, (uint) attribute.Data.LongLength);
             stream.Write(attribute.Data);
         }
@@ -118,7 +118,7 @@ namespace JavaAsm.IO
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(fieldNode.Name)));
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(fieldNode.Descriptor.ToString())));
             if (fieldNode.Attributes.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Too many attributes: {fieldNode.Attributes.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(fieldNode.Attributes.Count), $"Too many attributes: {fieldNode.Attributes.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(stream, (ushort) fieldNode.Attributes.Count);
             foreach (var attriute in fieldNode.Attributes)
                 WriteAttribute(stream, attriute, state, AttributeScope.Field);
@@ -130,7 +130,7 @@ namespace JavaAsm.IO
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(methodNode.Name)));
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(methodNode.Descriptor.ToString())));
             if (methodNode.Attributes.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Too many attributes: {methodNode.Attributes.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(methodNode.Attributes.Count), $"Too many attributes: {methodNode.Attributes.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(stream, (ushort)methodNode.Attributes.Count);
             foreach (var attriute in methodNode.Attributes)
                 WriteAttribute(stream, attriute, state, AttributeScope.Method);
@@ -158,26 +158,26 @@ namespace JavaAsm.IO
                 constantPool.Find(new ClassEntry(new Utf8Entry(classNode.SuperName.Name))));
 
             if (classNode.Interfaces.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Too many interfaces: {classNode.Interfaces.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(classNode.Interfaces.Count), $"Too many interfaces: {classNode.Interfaces.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort) classNode.Interfaces.Count);
             foreach (var interfaceClassName in classNode.Interfaces)
                 Binary.BigEndian.Write(afterConstantPoolDataStream,
                     constantPool.Find(new ClassEntry(new Utf8Entry(interfaceClassName.Name))));
 
             if (classNode.Fields.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Too many fields: {classNode.Fields.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(classNode.Fields.Count), $"Too many fields: {classNode.Fields.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort) classNode.Fields.Count);
             foreach (var field in classNode.Fields)
                 WriteField(afterConstantPoolDataStream, field, state);
 
             if (classNode.Methods.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Too many methods: {classNode.Methods.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(classNode.Methods.Count), $"Too many methods: {classNode.Methods.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort)classNode.Methods.Count);
             foreach (var method in classNode.Methods)
                 WriteMethod(afterConstantPoolDataStream, method, state);
 
             if (classNode.Attributes.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Too many attributes: {classNode.Attributes.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(classNode.Attributes.Count), $"Too many attributes: {classNode.Attributes.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort)classNode.Attributes.Count);
             foreach (var attriute in classNode.Attributes)
                 WriteAttribute(afterConstantPoolDataStream, attriute, state, AttributeScope.Class);

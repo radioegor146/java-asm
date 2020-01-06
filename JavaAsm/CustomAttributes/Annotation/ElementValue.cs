@@ -142,7 +142,7 @@ namespace JavaAsm.CustomAttributes.Annotation
                     break;
                 case ElementValueTag.Array:
                     if (ArrayValue.Count > ushort.MaxValue)
-                        throw new ArgumentException($"Array size is too big: {ArrayValue.Count} > {ushort.MaxValue}");
+                        throw new ArgumentOutOfRangeException(nameof(ArrayValue.Count), $"Array size is too big: {ArrayValue.Count} > {ushort.MaxValue}");
                     Binary.BigEndian.Write(stream, (ushort) ArrayValue.Count);
                     foreach (var element in ArrayValue)
                         element.Write(stream, writerState);

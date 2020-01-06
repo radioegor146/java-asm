@@ -56,13 +56,15 @@ namespace JavaAsm.CustomAttributes
             using var attributeDataStream = new MemoryStream();
 
             if (BootstrapMethods.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Number of bootstrap methods is too big: {BootstrapMethods.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(BootstrapMethods.Count), $"Number of bootstrap methods is too big: {BootstrapMethods.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (ushort) BootstrapMethods.Count);
             foreach (var method in BootstrapMethods)
             {
+                Binary.BigEndian.Write(attributeDataStream,
+                    writerState.ConstantPool.Find(method.BootstrapMethodReference.ToConstantPool()));
                 if (method.Arguments.Count > ushort.MaxValue)
-                    throw new ArgumentOutOfRangeException(
-                        $"Number of annotations is too big: {method.Arguments.Count} > {ushort.MaxValue}");
+                    throw new ArgumentOutOfRangeException(nameof(method.Arguments.Count),
+                        $"Number of arguments is too big: {method.Arguments.Count} > {ushort.MaxValue}");
                 Binary.BigEndian.Write(attributeDataStream, (ushort) method.Arguments.Count);
                 foreach (var argument in method.Arguments)
                 {
@@ -75,7 +77,7 @@ namespace JavaAsm.CustomAttributes
                         double doubleValue => new DoubleEntry(doubleValue),
                         Handle handle => handle.ToConstantPool(),
                         MethodDescriptor methodDescriptor => new MethodTypeEntry(new Utf8Entry(methodDescriptor.ToString())),
-                        _ => throw new ArgumentOutOfRangeException($"Can't encode value of type {argument.GetType()}")
+                        _ => throw new ArgumentOutOfRangeException(nameof(argument), $"Can't encode value of type {argument.GetType()}")
                     }));
                 }
             }
@@ -114,7 +116,8 @@ namespace JavaAsm.CustomAttributes
                         DoubleEntry doubleEntry => doubleEntry.Value,
                         MethodHandleEntry methodHandleEntry => Handle.FromConstantPool(methodHandleEntry),
                         MethodTypeEntry methodTypeEntry => MethodDescriptor.Parse(methodTypeEntry.Descriptor.String),
-                        _ => throw new ArgumentException($"Entry of type {argumentValueEntry.Tag} is not supported for argument of bootstrap method")
+                        _ => throw new ArgumentOutOfRangeException(nameof(argumentValueEntry), 
+                            $"Entry of type {argumentValueEntry.Tag} is not supported for argument of bootstrap method")
                     });
                 }
                 attribute.BootstrapMethods.Add(bootstrapMethod);

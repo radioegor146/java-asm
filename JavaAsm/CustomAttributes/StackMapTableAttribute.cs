@@ -73,14 +73,107 @@ namespace JavaAsm.CustomAttributes
 
             public List<VerificationElement> Locals { get; } = new List<VerificationElement>();
 
-            public int? ChopK { get; set; }
+            public byte? ChopK { get; set; }
         }
 
-        public List<StackMapFrame> Entries { get; } = new List<StackMapFrame>();
+        public List<StackMapFrame> Entries { get; set; } = new List<StackMapFrame>();
+
+        internal static void WriteVerificationElement(Stream stream, ClassWriterState writerState, VerificationElement verificationElement)
+        {
+            stream.WriteByte((byte) verificationElement.Type);
+            switch (verificationElement)
+            {
+                case ObjectVerificationElement objectVerificationElement:
+                    Binary.BigEndian.Write(stream,
+                        writerState.ConstantPool.Find(
+                            new ClassEntry(new Utf8Entry(objectVerificationElement.ObjectClass.Name))));
+                    break;
+                case UninitializedVerificationElement uninitializedVerificationElement:
+                    Binary.BigEndian.Write(stream, uninitializedVerificationElement.NewInstructionOffset);
+                    break;
+                case SimpleVerificationElement _:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(verificationElement));
+            }
+        }
 
         internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            throw new NotImplementedException();
+            using var attributeDataStream = new MemoryStream();
+
+            if (Entries.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(Entries.Count), $"Too many entries for StackMapTable: {Entries.Count} > {ushort.MaxValue}");
+
+            Binary.BigEndian.Write(attributeDataStream, (ushort) Entries.Count);
+
+            foreach (var entry in Entries)
+            {
+                switch (entry.Type)
+                {
+                    case FrameType.Same:
+                        if (entry.OffsetDelta < 64)
+                            attributeDataStream.WriteByte((byte) entry.OffsetDelta);
+                        else
+                        {
+                            attributeDataStream.WriteByte(251);
+                            Binary.BigEndian.Write(attributeDataStream, entry.OffsetDelta);
+                        }
+                        break;
+                    case FrameType.SameLocals1StackItem:
+                        if (entry.OffsetDelta < 64)
+                            attributeDataStream.WriteByte((byte) (entry.OffsetDelta + 64));
+                        else
+                        {
+                            attributeDataStream.WriteByte(247);
+                            Binary.BigEndian.Write(attributeDataStream, entry.OffsetDelta);
+                        }
+
+                        WriteVerificationElement(attributeDataStream, writerState, entry.Stack[0]);
+                        break;
+                    case FrameType.Chop:
+                        if (entry.ChopK == null)
+                            throw new ArgumentNullException(nameof(entry.ChopK));
+                        if (entry.ChopK < 1 || entry.ChopK > 3)
+                            throw new ArgumentOutOfRangeException(nameof(entry.ChopK),
+                                $"Chop K was < 1 || > 3: {entry.ChopK}");
+
+                        attributeDataStream.WriteByte((byte) (251 - entry.ChopK));
+                        Binary.BigEndian.Write(attributeDataStream, entry.OffsetDelta);
+                        break;
+                    case FrameType.Append:
+                        if (entry.Locals.Count < 1 || entry.Locals.Count > 3)
+                            throw new ArgumentOutOfRangeException(nameof(entry.Locals),
+                                $"Number of locals was < 1 || > 3: {entry.Locals}");
+                        attributeDataStream.WriteByte((byte) (251 + entry.Locals.Count));
+                        Binary.BigEndian.Write(attributeDataStream, entry.OffsetDelta);
+                        foreach (var verificationElement in entry.Locals)
+                            WriteVerificationElement(attributeDataStream, writerState, verificationElement);
+                        break;
+                    case FrameType.Full:
+                        attributeDataStream.WriteByte(255);
+                        Binary.BigEndian.Write(attributeDataStream, entry.OffsetDelta);
+
+                        if (entry.Locals.Count > ushort.MaxValue)
+                            throw new ArgumentOutOfRangeException(nameof(entry.Locals.Count),
+                                $"Too many entries in frame's locals: {entry.Locals.Count} > {ushort.MaxValue}");
+                        Binary.BigEndian.Write(attributeDataStream, (ushort) entry.Locals.Count);
+                        foreach (var verificationElement in entry.Locals)
+                            WriteVerificationElement(attributeDataStream, writerState, verificationElement);
+
+                        if (entry.Stack.Count > ushort.MaxValue)
+                            throw new ArgumentOutOfRangeException(nameof(entry.Stack.Count),
+                                $"Too many entries in frame's stack: {entry.Stack.Count} > {ushort.MaxValue}");
+                        Binary.BigEndian.Write(attributeDataStream, (ushort) entry.Stack.Count);
+                        foreach (var verificationElement in entry.Stack)
+                            WriteVerificationElement(attributeDataStream, writerState, verificationElement);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(entry.Type));
+                }
+            }
+
+            return attributeDataStream.ToArray();
         }
     }
 
@@ -108,7 +201,7 @@ namespace JavaAsm.CustomAttributes
                 {
                     NewInstructionOffset = Binary.BigEndian.ReadUInt16(stream)
                 },
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new ArgumentOutOfRangeException(nameof(verificationElementType))
             };
         }
 
@@ -116,9 +209,9 @@ namespace JavaAsm.CustomAttributes
         {
             var attribute = new StackMapTableAttribute();
 
-            var parametersCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
-            attribute.Entries.Capacity = parametersCount;
-            for (var i = 0; i < parametersCount; i++)
+            var stackMapTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
+            attribute.Entries.Capacity = stackMapTableSize;
+            for (var i = 0; i < stackMapTableSize; i++)
             {
                 StackMapTableAttribute.StackMapFrame stackMapFrame;
                 var frameTypeByte = attributeDataStream.ReadByteFully();
@@ -135,7 +228,7 @@ namespace JavaAsm.CustomAttributes
                     stackMapFrame = new StackMapTableAttribute.StackMapFrame
                     {
                         Type = StackMapTableAttribute.FrameType.SameLocals1StackItem,
-                        OffsetDelta = frameTypeByte
+                        OffsetDelta = (ushort) (frameTypeByte - 64)
                     };
 
                     stackMapFrame.Stack.Add(ReadVerificationElement(attributeDataStream, readerState));
@@ -156,7 +249,7 @@ namespace JavaAsm.CustomAttributes
                     {
                         Type = StackMapTableAttribute.FrameType.Chop,
                         OffsetDelta = Binary.BigEndian.ReadUInt16(attributeDataStream),
-                        ChopK = 251 - frameTypeByte
+                        ChopK = (byte) (251 - frameTypeByte)
                     };
                 }
                 else if (frameTypeByte == 251)
@@ -176,7 +269,9 @@ namespace JavaAsm.CustomAttributes
                     };
 
                     for (var j = 0; j < frameTypeByte - 251; j++)
+                    {
                         stackMapFrame.Locals.Add(ReadVerificationElement(attributeDataStream, readerState));
+                    }
                 }
                 else if (frameTypeByte == 255)
                 {
@@ -191,7 +286,7 @@ namespace JavaAsm.CustomAttributes
                         stackMapFrame.Locals.Add(ReadVerificationElement(attributeDataStream, readerState));
                     var stackCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
                     for (var j = 0; j < stackCount; j++)
-                        stackMapFrame.Locals.Add(ReadVerificationElement(attributeDataStream, readerState));
+                        stackMapFrame.Stack.Add(ReadVerificationElement(attributeDataStream, readerState));
                 }
                 else
                     throw new ArgumentOutOfRangeException(nameof(frameTypeByte));

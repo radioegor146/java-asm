@@ -23,12 +23,12 @@ namespace JavaAsm.CustomAttributes
             using var attributeDataStream = new MemoryStream();
 
             if (Parameters.Count > byte.MaxValue)
-                throw new ArgumentOutOfRangeException($"Number of parameters is too big: {Parameters.Count} > {byte.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(Parameters.Count), $"Number of parameters is too big: {Parameters.Count} > {byte.MaxValue}");
             attributeDataStream.WriteByte((byte)Parameters.Count);
             foreach (var parameter in Parameters)
             {
                 if (parameter.Annotations.Count > ushort.MaxValue)
-                    throw new ArgumentOutOfRangeException(
+                    throw new ArgumentOutOfRangeException(nameof(parameter.Annotations.Count),
                         $"Number of annotations is too big: {parameter.Annotations.Count} > {ushort.MaxValue}");
                 Binary.BigEndian.Write(attributeDataStream, (ushort)parameter.Annotations.Count);
                 foreach (var annotation in parameter.Annotations)

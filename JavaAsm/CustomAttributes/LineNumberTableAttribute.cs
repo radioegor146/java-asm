@@ -22,7 +22,7 @@ namespace JavaAsm.CustomAttributes
             using var attributeDataStream = new MemoryStream();
 
             if (LineNumberTable.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Line number table too big: {LineNumberTable.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(LineNumberTable.Count), $"Line number table too big: {LineNumberTable.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (ushort)LineNumberTable.Count);
             foreach (var exceptionTableEntry in LineNumberTable)
             {

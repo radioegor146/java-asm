@@ -3,9 +3,9 @@
     internal enum EntryTag : byte
     {
         Class = 7,
-        FieldRef = 9,
-        MethodRef = 10,
-        InterfaceMethodRef = 11,
+        FieldReference = 9,
+        MethodReference = 10,
+        InterfaceMethodReference = 11,
         String = 8,
         Integer = 3,
         Float = 4,

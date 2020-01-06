@@ -95,7 +95,7 @@ namespace JavaAsm
                 var readWriteCounter = new ReadWriteCountStream(stream);
                 ParsedAttribute = predefinedAttributes[(Name, scope)].Parse(readWriteCounter, dataLength, readerState, scope);
                 if (readWriteCounter.ReadBytes != dataLength)
-                    throw new ArgumentOutOfRangeException(
+                    throw new ArgumentOutOfRangeException(nameof(dataLength),
                         $"Wrong data length of attribute {Name} in {scope}: Given {dataLength}, Read: {readWriteCounter.ReadBytes}");
             }
             else

@@ -24,7 +24,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
             nameAndTypeIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 
-        public override EntryTag Tag => EntryTag.FieldRef;
+        public override EntryTag Tag => EntryTag.InvokeDynamic;
 
         public override void ProcessFromConstantPool(ConstantPool constantPool)
         {

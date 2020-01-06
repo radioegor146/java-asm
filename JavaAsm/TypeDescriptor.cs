@@ -87,12 +87,14 @@ namespace JavaAsm
                     offset++;
                     return new TypeDescriptor(new ClassName(className.ToString()), arrayDepth);
                 default:
-                    throw new ArgumentException($"Wrong type char: {typeChar}");
+                    throw new ArgumentOutOfRangeException(nameof(typeChar), $"Wrong type char: {typeChar}");
             }
 
             offset++;
             return new TypeDescriptor(primitiveType, arrayDepth);
         }
+
+        public int SizeOnStack => PrimitiveType == JavaAsm.PrimitiveType.Double || PrimitiveType == JavaAsm.PrimitiveType.Long ? 2 : 1;
 
         public override string ToString()
         {

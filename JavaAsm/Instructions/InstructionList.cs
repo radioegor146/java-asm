@@ -59,7 +59,7 @@ namespace JavaAsm.Instructions
         public void InsertBefore(Instruction instruction, Instruction toInsert)
         {
             if (instruction.OwnerList != this)
-                throw new ArgumentException("Position instruction does not belong to that list");
+                throw new ArgumentException("Position instruction does not belong to that list", nameof(instruction.OwnerList));
             toInsert.OwnerList = this;
             toInsert.Next = instruction;
             toInsert.Previous = instruction.Previous;
@@ -75,7 +75,7 @@ namespace JavaAsm.Instructions
         public void InsertAfter(Instruction instruction, Instruction toInsert)
         {
             if (instruction.OwnerList != this)
-                throw new ArgumentException("Position instruction does not belong to that list");
+                throw new ArgumentException("Position instruction does not belong to that list", nameof(instruction.OwnerList));
             toInsert.OwnerList = this;
             toInsert.Previous = instruction;
             toInsert.Next = instruction.Next;
@@ -91,7 +91,7 @@ namespace JavaAsm.Instructions
         public void Remove(Instruction instruction)
         {
             if (instruction.OwnerList != this)
-                throw new ArgumentException("Position instruction does not belong to that list");
+                throw new ArgumentException("Instruction does not belong to that list", nameof(instruction.OwnerList));
             instruction.OwnerList = null;
             if (instruction.Next != null)
                 instruction.Next.Previous = instruction.Previous;

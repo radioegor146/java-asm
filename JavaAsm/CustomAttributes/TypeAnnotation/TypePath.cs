@@ -42,7 +42,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
         internal void Write(Stream stream, ClassWriterState writerState)
         {
             if (Path.Count > byte.MaxValue)
-                throw new ArgumentOutOfRangeException($"Path is too big: {Path.Count} > {byte.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(Path.Count), $"Path is too big: {Path.Count} > {byte.MaxValue}");
             stream.WriteByte((byte) Path.Count);
             foreach (var part in Path)
             {

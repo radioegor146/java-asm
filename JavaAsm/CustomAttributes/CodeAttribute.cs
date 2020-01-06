@@ -38,12 +38,12 @@ namespace JavaAsm.CustomAttributes
             Binary.BigEndian.Write(attributeDataStream, MaxLocals);
 
             if (Code.LongLength > uint.MaxValue)
-                throw new ArgumentOutOfRangeException($"Code length too big: {Code.LongLength} > {uint.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(Code.LongLength), $"Code length too big: {Code.LongLength} > {uint.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (uint) Code.LongLength);
             attributeDataStream.Write(Code);
 
             if (ExceptionTable.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Exception table too big: {ExceptionTable.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(ExceptionTable.Count), $"Exception table too big: {ExceptionTable.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (ushort) ExceptionTable.Count);
             foreach (var exceptionTableEntry in ExceptionTable)
             {
@@ -55,7 +55,7 @@ namespace JavaAsm.CustomAttributes
             }
 
             if (Attributes.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException($"Too many attributes: {Attributes.Count} > {ushort.MaxValue}");
+                throw new ArgumentOutOfRangeException(nameof(Attributes.Count), $"Too many attributes: {Attributes.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(attributeDataStream, (ushort) Attributes.Count);
             foreach (var attriute in Attributes)
                 ClassFile.WriteAttribute(attributeDataStream, attriute, writerState, AttributeScope.Code);

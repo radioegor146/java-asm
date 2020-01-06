@@ -111,7 +111,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
             TypePath.Write(stream, writerState);
 
             if (ElementValuePairs.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(
+                throw new ArgumentOutOfRangeException(nameof(ElementValuePairs.Count),
                     $"Too many ElementValues: {ElementValuePairs.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(stream, (ushort)ElementValuePairs.Count);
             foreach (var elementValuePair in ElementValuePairs)

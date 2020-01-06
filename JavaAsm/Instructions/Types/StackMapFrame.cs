@@ -62,13 +62,11 @@ namespace JavaAsm.Instructions.Types
 
         public FrameType Type { get; set; }
 
-        public ushort OffsetDelta { get; set; }
-
         public List<VerificationElement> Stack { get; } = new List<VerificationElement>();
 
         public List<VerificationElement> Locals { get; } = new List<VerificationElement>();
 
-        public int? ChopK { get; set; }
+        public byte? ChopK { get; set; }
 
         public override string ToString()
         {
