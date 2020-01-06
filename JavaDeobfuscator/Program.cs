@@ -2,6 +2,8 @@
 using System.Linq;
 using System.IO;
 using System.IO.Compression;
+using JavaAsm;
+using JavaAsm.Commons;
 using JavaAsm.IO;
 
 namespace JavaDeobfuscator
@@ -28,6 +30,22 @@ namespace JavaDeobfuscator
                 }
 
                 var result = ClassFile.ParseClass(inputEntryStream);
+
+                foreach (var method in result.Methods.Where(method => !method.Access.HasFlag(MethodAccessModifiers.Abstract)
+                                                                      && !method.Access.HasFlag(MethodAccessModifiers.Native)))
+                {
+                    try
+                    {
+                        var computeResult = MethodHelper.ComputeMaxStackAndLocals(method);
+                        if (computeResult.MaxStack != method.MaxStack || computeResult.MaxLocals != method.MaxLocals)
+                            Console.WriteLine($"{computeResult} != ({method.MaxLocals}, {method.MaxStack})");
+                    } 
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"{method.Instructions.Count} {e}");
+                    }
+                }
+
                 var dataStream = new MemoryStream();
                 ClassFile.WriteClass(dataStream, result);
                 dataStream.Position = 0;

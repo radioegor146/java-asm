@@ -44,6 +44,8 @@ namespace JavaAsm.Instructions
 
         public Instruction Last { get; private set; }
 
+        public int Count { get; private set; }
+
         public void Add(Instruction instruction)
         {
             instruction.OwnerList = this;
@@ -54,6 +56,7 @@ namespace JavaAsm.Instructions
             Last = instruction;
             if (instruction.Previous != null)
                 instruction.Previous.Next = instruction;
+            Count++;
         }
 
         public void InsertBefore(Instruction instruction, Instruction toInsert)
@@ -70,6 +73,7 @@ namespace JavaAsm.Instructions
 
             if (ReferenceEquals(instruction, First))
                 First = toInsert;
+            Count++;
         }
 
         public void InsertAfter(Instruction instruction, Instruction toInsert)
@@ -86,6 +90,7 @@ namespace JavaAsm.Instructions
 
             if (ReferenceEquals(instruction, Last))
                 Last = toInsert;
+            Count++;
         }
 
         public void Remove(Instruction instruction)
@@ -101,6 +106,7 @@ namespace JavaAsm.Instructions
                 First = instruction.Next;
             if (ReferenceEquals(instruction, Last))
                 Last = instruction.Previous;
+            Count--;
         }
 
         public IEnumerator<Instruction> GetEnumerator()
