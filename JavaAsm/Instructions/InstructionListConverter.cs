@@ -434,9 +434,13 @@ namespace JavaAsm.Instructions
                             {
                                 methodReferenceEntry = readerState.ConstantPool.GetEntry<InterfaceMethodReferenceEntry>(
                                     Binary.BigEndian.ReadUInt16(codeStream));
-                                codeStream.ReadByteFully();
+                                var sizeOfArguments = codeStream.ReadByteFully();
+                                var requiredSizeOfArguments =
+                                    MethodDescriptor.Parse(methodReferenceEntry.NameAndType.Descriptor.String).ArgumentsTypes.Sum(x => x.SizeOnStack) + 1;
+                                if (sizeOfArguments != requiredSizeOfArguments)
+                                    throw new ArgumentOutOfRangeException(nameof(sizeOfArguments), $"Required size does not equal to provided: {requiredSizeOfArguments} > {sizeOfArguments}");
                                 if (codeStream.ReadByteFully() != 0)
-                                    throw new Exception("INVOKEINTERFACE 4th byte is not 0");
+                                    throw new ArgumentException("INVOKEINTERFACE 4th byte is not 0");
                             } 
                             else
                             {

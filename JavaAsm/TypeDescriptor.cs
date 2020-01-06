@@ -94,7 +94,7 @@ namespace JavaAsm
             return new TypeDescriptor(primitiveType, arrayDepth);
         }
 
-        public int SizeOnStack => PrimitiveType == JavaAsm.PrimitiveType.Double || PrimitiveType == JavaAsm.PrimitiveType.Long ? 2 : 1;
+        public int SizeOnStack => ArrayDepth == 0 && (PrimitiveType == JavaAsm.PrimitiveType.Double || PrimitiveType == JavaAsm.PrimitiveType.Long) ? 2 : 1;
 
         public override string ToString()
         {
