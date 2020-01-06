@@ -9,12 +9,6 @@
         Java5,
         Java6,
         Java7,
-        Java8,
-        Java9,
-        Java10,
-        Java11,
-        Java12,
-        Java13,
-        Java14
+        Java8
     }
 }

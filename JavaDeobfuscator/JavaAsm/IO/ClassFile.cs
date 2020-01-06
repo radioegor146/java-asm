@@ -35,7 +35,6 @@ namespace JavaDeobfuscator.JavaAsm.IO
             fieldNode.Attributes.Capacity = attributesCount;
             for (var i = 0; i < attributesCount; i++)
                 fieldNode.Attributes.Add(ParseAttribute(stream, state, AttributeScope.Field));
-            fieldNode.ParseAttributes(state);
             return fieldNode;
         }
 
@@ -53,7 +52,6 @@ namespace JavaDeobfuscator.JavaAsm.IO
             methodNode.Attributes.Capacity = attributesCount;
             for (var i = 0; i < attributesCount; i++)
                 methodNode.Attributes.Add(ParseAttribute(stream, state, AttributeScope.Method));
-            methodNode.ParseAttributes(state);
             return methodNode;
         }
 
@@ -68,7 +66,10 @@ namespace JavaDeobfuscator.JavaAsm.IO
             
             result.MinorVersion = Binary.BigEndian.ReadUInt16(stream);
             result.MajorVersion = (ClassVersion) Binary.BigEndian.ReadUInt16(stream);
-            
+
+            if (result.MajorVersion > ClassVersion.Java8)
+                throw new Exception($"Wrong Java version: {result.MajorVersion}");
+
             var constantPool = new ConstantPool();
             constantPool.Read(stream);
             state.ConstantPool = constantPool;
@@ -98,7 +99,7 @@ namespace JavaDeobfuscator.JavaAsm.IO
             for (var i = 0; i < attributesCount; i++)
                 result.Attributes.Add(ParseAttribute(stream, state, AttributeScope.Class));
 
-            result.ParseAttributes(state);
+            result.Parse(state);
 
             return result;
         }
@@ -146,8 +147,11 @@ namespace JavaDeobfuscator.JavaAsm.IO
             var constantPool = new ConstantPool();
             var state = new ClassWriterState
             {
+                ClassNode = classNode,
                 ConstantPool = constantPool
             };
+
+            classNode.Save(state);
 
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort) classNode.Access);
             Binary.BigEndian.Write(afterConstantPoolDataStream,

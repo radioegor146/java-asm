@@ -12,15 +12,15 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
 {
     internal class InstructionListConverter
     {
-        private static AttributeNode GetAttribute(CodeAttribute codeAttribute, string name)
+        private static AttributeNode GetAttribute(List<AttributeNode> attributes, string name)
         {
-            var attribute = codeAttribute.Attributes.FirstOrDefault(a => a.Name == name);
+            var attribute = attributes.FirstOrDefault(a => a.Name == name);
             if (attribute != null)
-                codeAttribute.Attributes.Remove(attribute);
+                attributes.Remove(attribute);
             return attribute;
         }
 
-        public static void ParseInstructionList(MethodNode parseTo, ClassReaderState readerState, CodeAttribute codeAttribute)
+        public static void ParseCodeAttribute(MethodNode parseTo, ClassReaderState readerState, CodeAttribute codeAttribute)
         {
             parseTo.MaxStack = codeAttribute.MaxStack;
             parseTo.MaxLocals = codeAttribute.MaxLocals;
@@ -29,8 +29,8 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
             if (codeAttribute.Code.Length == 0)
                 return;
 
-            var bootstrapMethodsAttribute =
-                GetAttribute(codeAttribute, PredefinedAttributeNames.BootstrapMethods)?.ParsedAttribute as BootstrapMethodsAttribute;
+            var bootstrapMethodsAttribute = readerState.ClassNode.Attributes
+                .FirstOrDefault(x => x.Name == PredefinedAttributeNames.BootstrapMethods)?.ParsedAttribute as BootstrapMethodsAttribute;
 
             var instructions = new Dictionary<long, Instruction>();
             var labels = new Dictionary<long, Label>();
@@ -276,10 +276,10 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.IINC:
                         if (wideFlag)
                         {
-                            instructions.Add(currentPosition, new IncrementInstruction
+                            instructions.Add(currentPosition - 1, new IncrementInstruction
                             {
                                 VariableIndex = Binary.BigEndian.ReadUInt16(codeStream),
-                                Value = Binary.BigEndian.ReadUInt16(codeStream)
+                                Value = Binary.BigEndian.ReadInt16(codeStream)
                             });
                             wideFlag = false;
                         } 
@@ -321,6 +321,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                         if (wideFlag)
                         {
                             variableIndex = Binary.BigEndian.ReadUInt16(codeStream);
+                            currentPosition--;
                             wideFlag = false;
                         } 
                         else
@@ -339,7 +340,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.ALOAD_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.ALOAD)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.ALOAD_0)
+                            VariableIndex = opcode - Opcode.ALOAD_0
                         });
                         break;
                     case Opcode.ASTORE_0:
@@ -348,7 +349,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.ASTORE_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.ASTORE)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.ASTORE_0)
+                            VariableIndex = opcode - Opcode.ASTORE_0
                         });
                         break;
                     case Opcode.DLOAD_0:
@@ -357,7 +358,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.DLOAD_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.DLOAD)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.DLOAD_0)
+                            VariableIndex = opcode - Opcode.DLOAD_0
                         });
                         break;
                     case Opcode.DSTORE_0:
@@ -366,7 +367,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.DSTORE_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.DSTORE)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.DSTORE_0)
+                            VariableIndex = opcode - Opcode.DSTORE_0
                         });
                         break;
                     case Opcode.FLOAD_0:
@@ -375,7 +376,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.FLOAD_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.FLOAD)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.FLOAD_0)
+                            VariableIndex = opcode - Opcode.FLOAD_0
                         });
                         break;
                     case Opcode.FSTORE_0:
@@ -384,7 +385,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.FSTORE_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.FSTORE)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.FSTORE_0)
+                            VariableIndex = opcode - Opcode.FSTORE_0
                         });
                         break;
                     case Opcode.ILOAD_0:
@@ -393,7 +394,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.ILOAD_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.ILOAD)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.ILOAD_0)
+                            VariableIndex = opcode - Opcode.ILOAD_0
                         });
                         break;
                     case Opcode.ISTORE_0:
@@ -402,7 +403,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.ISTORE_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.ISTORE)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.ISTORE_0)
+                            VariableIndex = opcode - Opcode.ISTORE_0
                         });
                         break;
                     case Opcode.LLOAD_0:
@@ -411,7 +412,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.LLOAD_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.LLOAD)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.LLOAD_0)
+                            VariableIndex = opcode - Opcode.LLOAD_0
                         });
                         break;
                     case Opcode.LSTORE_0:
@@ -420,7 +421,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case Opcode.LSTORE_3:
                         instructions.Add(currentPosition, new VariableInstruction(Opcode.LSTORE)
                         {
-                            VariableIndex = (ushort)(opcode - Opcode.LSTORE_0)
+                            VariableIndex = opcode - Opcode.LSTORE_0
                         });
                         break;
 
@@ -520,8 +521,6 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                         throw new ArgumentOutOfRangeException(nameof(opcode), "wut?!");
 
                     case Opcode.BREAKPOINT:
-                    case Opcode.IMPDEP1:
-                    case Opcode.IMPDEP2:
                         throw new ArgumentOutOfRangeException(nameof(opcode), $"Opcode {opcode} is currently not supported");
 
                     case Opcode.WIDE:
@@ -559,25 +558,122 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
             var labelList = labels.OrderBy(x => x.Key).ToList();
             var labelListPosition = 0;
 
-            var lineNumberTable = (GetAttribute(codeAttribute, PredefinedAttributeNames.LineNumberTable)?.ParsedAttribute
-                as LineNumberTableAttribute)?.LineNumberTable?.OrderBy(x => x.StartPc).ToList();
+            var lineNumberTable = ((GetAttribute(codeAttribute.Attributes, PredefinedAttributeNames.LineNumberTable)?.ParsedAttribute
+                as LineNumberTableAttribute)?.LineNumberTable ?? new List<LineNumberTableAttribute.LineNumberTableEntry>()).OrderBy(x => x.StartPc).ToList();
             var lineNumberTablePosition = 0;
+
+            var stackMapFrames = new List<(int Position, StackMapFrame Frame)>();
+            var stackMapFramesPosition = 0;
+
+            {
+                var stackMapTable = (GetAttribute(codeAttribute.Attributes, PredefinedAttributeNames.StackMapTable)?.ParsedAttribute
+                        as StackMapTableAttribute)?.Entries;
+                if (stackMapTable != null)
+                {
+                    stackMapFrames.Capacity = stackMapTable.Count;
+                    var position = 0;
+                    foreach (var entry in stackMapTable)
+                    {
+                        position += entry.OffsetDelta;
+                        var stackMapFrame = new StackMapFrame
+                        {
+                            Type = (FrameType) entry.Type,
+                            ChopK = entry.ChopK
+                        };
+                        stackMapFrame.Locals.Capacity = entry.Locals.Count;
+                        foreach (var local in entry.Locals)
+                        {
+                            VerificationElement verificationElement;
+
+                            switch (local)
+                            {
+                                case StackMapTableAttribute.SimpleVerificationElement simpleVerificationElement:
+                                    verificationElement = new SimpleVerificationElement((VerificationElementType) simpleVerificationElement.Type);
+                                    break;
+                                case StackMapTableAttribute.ObjectVerificationElement objectVerificationElement:
+                                    verificationElement = new ObjectVerificationElement
+                                    {
+                                        ObjectClass = objectVerificationElement.ObjectClass
+                                    };
+                                    break;
+                                case StackMapTableAttribute.UninitializedVerificationElement uninitializedVerificationElement:
+                                {
+                                    var newInstruction = instructions[uninitializedVerificationElement.NewInstructionOffset] as
+                                        TypeInstruction;
+                                    if (newInstruction.Opcode != Opcode.NEW)
+                                        throw new ArgumentException(
+                                            $"New instruction required by verification element is not NEW: {newInstruction.Opcode}");
+                                    verificationElement = new UninitializedVerificationElement
+                                    {
+                                        NewInstruction = newInstruction
+                                    };
+                                    break;
+                                }
+                                default:
+                                    throw new ArgumentException(nameof(verificationElement));
+
+                            }
+
+                            stackMapFrame.Locals.Add(verificationElement);
+                        }
+                        stackMapFrame.Stack.Capacity = entry.Stack.Count;
+                        foreach (var local in entry.Stack)
+                        {
+                            VerificationElement verificationElement;
+
+                            switch (local)
+                            {
+                                case StackMapTableAttribute.SimpleVerificationElement simpleVerificationElement:
+                                    verificationElement = new SimpleVerificationElement((VerificationElementType) simpleVerificationElement.Type);
+                                    break;
+                                case StackMapTableAttribute.ObjectVerificationElement objectVerificationElement:
+                                    verificationElement = new ObjectVerificationElement
+                                    {
+                                        ObjectClass = objectVerificationElement.ObjectClass
+                                    };
+                                    break;
+                                case StackMapTableAttribute.UninitializedVerificationElement uninitializedVerificationElement:
+                                    {
+                                        var newInstruction = instructions[uninitializedVerificationElement.NewInstructionOffset] as
+                                            TypeInstruction;
+                                        if (newInstruction.Opcode != Opcode.NEW)
+                                            throw new ArgumentException(
+                                                $"New instruction required by verification element is not NEW: {newInstruction.Opcode}");
+                                        verificationElement = new UninitializedVerificationElement
+                                        {
+                                            NewInstruction = newInstruction
+                                        };
+                                        break;
+                                    }
+                                default:
+                                    throw new ArgumentException(nameof(verificationElement));
+
+                            }
+
+                            stackMapFrame.Stack.Add(verificationElement);
+                        }
+                        stackMapFrames.Add((position, stackMapFrame));
+                    }
+                }
+            }
 
             foreach (var (position, instruction) in instructionList)
             {
-                while (labelListPosition < labelList.Count && position >= labelList[labelListPosition].Key)
-                    parseTo.Instructions.Add(labelList[labelListPosition++].Value);
                 while (lineNumberTablePosition < lineNumberTable.Count &&
                        position >= lineNumberTable[lineNumberTablePosition].StartPc)
                     parseTo.Instructions.Add(new LineNumber
                     {
                         Line = lineNumberTable[lineNumberTablePosition++].LineNumber
                     });
+                while (labelListPosition < labelList.Count && position >= labelList[labelListPosition].Key)
+                    parseTo.Instructions.Add(labelList[labelListPosition++].Value);
+                while (stackMapFramesPosition < stackMapFrames.Count && position >= stackMapFrames[stackMapFramesPosition].Position)
+                    parseTo.Instructions.Add(stackMapFrames[stackMapFramesPosition++].Frame);
                 parseTo.Instructions.Add(instruction);
             }
         }
 
-        public static CodeAttribute GenerateCodeAttribute(MethodNode source, ClassWriterState writerState)
+        public static CodeAttribute SaveCodeAttribute(MethodNode source, ClassWriterState writerState)
         {
             var codeAttribute = new CodeAttribute
             {
@@ -613,6 +709,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                             string stringValue => new StringEntry(new Utf8Entry(stringValue)),
                             long longValue => new LongEntry(longValue),
                             double doubleValue => new DoubleEntry(doubleValue),
+                            ClassName className => new ClassEntry(new Utf8Entry(className.Name)),
                             Handle handle => handle.ToConstantPool(),
                             MethodDescriptor methodDescriptor => new MethodTypeEntry(new Utf8Entry(methodDescriptor.ToString())),
                             _ => throw new ArgumentOutOfRangeException($"Can't encode value of type {ldcInstruction.Value.GetType()}")
@@ -622,7 +719,21 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                         writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(multiANewArrayInstruction.Type.Name)));
                         break;
                     case InvokeDynamicInstruction invokeDynamicInstruction:
-                        writerState.ConstantPool.Find(new InvokeDynamicEntry(0, // TODO
+                        var bootstrapMethodAttributeNode =
+                            writerState.ClassNode.Attributes.FirstOrDefault(x =>
+                                x.Name == PredefinedAttributeNames.BootstrapMethods);
+                        if (bootstrapMethodAttributeNode == null)
+                            writerState.ClassNode.Attributes.Add(bootstrapMethodAttributeNode = new AttributeNode
+                            {
+                                Name = PredefinedAttributeNames.BootstrapMethods,
+                                ParsedAttribute = new BootstrapMethodsAttribute()
+                            });
+                        if (!(bootstrapMethodAttributeNode.ParsedAttribute is BootstrapMethodsAttribute bootstrapMethodAttribute))
+                            throw new Exception("BootstrapMethods attribute exists, but in not-parsed state");
+                        var bootstrapMethod = new BootstrapMethod(invokeDynamicInstruction.BootstrapMethod, invokeDynamicInstruction.BootstrapMethodArgs);
+                        if (!bootstrapMethodAttribute.BootstrapMethods.Contains(bootstrapMethod))
+                            bootstrapMethodAttribute.BootstrapMethods.Add(bootstrapMethod);
+                        writerState.ConstantPool.Find(new InvokeDynamicEntry((ushort) bootstrapMethodAttribute.BootstrapMethods.FindIndex(x => x.Equals(bootstrapMethod)),
                             new NameAndTypeEntry(new Utf8Entry(invokeDynamicInstruction.Name),
                                 new Utf8Entry(invokeDynamicInstruction.Descriptor.ToString()))));
                         break;
@@ -636,18 +747,21 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                     case SimpleInstruction _:
                     case TableSwitchInstruction _:
                     case VariableInstruction _:
+                    case StackMapFrame _:
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(instruction));
                 }
             }
 
-            var labels = new Dictionary<Label, ushort>();
             var lineNumbers = new List<LineNumberTableAttribute.LineNumberTableEntry>();
+
+            var instructions = new Dictionary<Instruction, ushort>();
 
             var currentPosition = 0;
             foreach (var instruction in source.Instructions)
             {
+                instructions.Add(instruction, (ushort) currentPosition);
                 currentPosition += instruction.Opcode == Opcode.None ? 0 : sizeof(byte);
                 switch (instruction)
                 {
@@ -661,7 +775,8 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                         currentPosition += sizeof(ushort);
                         break;
                     case IncrementInstruction incrementInstruction:
-                        currentPosition += incrementInstruction.VariableIndex > byte.MaxValue || incrementInstruction.Value > byte.MaxValue
+                        currentPosition += incrementInstruction.VariableIndex > byte.MaxValue || 
+                                           incrementInstruction.Value > sbyte.MaxValue || incrementInstruction.Value < sbyte.MinValue
                                 ? sizeof(ushort) * 2 + sizeof(byte)
                                 : sizeof(byte) * 2;
                         break;
@@ -684,6 +799,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                                 float floatValue => writerState.ConstantPool.Find(new FloatEntry(floatValue)),
                                 string stringValue => writerState.ConstantPool.Find(
                                     new StringEntry(new Utf8Entry(stringValue))),
+                                ClassName className => writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(className.Name))),
                                 Handle handle => writerState.ConstantPool.Find(handle.ToConstantPool()),
                                 MethodDescriptor methodDescriptor => writerState.ConstantPool.Find(new MethodTypeEntry(new Utf8Entry(methodDescriptor.ToString()))),
                                 _ => throw new ArgumentOutOfRangeException(
@@ -699,8 +815,8 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                             StartPc = (ushort) currentPosition
                         });
                         break;
-                    case Label label:
-                        labels.Add(label, (ushort) currentPosition);
+                    case Label _:
+                    case StackMapFrame _:
                         break;
                     case LookupSwitchInstruction lookupSwitchInstruction:
                         while (currentPosition % 4 != 0)
@@ -757,11 +873,210 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
                 codeAttribute.ExceptionTable.Add(new CodeAttribute.ExceptionTableEntry
                 {
                     CatchType = tryCatchNode.ExceptionClassName,
-                    StartPc = labels[tryCatchNode.Start],
-                    EndPc = labels[tryCatchNode.Start],
-                    HandlerPc = labels[tryCatchNode.Start],
+                    StartPc = instructions[tryCatchNode.Start],
+                    EndPc = instructions[tryCatchNode.End],
+                    HandlerPc = instructions[tryCatchNode.Handler]
                 });
             }
+
+            using var codeDataStream = new MemoryStream(currentPosition);
+
+            foreach (var instruction in source.Instructions)
+            {
+                var position = (ushort) codeDataStream.Position;
+
+                if (position != instructions[instruction])
+                    throw new Exception($"Wrong position: {position} != {instructions[instruction]}");
+                switch (instruction)
+                {
+                    case FieldInstruction fieldInstruction:
+                        codeDataStream.WriteByte((byte) fieldInstruction.Opcode);
+                        Binary.BigEndian.Write(codeDataStream, writerState.ConstantPool.Find(new FieldReferenceEntry(
+                            new ClassEntry(new Utf8Entry(fieldInstruction.Owner.Name)),
+                            new NameAndTypeEntry(new Utf8Entry(fieldInstruction.Name),
+                                new Utf8Entry(fieldInstruction.Descriptor.ToString())))));
+                        break;
+                    case MethodInstruction methodInstruction:
+                        codeDataStream.WriteByte((byte) methodInstruction.Opcode);
+                        Binary.BigEndian.Write(codeDataStream, writerState.ConstantPool.Find(new MethodReferenceEntry(
+                            new ClassEntry(new Utf8Entry(methodInstruction.Owner.Name)),
+                            new NameAndTypeEntry(new Utf8Entry(methodInstruction.Name),
+                                new Utf8Entry(methodInstruction.Descriptor.ToString())))));
+                        if (methodInstruction.Opcode == Opcode.INVOKEINTERFACE)
+                            Binary.BigEndian.Write(codeDataStream, (ushort)0);
+                        break;
+                    case TypeInstruction typeInstruction:
+                        codeDataStream.WriteByte((byte) typeInstruction.Opcode);
+                        Binary.BigEndian.Write(codeDataStream,
+                            writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(typeInstruction.Type.Name))));
+                        break;
+                    case IncrementInstruction incrementInstruction:
+                        if (incrementInstruction.VariableIndex > byte.MaxValue || incrementInstruction.Value > sbyte.MaxValue || incrementInstruction.Value < sbyte.MinValue)
+                            codeDataStream.WriteByte((byte) Opcode.WIDE);
+                        codeDataStream.WriteByte((byte) incrementInstruction.Opcode);
+                        if (incrementInstruction.VariableIndex > byte.MaxValue ||
+                            incrementInstruction.Value > sbyte.MaxValue || incrementInstruction.Value < sbyte.MinValue)
+                        {
+                            Binary.BigEndian.Write(codeDataStream, incrementInstruction.VariableIndex);
+                            Binary.BigEndian.Write(codeDataStream, incrementInstruction.Value);
+                        }
+                        else
+                        {
+                            codeDataStream.WriteByte((byte) incrementInstruction.VariableIndex);
+                            codeDataStream.WriteByte(unchecked((byte) incrementInstruction.Value));
+                        }
+                        break;
+                    case IntegerPushInstruction integerPushInstruction:
+                        codeDataStream.WriteByte((byte) integerPushInstruction.Opcode);
+                        if (integerPushInstruction.Opcode == Opcode.SIPUSH)
+                            Binary.BigEndian.Write(codeDataStream, integerPushInstruction.Value);
+                        else
+                            codeDataStream.WriteByte((byte) integerPushInstruction.Value);
+                        break;
+                    case JumpInstruction jumpInstruction:
+                        codeDataStream.WriteByte((byte) jumpInstruction.Opcode);
+                        Binary.BigEndian.Write(codeDataStream, (short) (instructions[jumpInstruction.Target] - instructions[jumpInstruction]));
+                        break;
+                    case LdcInstruction ldcInstruction:
+                        var constantPoolEntryIndex = ldcInstruction.Value switch
+                        {
+                            int integerValue => writerState.ConstantPool.Find(new IntegerEntry(integerValue)),
+                            float floatValue => writerState.ConstantPool.Find(new FloatEntry(floatValue)),
+                            string stringValue => writerState.ConstantPool.Find(
+                                new StringEntry(new Utf8Entry(stringValue))),
+                            long longValue => writerState.ConstantPool.Find(new LongEntry(longValue)),
+                            double doubleValue => writerState.ConstantPool.Find(new DoubleEntry(doubleValue)),
+                            ClassName className => writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(className.Name))),
+                            Handle handle => writerState.ConstantPool.Find(handle.ToConstantPool()),
+                            MethodDescriptor methodDescriptor => writerState.ConstantPool.Find(new MethodTypeEntry(new Utf8Entry(methodDescriptor.ToString()))),
+                            _ => throw new ArgumentOutOfRangeException(
+                                $"Can't encode value of type {ldcInstruction.Value.GetType()}")
+                        };
+                        if (ldcInstruction.Value is long || ldcInstruction.Value is double)
+                        {
+                            codeDataStream.WriteByte((byte) Opcode.LDC2_W);
+                            Binary.BigEndian.Write(codeDataStream, constantPoolEntryIndex);
+                        }
+                        else
+                        {
+                            codeDataStream.WriteByte((byte) (constantPoolEntryIndex > byte.MaxValue ? Opcode.LDC_W : Opcode.LDC));
+                            if (constantPoolEntryIndex > byte.MaxValue)
+                                Binary.BigEndian.Write(codeDataStream, constantPoolEntryIndex);
+                            else
+                                codeDataStream.WriteByte((byte) constantPoolEntryIndex);
+                        }
+                        break;
+                    case LookupSwitchInstruction lookupSwitchInstruction:
+                        codeDataStream.WriteByte((byte) lookupSwitchInstruction.Opcode);
+                        while (codeDataStream.Position % 4 != 0)
+                            codeDataStream.WriteByte(0);
+                        Binary.BigEndian.Write(codeDataStream, instructions[lookupSwitchInstruction.Default] - position);
+                        Binary.BigEndian.Write(codeDataStream, lookupSwitchInstruction.MatchLabels.Count);
+                        foreach (var (key, label) in lookupSwitchInstruction.MatchLabels)
+                        {
+                            Binary.BigEndian.Write(codeDataStream, key);
+                            Binary.BigEndian.Write(codeDataStream, instructions[label] - position);
+                        }
+                        break;
+                    case MultiANewArrayInstruction multiANewArrayInstruction:
+                        codeDataStream.WriteByte((byte) multiANewArrayInstruction.Opcode);
+                        Binary.BigEndian.Write(codeDataStream, writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(multiANewArrayInstruction.Type.Name))));
+                        codeDataStream.WriteByte(multiANewArrayInstruction.Dimensions);
+                        break;
+                    case NewArrayInstruction newArrayInstruction:
+                        codeDataStream.WriteByte((byte) newArrayInstruction.Opcode);
+                        codeDataStream.WriteByte((byte) newArrayInstruction.ArrayType);
+                        break;
+                    case SimpleInstruction simpleInstruction:
+                        codeDataStream.WriteByte((byte) simpleInstruction.Opcode);
+                        break;
+                    case TableSwitchInstruction tableSwitchInstruction:
+                        codeDataStream.WriteByte((byte) tableSwitchInstruction.Opcode);
+                        while (codeDataStream.Position % 4 != 0)
+                            codeDataStream.WriteByte(0);
+                        Binary.BigEndian.Write(codeDataStream, instructions[tableSwitchInstruction.Default] - position);
+                        Binary.BigEndian.Write(codeDataStream, tableSwitchInstruction.LowValue);
+                        Binary.BigEndian.Write(codeDataStream, tableSwitchInstruction.HighValue);
+                        if (tableSwitchInstruction.HighValue - tableSwitchInstruction.LowValue + 1 !=
+                            tableSwitchInstruction.Labels.Count)
+                            throw new ArgumentOutOfRangeException(nameof(tableSwitchInstruction));
+                        foreach (var label in tableSwitchInstruction.Labels)
+                            Binary.BigEndian.Write(codeDataStream, instructions[label] - position);
+                        break;
+                    case VariableInstruction variableInstruction:
+                        if (variableInstruction.Opcode != Opcode.RET && variableInstruction.VariableIndex < 4)
+                        {
+                            // ReSharper disable once SwitchStatementMissingSomeCases
+                            switch (variableInstruction.Opcode)
+                            {
+                                case Opcode.ASTORE:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.ASTORE_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.ISTORE:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.ISTORE_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.FSTORE:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.FSTORE_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.DSTORE:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.DSTORE_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.LSTORE:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.LSTORE_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.ALOAD:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.ALOAD_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.ILOAD:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.ILOAD_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.FLOAD:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.FLOAD_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.DLOAD:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.DLOAD_0 + variableInstruction.VariableIndex));
+                                    break;
+                                case Opcode.LLOAD:
+                                    codeDataStream.WriteByte((byte) ((byte) Opcode.LLOAD_0 + variableInstruction.VariableIndex));
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException(nameof(variableInstruction.Opcode));
+                            }
+                        }
+                        else
+                        {
+                            if (variableInstruction.VariableIndex > byte.MaxValue)
+                                codeDataStream.WriteByte((byte) Opcode.WIDE);
+                            codeDataStream.WriteByte((byte) variableInstruction.Opcode);
+                            if (variableInstruction.VariableIndex > byte.MaxValue)
+                                Binary.BigEndian.Write(codeDataStream, variableInstruction.VariableIndex);
+                            else
+                                codeDataStream.WriteByte((byte) variableInstruction.VariableIndex);
+                        }
+                        break;
+                    case InvokeDynamicInstruction invokeDynamicInstruction:
+                        codeDataStream.WriteByte((byte) invokeDynamicInstruction.Opcode);
+                        var bootstrapMethodAttribute =
+                            writerState.ClassNode.Attributes.FirstOrDefault(x =>
+                                x.Name == PredefinedAttributeNames.BootstrapMethods).ParsedAttribute as BootstrapMethodsAttribute;
+
+                        var bootstrapMethod = new BootstrapMethod(invokeDynamicInstruction.BootstrapMethod, invokeDynamicInstruction.BootstrapMethodArgs);
+                        Binary.BigEndian.Write(codeDataStream, writerState.ConstantPool.Find(new InvokeDynamicEntry(
+                                (ushort) bootstrapMethodAttribute.BootstrapMethods.FindIndex(x => x.Equals(bootstrapMethod)),
+                                new NameAndTypeEntry(new Utf8Entry(invokeDynamicInstruction.Name),
+                                    new Utf8Entry(invokeDynamicInstruction.Descriptor.ToString())))));
+                        Binary.BigEndian.Write(codeDataStream, (ushort) 0);
+                        break;
+                    case LineNumber _:
+                    case Label _:
+                    case StackMapFrame _:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(instruction));
+                }
+            }
+
+            codeAttribute.Code = codeDataStream.ToArray();
 
             return codeAttribute;
         }

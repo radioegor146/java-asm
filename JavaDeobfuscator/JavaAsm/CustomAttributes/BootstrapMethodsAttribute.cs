@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using BinaryEncoding;
 using JavaDeobfuscator.JavaAsm.Instructions.Types;
 using JavaDeobfuscator.JavaAsm.IO;
@@ -9,20 +8,79 @@ using JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries;
 
 namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 {
-    internal class BootstrapMethodsAttribute : CustomAttribute
+    internal class BootstrapMethod
     {
-        public class BootstrapMethod
-        {
-            public Handle BootstrapMethodReference { get; set; }
+        public Handle BootstrapMethodReference { get; }
 
-            public List<object> Arguments { get; } = new List<object>();
+        public List<object> Arguments { get; } = new List<object>();
+
+        public BootstrapMethod(Handle bootstrapMethodReference)
+        {
+            BootstrapMethodReference = bootstrapMethodReference;
         }
 
-        public List<BootstrapMethod> BootstrapMethods { get; } = new List<BootstrapMethod>();
+        public BootstrapMethod(Handle bootstrapMethodReference, List<object> arguments)
+        {
+            BootstrapMethodReference = bootstrapMethodReference;
+            Arguments = arguments;
+        }
+
+        public bool Equals(BootstrapMethod other)
+        {
+            return BootstrapMethodReference.Equals(other.BootstrapMethodReference) && Arguments.Equals(other.Arguments);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && Equals((BootstrapMethod)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (BootstrapMethodReference.GetHashCode() * 397) ^ Arguments.GetHashCode();
+            }
+        }
+    }
+
+
+    internal class BootstrapMethodsAttribute : CustomAttribute
+    {
+        public List<BootstrapMethod> BootstrapMethods { get; set; } = new List<BootstrapMethod>();
 
         public override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            throw new NotImplementedException(); 
+            using var attributeDataStream = new MemoryStream();
+
+            if (BootstrapMethods.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException($"Number of bootstrap methods is too big: {BootstrapMethods.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(attributeDataStream, (ushort) BootstrapMethods.Count);
+            foreach (var method in BootstrapMethods)
+            {
+                if (method.Arguments.Count > ushort.MaxValue)
+                    throw new ArgumentOutOfRangeException(
+                        $"Number of annotations is too big: {method.Arguments.Count} > {ushort.MaxValue}");
+                Binary.BigEndian.Write(attributeDataStream, (ushort) method.Arguments.Count);
+                foreach (var argument in method.Arguments)
+                {
+                    Binary.BigEndian.Write(attributeDataStream, writerState.ConstantPool.Find(argument switch
+                    {
+                        int integerValue => (Entry) new IntegerEntry(integerValue),
+                        float floatValue => new FloatEntry(floatValue),
+                        string stringValue => new StringEntry(new Utf8Entry(stringValue)),
+                        long longValue => new LongEntry(longValue),
+                        double doubleValue => new DoubleEntry(doubleValue),
+                        Handle handle => handle.ToConstantPool(),
+                        MethodDescriptor methodDescriptor => new MethodTypeEntry(new Utf8Entry(methodDescriptor.ToString())),
+                        _ => throw new ArgumentOutOfRangeException($"Can't encode value of type {argument.GetType()}")
+                    }));
+                }
+            }
+
+            return attributeDataStream.ToArray();
         }
     }
 
@@ -37,10 +95,10 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
             attribute.BootstrapMethods.Capacity = bootstrapMethodsCount;
             for (var i = 0; i < bootstrapMethodsCount; i++)
             {
-                var bootstrapMethod = new BootstrapMethodsAttribute.BootstrapMethod
-                {
-                    BootstrapMethodReference = Handle.FromConstantPool(readerState.ConstantPool.GetEntry<MethodHandleEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream)))
-                };
+                var bootstrapMethod = new BootstrapMethod(
+                    Handle.FromConstantPool(
+                        readerState.ConstantPool.GetEntry<MethodHandleEntry>(
+                            Binary.BigEndian.ReadUInt16(attributeDataStream))));
                 var numberOfArguments = Binary.BigEndian.ReadUInt16(attributeDataStream);
                 bootstrapMethod.Arguments.Capacity = numberOfArguments;
                 for (var j = 0; j < numberOfArguments; j++)

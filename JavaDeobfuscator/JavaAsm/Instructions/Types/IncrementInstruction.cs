@@ -10,7 +10,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
 
         public ushort VariableIndex { get; set; }
 
-        public ushort Value { get; set; }
+        public short Value { get; set; }
 
         public override string ToString()
         {

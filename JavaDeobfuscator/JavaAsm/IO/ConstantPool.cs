@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using BinaryEncoding;
 using JavaDeobfuscator.JavaAsm.Helpers;
 using JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries;
@@ -16,10 +17,20 @@ namespace JavaDeobfuscator.JavaAsm.IO
         public ushort Find(Entry entry)
         {
             if (constantPoolMap.ContainsKey(entry))
+            {
+                var index = constantPoolMap[entry];
+                if (!entry.Equals(constantPoolMap.First(x => x.Value == index).Key))
+                    throw new Exception($"WTF?!");
                 return constantPoolMap[entry];
+            }
+
             entry.PutToConstantPool(this);
             entries.Add(entry);
-            var newKey = (ushort)entries.Count;
+            var newKey = (ushort) entries.Count;
+            if (entry is LongEntry || entry is DoubleEntry)
+                entries.Add(new LongDoublePlaceholderEntry());
+            if (entries.Count > ushort.MaxValue)
+                throw new Exception("Too much entries in constant pool");
             constantPoolMap.Add(entry, newKey);
             return newKey;
         }
@@ -54,11 +65,10 @@ namespace JavaDeobfuscator.JavaAsm.IO
                     _ => throw new ArgumentOutOfRangeException(nameof(tag))
                 };
                 entries.Add(entry);
-                if (entry is LongEntry || entry is DoubleEntry)
-                {
-                    entries.Add(new LongDoublePlaceholderEntry());
-                    i++;
-                }
+                if (!(entry is LongEntry) && !(entry is DoubleEntry)) 
+                    continue;
+                entries.Add(new LongDoublePlaceholderEntry());
+                i++;
             }
 
             foreach (var entry in entries)
@@ -83,7 +93,9 @@ namespace JavaDeobfuscator.JavaAsm.IO
             Binary.BigEndian.Write(stream, (ushort)(entries.Count + 1));
             foreach (var entry in entries)
             {
-                stream.WriteByte((byte)entry.Tag);
+                if (entry is LongDoublePlaceholderEntry)
+                    continue;
+                stream.WriteByte((byte) entry.Tag);
                 entry.Write(stream);
             }
         }

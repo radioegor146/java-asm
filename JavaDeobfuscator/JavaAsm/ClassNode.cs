@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using JavaDeobfuscator.JavaAsm.CustomAttributes;
@@ -52,7 +53,7 @@ namespace JavaDeobfuscator.JavaAsm
             return attribute;
         }
 
-        internal void ParseAttributes(ClassReaderState readerState)
+        internal void Parse(ClassReaderState readerState)
         {
             SourceFile = (GetAttribute(PredefinedAttributeNames.SourceFile)?.ParsedAttribute as SourceFileAttribute)?.Value;
             SourceDebugExtension = (GetAttribute(PredefinedAttributeNames.SourceDebugExtension)?.ParsedAttribute as SourceFileAttribute)?.Value;
@@ -69,12 +70,140 @@ namespace JavaDeobfuscator.JavaAsm
             }
             IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
             EnclosingMethod = GetAttribute(PredefinedAttributeNames.EnclosingMethod)?.ParsedAttribute as EnclosingMethodAttribute;
-            IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
             {
                 var attribute = GetAttribute(PredefinedAttributeNames.InnerClasses);
                 if (attribute != null)
                     InnerClasses = (attribute.ParsedAttribute as InnerClassesAttribute)?.Classes;
             }
+
+            foreach (var method in Methods)
+                method.Parse(readerState);
+
+            foreach (var field in Fields)
+                field.Parse(readerState);
+        }
+
+        internal void Save(ClassWriterState writerState)
+        {
+            if (SourceFile != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.SourceFile))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.SourceFile} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.SourceFile,
+                    ParsedAttribute = new SourceFileAttribute
+                    {
+                        Value = SourceFile
+                    }
+                });
+            }
+
+            if (SourceDebugExtension != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.SourceDebugExtension))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.SourceDebugExtension} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.SourceDebugExtension,
+                    ParsedAttribute = new SourceDebugExtensionAttribute
+                    {
+                        Value = SourceDebugExtension
+                    }
+                });
+            }
+
+            if (Signature != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.Signature} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.Signature,
+                    ParsedAttribute = new SignatureAttribute
+                    {
+                        Value = Signature
+                    }
+                });
+            }
+
+            if (InvisibleAnnotations.Count > 0)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.RuntimeInvisibleAnnotations,
+                    ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute
+                    {
+                        Annotations = InvisibleAnnotations
+                    }
+                });
+            }
+
+            if (VisibleAnnotations.Count > 0)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.RuntimeVisibleAnnotations,
+                    ParsedAttribute = new RuntimeVisibleAnnotationsAttribute
+                    {
+                        Annotations = VisibleAnnotations
+                    }
+                });
+            }
+
+            if (IsDeprecated)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.Deprecated} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.Deprecated,
+                    ParsedAttribute = new DeprecatedAttribute()
+                });
+            }
+
+            if (EnclosingMethod != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.EnclosingMethod))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.EnclosingMethod} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.EnclosingMethod,
+                    ParsedAttribute = EnclosingMethod
+                });
+            }
+
+            if (InnerClasses != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.InnerClasses))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.InnerClasses} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.InnerClasses,
+                    ParsedAttribute = new InnerClassesAttribute
+                    {
+                        Classes = InnerClasses
+                    }
+                });
+            }
+
+            foreach (var method in Methods)
+                method.Save(writerState);
+
+            foreach (var field in Fields)
+                field.Save(writerState);
         }
 
         public override string ToString()

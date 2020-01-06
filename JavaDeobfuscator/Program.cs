@@ -10,20 +10,19 @@ namespace JavaDeobfuscator
     {
         private static void Main(string[] args)
         {
-            foreach (var entry in ZipFile.OpenRead("test4.jar").Entries)
+            using var inputJarFile = new ZipArchive(new FileStream("DivineRPG-1.4.1.4-FP.jar", FileMode.Open), 
+                ZipArchiveMode.Read, false);
+
+            foreach (var inputEntry in inputJarFile.Entries)
             {
-                if (!entry.FullName.EndsWith(".class"))
+                if (inputEntry.Name == "")
                     continue;
-                using var entryStream = entry.Open();
-                var result = ClassFile.ParseClass(entryStream);
-                try
-                {
-                    // Console.WriteLine(result);
-                } 
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Failed to parse {entry.FullName}: {e}");
-                }
+                using var inputEntryStream = inputEntry.Open();
+                if (!inputEntry.FullName.EndsWith(".class")) 
+                    continue;
+                var result = ClassFile.ParseClass(inputEntryStream);
+                if (result.SuperName.Name.ToLower().Contains("boss"))
+                    Console.WriteLine(result.Name);
             }
         }
     }

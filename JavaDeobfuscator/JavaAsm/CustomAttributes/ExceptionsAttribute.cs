@@ -8,7 +8,7 @@ using JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries;
 
 namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 {
-    internal class ExceptionAttribute : CustomAttribute
+    internal class ExceptionsAttribute : CustomAttribute
     {
         public List<ClassName> ExceptionTable { get; set; } = new List<ClassName>();
 
@@ -28,12 +28,12 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
         }
     }
 
-    internal class ExceptionAttributeFactory : ICustomAttributeFactory<ExceptionAttribute>
+    internal class ExceptionsAttributeFactory : ICustomAttributeFactory<ExceptionsAttribute>
     {
-        public ExceptionAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public ExceptionsAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
         {
             using var attributeDataStream = new MemoryStream(attributeNode.Data);
-            var attribute = new ExceptionAttribute();
+            var attribute = new ExceptionsAttribute();
 
             var count = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.ExceptionTable.Capacity = count;

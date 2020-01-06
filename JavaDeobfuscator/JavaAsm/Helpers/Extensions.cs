@@ -12,5 +12,13 @@ namespace JavaDeobfuscator.JavaAsm.Helpers
             if (!values.Contains(value))
                 throw new ArgumentOutOfRangeException($"{valueName} is not in [{string.Join(", ", values)}]");
         }
+
+        public static bool TryAdd<T>(this ICollection<T> collection, T value)
+        {
+            if (collection.Contains(value))
+                return false;
+            collection.Add(value);
+            return true;
+        }
     }
 }

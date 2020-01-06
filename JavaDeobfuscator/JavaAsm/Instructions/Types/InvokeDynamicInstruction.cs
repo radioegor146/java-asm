@@ -46,6 +46,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions.Types
         {
             return new Handle
             {
+                Type = methodHandleEntry.ReferenceKind,
                 Descriptor = methodHandleEntry.ReferenceKind.IsFieldReference()
                     ? (IDescriptor) TypeDescriptor.Parse(methodHandleEntry.Reference.NameAndType
                         .Descriptor.String)

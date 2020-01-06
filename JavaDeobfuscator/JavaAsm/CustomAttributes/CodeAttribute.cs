@@ -50,8 +50,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                 Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.StartPc);
                 Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.EndPc);
                 Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.HandlerPc);
-                Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.CatchType.Name == null ? 0 : 
-                    writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(exceptionTableEntry.CatchType.Name))));
+                Binary.BigEndian.Write(attributeDataStream, (ushort) (exceptionTableEntry.CatchType == null ? 0 : 
+                    writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(exceptionTableEntry.CatchType.Name)))));
             }
 
             if (Attributes.Count > ushort.MaxValue)

@@ -6,9 +6,9 @@ using System.Text;
 namespace JavaDeobfuscator.JavaAsm.Instructions
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    internal enum Opcode
+    internal enum Opcode : byte
     {
-        None = -1,
+        None = 0xFF,
 
         AALOAD = 0x32,
         AASTORE = 0x53,
@@ -137,8 +137,6 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
         ILOAD_1 = 0x1B,
         ILOAD_2 = 0x1C,
         ILOAD_3 = 0x1D,
-        IMPDEP1 = 0xFE,
-        IMPDEP2 = 0xFF,
         IMUL = 0x68,
         INEG = 0x74,
         INSTANCEOF = 0xC1,

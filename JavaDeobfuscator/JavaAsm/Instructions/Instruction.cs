@@ -4,7 +4,7 @@ using System.Text;
 
 namespace JavaDeobfuscator.JavaAsm.Instructions
 {
-    internal abstract class Instruction : ICloneable
+    internal abstract class Instruction
     {
         public InstructionList OwnerList { get; internal set; }
 
@@ -13,10 +13,5 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
         public Instruction Next { get; internal set; }
 
         public abstract Opcode Opcode { get; }
-
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
     }
 }

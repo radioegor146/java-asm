@@ -11,11 +11,16 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
         {
             public InstructionListEnumerator(Instruction start)
             {
-                Current = Start = start;
+                Start = start;
             }
 
             public bool MoveNext()
             {
+                if (Start != null && Current == null)
+                {
+                    Current = Start;
+                    return true;
+                }
                 if (Current?.Next == null)
                     return false;
                 Current = Current.Next;
@@ -24,7 +29,7 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
 
             public void Reset()
             {
-                Current = Start;
+                Current = null;
             }
 
             public Instruction Current { get; private set; }
@@ -42,7 +47,6 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
 
         public void Add(Instruction instruction)
         {
-            instruction = (Instruction) instruction.Clone();
             instruction.OwnerList = this;
             instruction.Next = null;
             if (First == null)
@@ -57,7 +61,6 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
         {
             if (instruction.OwnerList != this)
                 throw new ArgumentException("Position instruction does not belong to that list");
-            toInsert = (Instruction) toInsert.Clone();
             toInsert.OwnerList = this;
             toInsert.Next = instruction;
             toInsert.Previous = instruction.Previous;
@@ -74,7 +77,6 @@ namespace JavaDeobfuscator.JavaAsm.Instructions
         {
             if (instruction.OwnerList != this)
                 throw new ArgumentException("Position instruction does not belong to that list");
-            toInsert = (Instruction) toInsert.Clone();
             toInsert.OwnerList = this;
             toInsert.Previous = instruction;
             toInsert.Next = instruction.Next;

@@ -41,7 +41,7 @@ namespace JavaDeobfuscator.JavaAsm
                     { (PredefinedAttributeNames.ConstantValue, AttributeScope.Field), new ConstantValueAttributeFactory() },
                     { (PredefinedAttributeNames.SourceDebugExtension, AttributeScope.Class), new SourceDebugExtensionFactory() },
                     { (PredefinedAttributeNames.SourceFile, AttributeScope.Class), new SourceFileAttributeFactory() },
-                    { (PredefinedAttributeNames.Exceptions, AttributeScope.Method), new ExceptionAttributeFactory() },
+                    { (PredefinedAttributeNames.Exceptions, AttributeScope.Method), new ExceptionsAttributeFactory() },
                     { (PredefinedAttributeNames.EnclosingMethod, AttributeScope.Class), new EnclosingMethodAttributeFactory() },
                     { (PredefinedAttributeNames.Synthetic, AttributeScope.Class), new SyntheticAttributeFactory() },
                     { (PredefinedAttributeNames.Synthetic, AttributeScope.Method), new SyntheticAttributeFactory() },
@@ -74,7 +74,8 @@ namespace JavaDeobfuscator.JavaAsm
                     { (PredefinedAttributeNames.RuntimeVisibleTypeAnnotations, AttributeScope.Field), new RuntimeVisibleTypeAnnotationsAttributeFactory() },
                     { (PredefinedAttributeNames.RuntimeVisibleTypeAnnotations, AttributeScope.Code), new RuntimeVisibleTypeAnnotationsAttributeFactory() },
                     { (PredefinedAttributeNames.AnnotationDefault, AttributeScope.Method), new AnnotationDefaultAttributeFactory() },
-                    { (PredefinedAttributeNames.BootstrapMethods, AttributeScope.Code), new BootstrapMethodsAttributeFactory() }
+                    { (PredefinedAttributeNames.BootstrapMethods, AttributeScope.Class), new BootstrapMethodsAttributeFactory() },
+                    { (PredefinedAttributeNames.StackMapTable, AttributeScope.Code), new StackMapTableAttributeFactory() }
                 };
 
         public string Name { get; set; }

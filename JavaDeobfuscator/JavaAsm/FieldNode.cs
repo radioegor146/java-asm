@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JavaDeobfuscator.JavaAsm.CustomAttributes;
 using JavaDeobfuscator.JavaAsm.CustomAttributes.Annotation;
@@ -38,7 +39,7 @@ namespace JavaDeobfuscator.JavaAsm
             return attribute;
         }
 
-        public void ParseAttributes(ClassReaderState readerState)
+        internal void Parse(ClassReaderState readerState)
         {
             Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
             {
@@ -55,6 +56,82 @@ namespace JavaDeobfuscator.JavaAsm
                 (GetAttribute(PredefinedAttributeNames.ConstantValue)?.ParsedAttribute as
                     ConstantValueAttribute)?.Value;
             IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
+        }
+
+        internal void Save(ClassWriterState writerState)
+        {
+            if (Signature != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.Signature} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.Signature,
+                    ParsedAttribute = new SignatureAttribute
+                    {
+                        Value = Signature
+                    }
+                });
+            }
+
+            if (InvisibleAnnotations.Count > 0)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.RuntimeInvisibleAnnotations,
+                    ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute
+                    {
+                        Annotations = InvisibleAnnotations
+                    }
+                });
+            }
+
+            if (VisibleAnnotations.Count > 0)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.RuntimeVisibleAnnotations,
+                    ParsedAttribute = new RuntimeVisibleAnnotationsAttribute
+                    {
+                        Annotations = VisibleAnnotations
+                    }
+                });
+            }
+
+            if (ConstantValue != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.ConstantValue))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.ConstantValue} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.ConstantValue,
+                    ParsedAttribute = new ConstantValueAttribute
+                    {
+                        Value = ConstantValue
+                    }
+                });
+            }
+
+            // ReSharper disable once InvertIf
+            if (IsDeprecated)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.Deprecated} attribute is already presented on field");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.Deprecated,
+                    ParsedAttribute = new DeprecatedAttribute()
+                });
+            }
         }
 
         public override string ToString()

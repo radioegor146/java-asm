@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JavaDeobfuscator.JavaAsm.CustomAttributes;
 using JavaDeobfuscator.JavaAsm.CustomAttributes.Annotation;
@@ -51,13 +52,13 @@ namespace JavaDeobfuscator.JavaAsm
             return attribute;
         }
 
-        internal void ParseAttributes(ClassReaderState readerState)
+        internal void Parse(ClassReaderState readerState)
         {
             Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
             {
                 var attribute = GetAttribute(PredefinedAttributeNames.Code);
                 if (attribute?.ParsedAttribute is CodeAttribute codeAttribute)
-                    InstructionListConverter.ParseInstructionList(this, readerState, codeAttribute);
+                    InstructionListConverter.ParseCodeAttribute(this, readerState, codeAttribute);
             }
             {
                 var attribute = GetAttribute(PredefinedAttributeNames.RuntimeInvisibleAnnotations);
@@ -72,11 +73,114 @@ namespace JavaDeobfuscator.JavaAsm
             {
                 var attribute = GetAttribute(PredefinedAttributeNames.Exceptions);
                 if (attribute != null)
-                    Throws = (attribute.ParsedAttribute as ExceptionAttribute)?.ExceptionTable;
+                    Throws = (attribute.ParsedAttribute as ExceptionsAttribute)?.ExceptionTable;
             }
             AnnotationDefaultValue =
                 (GetAttribute(PredefinedAttributeNames.AnnotationDefault)?.ParsedAttribute as AnnotationDefaultAttribute)?.Value;
             IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
+        }
+
+        internal void Save(ClassWriterState writerState)
+        {
+            if (Signature != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.Signature} attribute is already presented on method");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.Signature,
+                    ParsedAttribute = new SignatureAttribute
+                    {
+                        Value = Signature
+                    }
+                });
+            }
+
+            if (!Access.HasFlag(MethodAccessModifiers.Abstract) && !Access.HasFlag(MethodAccessModifiers.Native) && Instructions != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Code))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.Code} attribute is already presented on method");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.Code,
+                    ParsedAttribute = InstructionListConverter.SaveCodeAttribute(this, writerState)
+                });
+            }
+
+            if (InvisibleAnnotations.Count > 0)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on method");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.RuntimeInvisibleAnnotations,
+                    ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute
+                    {
+                        Annotations = InvisibleAnnotations
+                    }
+                });
+            }
+
+            if (VisibleAnnotations.Count > 0)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on method");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.RuntimeVisibleAnnotations,
+                    ParsedAttribute = new RuntimeVisibleAnnotationsAttribute
+                    {
+                        Annotations = VisibleAnnotations
+                    }
+                });
+            }
+
+            if (Throws.Count > 0)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Exceptions))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.Exceptions} attribute is already presented on method");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.Exceptions,
+                    ParsedAttribute = new ExceptionsAttribute
+                    {
+                        ExceptionTable = Throws
+                    }
+                });
+            }
+
+            if (AnnotationDefaultValue != null)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.AnnotationDefault))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.AnnotationDefault} attribute is already presented on method");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.AnnotationDefault,
+                    ParsedAttribute = new AnnotationDefaultAttribute
+                    {
+                        Value = AnnotationDefaultValue
+                    }
+                });
+            }
+
+            // ReSharper disable once InvertIf
+            if (IsDeprecated)
+            {
+                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
+                    throw new Exception(
+                        $"{PredefinedAttributeNames.Deprecated} attribute is already presented on method");
+                Attributes.Add(new AttributeNode
+                {
+                    Name = PredefinedAttributeNames.Deprecated,
+                    ParsedAttribute = new DeprecatedAttribute()
+                });
+            }
         }
 
         public override string ToString()

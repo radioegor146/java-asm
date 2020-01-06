@@ -125,7 +125,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes.Annotation
                     Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new LongEntry((long) ConstValue)));
                     break;
                 case ElementValueTag.String:
-                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new StringEntry(new Utf8Entry((string) ConstValue))));
+                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new Utf8Entry((string) ConstValue)));
                     break;
                 case ElementValueTag.Enum:
                     Binary.BigEndian.Write(stream,
