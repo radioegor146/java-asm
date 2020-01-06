@@ -2,7 +2,7 @@
 using System.Linq;
 using System.IO;
 using System.IO.Compression;
-using JavaDeobfuscator.JavaAsm.IO;
+using JavaAsm.IO;
 
 namespace JavaDeobfuscator
 {
