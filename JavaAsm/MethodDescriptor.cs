@@ -5,20 +5,44 @@ using System.Text;
 
 namespace JavaAsm
 {
+    /// <summary>
+    /// Descriptor of method. Consists of type descriptors of arguments and return value
+    /// </summary>
     public class MethodDescriptor : IDescriptor
     {
+        /// <summary>
+        /// Return value type descriptor
+        /// </summary>
         public TypeDescriptor ReturnType { get; }
 
-        public List<TypeDescriptor> ArgumentsTypes { get; } 
+        /// <summary>
+        /// Arguments type descriptors
+        /// </summary>
+        public List<TypeDescriptor> ArgumentTypes { get; } 
 
+        /// <summary>
+        /// Creates method descriptor
+        /// </summary>
+        /// <param name="returnType">Return type</param>
+        /// <param name="argumentTypes">Argument types</param>
         public MethodDescriptor(TypeDescriptor returnType, params TypeDescriptor[] argumentTypes) : this(returnType, argumentTypes.ToList()) { }
-
-        public MethodDescriptor(TypeDescriptor returnType, List<TypeDescriptor> argumentsTypes)
+        
+        /// <summary>
+        /// Creates method descriptor
+        /// </summary>
+        /// <param name="returnType">Return type</param>
+        /// <param name="argumentTypes">Argument types</param>
+        public MethodDescriptor(TypeDescriptor returnType, List<TypeDescriptor> argumentTypes)
         {
             ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
-            ArgumentsTypes = argumentsTypes ?? throw new ArgumentNullException(nameof(argumentsTypes));
+            ArgumentTypes = argumentTypes ?? throw new ArgumentNullException(nameof(argumentTypes));
         }
 
+        /// <summary>
+        /// Parses method descriptor from string
+        /// </summary>
+        /// <param name="descriptor">Source string</param>
+        /// <returns>Parsed method descriptor</returns>
         public static MethodDescriptor Parse(string descriptor)
         {
             var offset = 0;
@@ -32,22 +56,24 @@ namespace JavaAsm
             return new MethodDescriptor(TypeDescriptor.Parse(descriptor, ref offset, true), argumentTypes);
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var result = new StringBuilder();
             result.Append('(');
-            foreach (var argumentType in ArgumentsTypes)
+            foreach (var argumentType in ArgumentTypes)
                 result.Append(argumentType);
             result.Append(')');
             result.Append(ReturnType);
             return result.ToString();
         }
 
-        public bool Equals(MethodDescriptor other)
+        private bool Equals(MethodDescriptor other)
         {
-            return Equals(ReturnType, other.ReturnType) && Equals(ArgumentsTypes, other.ArgumentsTypes);
+            return Equals(ReturnType, other.ReturnType) && Equals(ArgumentTypes, other.ArgumentTypes);
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (obj is null) return false;
@@ -55,11 +81,12 @@ namespace JavaAsm
             return obj.GetType() == GetType() && Equals((MethodDescriptor) obj);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
             {
-                return (ReturnType.GetHashCode() * 397) ^ ArgumentsTypes.GetHashCode();
+                return (ReturnType.GetHashCode() * 397) ^ ArgumentTypes.GetHashCode();
             }
         }
     }

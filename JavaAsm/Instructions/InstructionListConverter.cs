@@ -436,7 +436,7 @@ namespace JavaAsm.Instructions
                                     Binary.BigEndian.ReadUInt16(codeStream));
                                 var sizeOfArguments = codeStream.ReadByteFully();
                                 var requiredSizeOfArguments =
-                                    MethodDescriptor.Parse(methodReferenceEntry.NameAndType.Descriptor.String).ArgumentsTypes.Sum(x => x.SizeOnStack) + 1;
+                                    MethodDescriptor.Parse(methodReferenceEntry.NameAndType.Descriptor.String).ArgumentTypes.Sum(x => x.SizeOnStack) + 1;
                                 if (sizeOfArguments != requiredSizeOfArguments)
                                     throw new ArgumentOutOfRangeException(nameof(sizeOfArguments), $"Required size does not equal to provided: {requiredSizeOfArguments} > {sizeOfArguments}");
                                 if (codeStream.ReadByteFully() != 0)
@@ -897,10 +897,10 @@ namespace JavaAsm.Instructions
                                 new ClassEntry(new Utf8Entry(methodInstruction.Owner.Name)),
                                 new NameAndTypeEntry(new Utf8Entry(methodInstruction.Name),
                                     new Utf8Entry(methodInstruction.Descriptor.ToString())))));
-                            if (methodInstruction.Descriptor.ArgumentsTypes.Sum(x => x.SizeOnStack) + 1 > byte.MaxValue)
-                                throw new ArgumentOutOfRangeException(nameof(methodInstruction.Descriptor.ArgumentsTypes.Count), 
-                                    $"Too many arguments: {methodInstruction.Descriptor.ArgumentsTypes.Sum(x => x.SizeOnStack) + 1} > {byte.MaxValue}");
-                            codeDataStream.WriteByte((byte) (methodInstruction.Descriptor.ArgumentsTypes.Sum(x => x.SizeOnStack) + 1));
+                            if (methodInstruction.Descriptor.ArgumentTypes.Sum(x => x.SizeOnStack) + 1 > byte.MaxValue)
+                                throw new ArgumentOutOfRangeException(nameof(methodInstruction.Descriptor.ArgumentTypes.Count), 
+                                    $"Too many arguments: {methodInstruction.Descriptor.ArgumentTypes.Sum(x => x.SizeOnStack) + 1} > {byte.MaxValue}");
+                            codeDataStream.WriteByte((byte) (methodInstruction.Descriptor.ArgumentTypes.Sum(x => x.SizeOnStack) + 1));
                             codeDataStream.WriteByte(0);
                         } 
                         else

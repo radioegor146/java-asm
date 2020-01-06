@@ -1,15 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using JavaAsm.Helpers;
 using JavaAsm.Instructions;
 using JavaAsm.Instructions.Types;
 
 namespace JavaAsm.Commons
 {
+    /// <summary>
+    /// Helper class for different operations with methods (computing sizes, frames, etc)
+    /// </summary>
     public class MethodHelper
     {
+        /// <summary>
+        /// Computers max number of locals and stack
+        /// </summary>
+        /// <param name="methodNode">Method to compute for</param>
+        /// <returns>ValueTuple of max number of locals and stack</returns>
         public static (ushort MaxLocals, ushort MaxStack) ComputeMaxStackAndLocals(MethodNode methodNode)
         {
             if (methodNode.Instructions == null || methodNode.Access.HasFlag(MethodAccessModifiers.Native) ||
@@ -20,7 +27,7 @@ namespace JavaAsm.Commons
             var maxLocalIndex = Math.Max(methodNode.Instructions.Any(x => x is VariableInstruction) ? 
                     methodNode.Instructions.Where(x => x is VariableInstruction).Max(x => ((VariableInstruction) x).VariableIndex +
                                          (x.Opcode.In(Opcode.LLOAD, Opcode.LSTORE, Opcode.DLOAD, Opcode.DSTORE) ? 1 : 0)) + 1 : 0, 
-                                        methodNode.Descriptor.ArgumentsTypes.Sum(x => x.SizeOnStack) + (methodNode.Access.HasFlag(MethodAccessModifiers.Static) ? 0 : 1));
+                                        methodNode.Descriptor.ArgumentTypes.Sum(x => x.SizeOnStack) + (methodNode.Access.HasFlag(MethodAccessModifiers.Static) ? 0 : 1));
             if (maxLocalIndex > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(maxLocalIndex),
                     $"Max local index is larger that maximum possible amount: {maxLocalIndex} > {ushort.MaxValue}");
@@ -83,7 +90,7 @@ namespace JavaAsm.Commons
                         newStackSize++;
                         break;
                     case InvokeDynamicInstruction invokeDynamicInstruction:
-                        newStackSize -= invokeDynamicInstruction.Descriptor.ArgumentsTypes.Sum(x => x.SizeOnStack);
+                        newStackSize -= invokeDynamicInstruction.Descriptor.ArgumentTypes.Sum(x => x.SizeOnStack);
                         CheckStackSizeAndThrow(newStackSize);
                         newStackSize += invokeDynamicInstruction.Descriptor.ReturnType.SizeOnStack;
                         break;
@@ -140,7 +147,7 @@ namespace JavaAsm.Commons
                             CheckStackSizeAndThrow(newStackSize);
                         }
 
-                        newStackSize -= methodInstruction.Descriptor.ArgumentsTypes.Sum(x => x.SizeOnStack);
+                        newStackSize -= methodInstruction.Descriptor.ArgumentTypes.Sum(x => x.SizeOnStack);
                         CheckStackSizeAndThrow(newStackSize);
                         newStackSize += methodInstruction.Descriptor.ReturnType.SizeOnStack;
                         break;
@@ -417,9 +424,13 @@ namespace JavaAsm.Commons
             return (maxLocals, stackSizes.Max(x => x.Value));
         }
 
+        /// <summary>
+        /// Computes stack frames
+        /// </summary>
+        /// <param name="methodNode">Method to compute for</param>
         public static void ComputeStackMapFrames(MethodNode methodNode)
         {
-
+            throw new NotImplementedException();
         }
     }
 }

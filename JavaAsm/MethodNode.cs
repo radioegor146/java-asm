@@ -8,42 +8,98 @@ using JavaAsm.IO;
 
 namespace JavaAsm
 {
+    /// <summary>
+    /// Method node
+    /// </summary>
     public class MethodNode
     {
+        /// <summary>
+        /// Owner class of that method
+        /// </summary>
         public ClassNode Owner { get; set; }
 
 
+        /// <summary>
+        /// Access flags
+        /// </summary>
         public MethodAccessModifiers Access { get; set; }
 
+        /// <summary>
+        /// Name
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Descriptor
+        /// </summary>
         public MethodDescriptor Descriptor { get; set; }
 
+        /// <summary>
+        /// Attributes
+        /// </summary>
         public List<AttributeNode> Attributes { get; set; } = new List<AttributeNode>();
 
 
+        /// <summary>
+        /// Signature
+        /// </summary>
         public string Signature { get; set; }
 
+        /// <summary>
+        /// Max size of stack
+        /// </summary>
         public ushort MaxStack { get; set; }
 
+        /// <summary>
+        /// Max number of locals
+        /// </summary>
         public ushort MaxLocals { get; set; }
 
+        /// <summary>
+        /// try-catch nodes
+        /// </summary>
         public List<TryCatchNode> TryCatches { get; set; } = new List<TryCatchNode>();
 
+        /// <summary>
+        /// Instructions list
+        /// </summary>
         public InstructionList Instructions { get; set; } = new InstructionList();
 
+        /// <summary>
+        /// Method's Code attribute attributes
+        /// </summary>
         public List<AttributeNode> CodeAttributes { get; set; } = new List<AttributeNode>();
 
+        /// <summary>
+        /// Invisible annotations
+        /// </summary>
         public List<AnnotationNode> InvisibleAnnotations { get; set; } = new List<AnnotationNode>();
 
+        /// <summary>
+        /// Visible annotations
+        /// </summary>
         public List<AnnotationNode> VisibleAnnotations { get; set; } = new List<AnnotationNode>();
 
+        /// <summary>
+        /// Deprecated flag
+        /// </summary>
         public bool IsDeprecated { get; set; }
 
+        /// <summary>
+        /// All throw statements
+        /// </summary>
         public List<ClassName> Throws { get; set; } = new List<ClassName>();
 
+        /// <summary>
+        /// Default value of that annotation field if owner class is annotation
+        /// </summary>
         public ElementValue AnnotationDefaultValue { get; set; }
 
+        /// <summary>
+        /// Returns and deletes attribute. Used for internal methods to parse contents
+        /// </summary>
+        /// <param name="name">Name of annotation</param>
+        /// <returns>null, if attribute does not exist or AttributeNode if exists</returns>
         private AttributeNode GetAttribute(string name)
         {
             var attribute = Attributes.FirstOrDefault(a => a.Name == name);
@@ -52,6 +108,10 @@ namespace JavaAsm
             return attribute;
         }
 
+        /// <summary>
+        /// Parses method annotations to fill up information
+        /// </summary>
+        /// <param name="readerState">Class reader state</param>
         internal void Parse(ClassReaderState readerState)
         {
             Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
@@ -80,6 +140,10 @@ namespace JavaAsm
             IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
         }
 
+        /// <summary>
+        /// Saves method information to annotations
+        /// </summary>
+        /// <param name="writerState">Class writer state</param>
         internal void Save(ClassWriterState writerState)
         {
             if (Signature != null)
@@ -183,6 +247,7 @@ namespace JavaAsm
             }
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"{AccessModifiersExtensions.ToString(Access)} {Name}{Descriptor}";

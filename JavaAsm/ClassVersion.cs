@@ -1,5 +1,8 @@
 ﻿namespace JavaAsm
 {
+    /// <summary>
+    /// Class file version enum
+    /// </summary>
     public enum ClassVersion : ushort
     {
         Java1P1 = 45,

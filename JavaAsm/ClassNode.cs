@@ -7,6 +7,9 @@ using JavaAsm.IO;
 
 namespace JavaAsm
 {
+    /// <summary>
+    /// Class node
+    /// </summary>
     public class ClassNode
     {
         public ClassVersion MajorVersion { get; set; }

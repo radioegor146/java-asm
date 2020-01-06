@@ -4,26 +4,54 @@ using System.Text;
 
 namespace JavaAsm
 {
+    /// <summary>
+    /// Type descriptor
+    /// </summary>
     public class TypeDescriptor : IDescriptor
     {
+        /// <summary>
+        /// Class name. Equals to null if type is primitive
+        /// </summary>
         public ClassName ClassName { get; }
 
+        /// <summary>
+        /// Primitive type. Equals to null if type is object-based
+        /// </summary>
         public PrimitiveType? PrimitiveType { get; }
 
+        /// <summary>
+        /// Depth of array or zero if it is not an array
+        /// </summary>
         public int ArrayDepth { get; }
 
+        /// <summary>
+        /// Creates class type descriptor
+        /// </summary>
+        /// <param name="className">Class</param>
+        /// <param name="arrayDepth">Array depth</param>
         public TypeDescriptor(ClassName className, int arrayDepth)
         {
             ArrayDepth = arrayDepth;
             ClassName = className ?? throw new ArgumentNullException(nameof(className));
         }
 
+        /// <summary>
+        /// Creates primitive type type descriptor
+        /// </summary>
+        /// <param name="primitiveType">Primitive type</param>
+        /// <param name="arrayDepth">Array depth</param>
         public TypeDescriptor(PrimitiveType primitiveType, int arrayDepth)
         {
             ArrayDepth = arrayDepth;
             PrimitiveType = primitiveType;
         }
 
+        /// <summary>
+        /// Parses type descriptor from string
+        /// </summary>
+        /// <param name="descriptor">Source string to parse from</param>
+        /// <param name="allowVoid">Allow void type</param>
+        /// <returns>Parsed type descriptor</returns>
         public static TypeDescriptor Parse(string descriptor, bool allowVoid = false)
         {
             var offset = 0;
@@ -33,6 +61,13 @@ namespace JavaAsm
             return parsedType;
         }
 
+        /// <summary>
+        /// Parses type descriptor from string starting from specified offset
+        /// </summary>
+        /// <param name="descriptor">Source string to parse from</param>
+        /// <param name="offset">Offset in source string to parse from</param>
+        /// <param name="allowVoid">Allow void type</param>
+        /// <returns>Parsed type descriptor</returns>
         public static TypeDescriptor Parse(string descriptor, ref int offset, bool allowVoid = false)
         {
             var arrayDepth = 0;
@@ -94,9 +129,13 @@ namespace JavaAsm
             return new TypeDescriptor(primitiveType, arrayDepth);
         }
 
+        /// <summary>
+        /// Returns size of type on stack
+        /// </summary>
         public int SizeOnStack => ArrayDepth == 0 && (PrimitiveType == JavaAsm.PrimitiveType.Double || PrimitiveType == JavaAsm.PrimitiveType.Long) ? 2 : 
             PrimitiveType == JavaAsm.PrimitiveType.Void ? 0 : 1;
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var result = string.Join("", Enumerable.Repeat('[', ArrayDepth));
@@ -123,11 +162,12 @@ namespace JavaAsm
             return result;
         }
 
-        protected bool Equals(TypeDescriptor other)
+        private bool Equals(TypeDescriptor other)
         {
             return ArrayDepth == other.ArrayDepth && Equals(ClassName, other.ClassName) && PrimitiveType == other.PrimitiveType;
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (obj is null) return false;
@@ -135,6 +175,7 @@ namespace JavaAsm
             return obj.GetType() == GetType() && Equals((TypeDescriptor) obj);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -147,6 +188,9 @@ namespace JavaAsm
         }
     }
 
+    /// <summary>
+    /// Primitive types enum
+    /// </summary>
     public enum PrimitiveType
     {
         Boolean,
