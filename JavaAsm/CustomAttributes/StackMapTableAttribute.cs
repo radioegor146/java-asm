@@ -58,9 +58,7 @@ namespace JavaAsm.CustomAttributes
         {
             Same,
             SameLocals1StackItem,
-            SameLocals1StackItemExtended,
             Chop,
-            SameExtended,
             Append,
             Full
         }
@@ -90,7 +88,7 @@ namespace JavaAsm.CustomAttributes
     {
         private static StackMapTableAttribute.VerificationElement ReadVerificationElement(Stream stream, ClassReaderState readerState)
         {
-            var verificationElementType = (StackMapTableAttribute.VerificationElementType) stream.ReadByte();
+            var verificationElementType = (StackMapTableAttribute.VerificationElementType) stream.ReadByteFully();
             return verificationElementType switch
             {
                 StackMapTableAttribute.VerificationElementType.Top => (StackMapTableAttribute.VerificationElement) new StackMapTableAttribute.SimpleVerificationElement(verificationElementType),
@@ -123,7 +121,7 @@ namespace JavaAsm.CustomAttributes
             for (var i = 0; i < parametersCount; i++)
             {
                 StackMapTableAttribute.StackMapFrame stackMapFrame;
-                var frameTypeByte = (byte) attributeDataStream.ReadByte();
+                var frameTypeByte = attributeDataStream.ReadByteFully();
                 if (frameTypeByte < 64)
                 {
                     stackMapFrame = new StackMapTableAttribute.StackMapFrame
@@ -146,7 +144,7 @@ namespace JavaAsm.CustomAttributes
                 {
                     stackMapFrame = new StackMapTableAttribute.StackMapFrame
                     {
-                        Type = StackMapTableAttribute.FrameType.SameLocals1StackItemExtended,
+                        Type = StackMapTableAttribute.FrameType.SameLocals1StackItem,
                         OffsetDelta = Binary.BigEndian.ReadUInt16(attributeDataStream)
                     };
 
@@ -165,7 +163,7 @@ namespace JavaAsm.CustomAttributes
                 {
                     stackMapFrame = new StackMapTableAttribute.StackMapFrame
                     {
-                        Type = StackMapTableAttribute.FrameType.SameExtended,
+                        Type = StackMapTableAttribute.FrameType.Same,
                         OffsetDelta = Binary.BigEndian.ReadUInt16(attributeDataStream)
                     };
                 }

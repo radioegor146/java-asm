@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using BinaryEncoding;
 using JavaAsm.CustomAttributes.Annotation;
+using JavaAsm.Helpers;
 using JavaAsm.IO;
 
 namespace JavaAsm.CustomAttributes
@@ -44,7 +45,7 @@ namespace JavaAsm.CustomAttributes
         {
             var attribute = new RuntimeInvisibleParameterAnnotationsAttribute();
 
-            var parametersCount = (byte)attributeDataStream.ReadByte();
+            var parametersCount = attributeDataStream.ReadByteFully();
             attribute.Parameters.Capacity = parametersCount;
             for (var i = 0; i < parametersCount; i++)
             {

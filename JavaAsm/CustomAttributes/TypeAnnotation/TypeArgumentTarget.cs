@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using BinaryEncoding;
+using JavaAsm.Helpers;
 using JavaAsm.IO;
 
 namespace JavaAsm.CustomAttributes.TypeAnnotation
@@ -21,7 +22,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
         internal override void Read(Stream stream, ClassReaderState readerState)
         {
             Offset = Binary.BigEndian.ReadUInt16(stream);
-            TypeArgumentIndex = (byte) stream.ReadByte();
+            TypeArgumentIndex = stream.ReadByteFully();
         }
     }
 }

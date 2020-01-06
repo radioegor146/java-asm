@@ -51,9 +51,7 @@ namespace JavaAsm.Instructions.Types
     {
         Same,
         SameLocals1StackItem,
-        SameLocals1StackItemExtended,
         Chop,
-        SameExtended,
         Append,
         Full
     }

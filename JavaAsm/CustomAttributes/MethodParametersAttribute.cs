@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using BinaryEncoding;
+using JavaAsm.Helpers;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
@@ -42,7 +43,7 @@ namespace JavaAsm.CustomAttributes
         {
             var attribute = new MethodParametersAttribute();
 
-            var exceptionTableSize = (byte) attributeDataStream.ReadByte();
+            var exceptionTableSize = attributeDataStream.ReadByteFully();
             attribute.Parameters.Capacity = exceptionTableSize;
             for (var i = 0; i < exceptionTableSize; i++)
                 attribute.Parameters.Add(new MethodParametersAttribute.Parameter

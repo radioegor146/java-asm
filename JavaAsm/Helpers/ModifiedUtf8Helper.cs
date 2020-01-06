@@ -82,7 +82,7 @@ namespace JavaAsm.Helpers
                 }
             }
 
-            return new string(result, 0, (int) numberOfChars);
+            return new string(result, 0, numberOfChars);
         }
     }
 }

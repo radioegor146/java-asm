@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using BinaryEncoding;
 using JavaAsm.CustomAttributes.Annotation;
+using JavaAsm.Helpers;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
@@ -31,7 +32,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
         {
             var typeAnnotation = new TypeAnnotationNode
             {
-                TargetType = (TargetType) stream.ReadByte()
+                TargetType = (TargetType) stream.ReadByteFully()
             };
             typeAnnotation.Target = typeAnnotation.TargetType switch
             {

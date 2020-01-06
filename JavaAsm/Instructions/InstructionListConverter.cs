@@ -43,7 +43,7 @@ namespace JavaAsm.Instructions
             {
                 var currentPosition = codeStream.Position;
 
-                var opcode = (Opcode) codeStream.ReadByte();
+                var opcode = (Opcode) codeStream.ReadByteFully();
                 switch (opcode)
                 {
                     case Opcode.NOP:
@@ -194,8 +194,7 @@ namespace JavaAsm.Instructions
                     case Opcode.LOOKUPSWITCH:
                         {
                             while (codeStream.Position % 4 != 0)
-                                if (codeStream.ReadByte() == -1)
-                                    throw new EndOfStreamException();
+                                codeStream.ReadByteFully();
                             var lookupSwitchInstruction = new LookupSwitchInstruction
                             {
                                 Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), new Label())
@@ -216,8 +215,7 @@ namespace JavaAsm.Instructions
                     case Opcode.TABLESWITCH:
                         {
                             while (codeStream.Position % 4 != 0)
-                                if (codeStream.ReadByte() == -1)
-                                    throw new EndOfStreamException();
+                                codeStream.ReadByteFully();
                             var tableSwitchInstruction = new TableSwitchInstruction
                             {
                                 Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), new Label()),
@@ -251,7 +249,7 @@ namespace JavaAsm.Instructions
                     case Opcode.NEWARRAY:
                         instructions.Add(currentPosition, new NewArrayInstruction
                         {
-                            ArrayType = (NewArrayTypeCode) codeStream.ReadByte()
+                            ArrayType = (NewArrayTypeCode) codeStream.ReadByteFully()
                         });
                         break;
 
@@ -260,7 +258,7 @@ namespace JavaAsm.Instructions
                         {
                             Type = new ClassName(readerState.ConstantPool
                                 .GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(codeStream)).Name.String),
-                            Dimensions = (byte) codeStream.ReadByte()
+                            Dimensions = codeStream.ReadByteFully()
                         });
                         break;
 
@@ -288,8 +286,8 @@ namespace JavaAsm.Instructions
                         {
                             instructions.Add(currentPosition, new IncrementInstruction
                             {
-                                VariableIndex = (byte) codeStream.ReadByte(),
-                                Value = (byte) codeStream.ReadByte()
+                                VariableIndex = codeStream.ReadByteFully(),
+                                Value = codeStream.ReadByteFully()
                             });
                         }
                         break;
@@ -297,7 +295,7 @@ namespace JavaAsm.Instructions
                     case Opcode.BIPUSH:
                         instructions.Add(currentPosition, new IntegerPushInstruction(opcode)
                         {
-                            Value = (byte) codeStream.ReadByte()
+                            Value = codeStream.ReadByteFully()
                         });
                         break;
                     case Opcode.SIPUSH:
@@ -327,7 +325,7 @@ namespace JavaAsm.Instructions
                         } 
                         else
                         {
-                            variableIndex = (byte) codeStream.ReadByte();
+                            variableIndex = codeStream.ReadByteFully();
                         }
 
                         instructions.Add(currentPosition, new VariableInstruction(opcode)
@@ -435,8 +433,8 @@ namespace JavaAsm.Instructions
                                 Binary.BigEndian.ReadUInt16(codeStream));
                             if (opcode == Opcode.INVOKEINTERFACE)
                             {
-                                codeStream.ReadByte();
-                                if (codeStream.ReadByte() != 0)
+                                codeStream.ReadByteFully();
+                                if (codeStream.ReadByteFully() != 0)
                                     throw new Exception("INVOKEINTERFACE 4th byte is not 0");
                             }
 
@@ -466,7 +464,7 @@ namespace JavaAsm.Instructions
                     case Opcode.LDC:
                         {
                             var constantPoolEntry =
-                                readerState.ConstantPool.GetEntry<Entry>((byte) codeStream.ReadByte());
+                                readerState.ConstantPool.GetEntry<Entry>(codeStream.ReadByteFully());
                             instructions.Add(currentPosition, new LdcInstruction
                             {
                                 Value = constantPoolEntry switch

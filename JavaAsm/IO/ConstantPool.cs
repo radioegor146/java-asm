@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BinaryEncoding;
+using JavaAsm.Helpers;
 using JavaAsm.IO.ConstantPoolEntries;
 
 namespace JavaAsm.IO
@@ -43,7 +44,7 @@ namespace JavaAsm.IO
             var size = Binary.BigEndian.ReadUInt16(stream);
             for (var i = 0; i < size - 1; i++)
             {
-                var tag = (EntryTag) stream.ReadByte();
+                var tag = (EntryTag) stream.ReadByteFully();
                 var entry = tag switch
                 {
                     EntryTag.Class => (Entry)new ClassEntry(stream),

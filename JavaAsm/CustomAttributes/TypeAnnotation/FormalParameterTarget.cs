@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using JavaAsm.Helpers;
 using JavaAsm.IO;
 
 namespace JavaAsm.CustomAttributes.TypeAnnotation
@@ -16,7 +17,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal override void Read(Stream stream, ClassReaderState readerState)
         {
-            FormalParameterIndex = (byte)stream.ReadByte();
+            FormalParameterIndex = stream.ReadByteFully();
         }
     }
 }

@@ -47,7 +47,7 @@ namespace JavaAsm.Instructions.Types
             {
                 Type = methodHandleEntry.ReferenceKind,
                 Descriptor = methodHandleEntry.ReferenceKind.IsFieldReference()
-                    ? (IDescriptor) TypeDescriptor.Parse(methodHandleEntry.Reference.NameAndType
+                    ? TypeDescriptor.Parse(methodHandleEntry.Reference.NameAndType
                         .Descriptor.String)
                     : (IDescriptor) MethodDescriptor.Parse(methodHandleEntry.Reference.NameAndType
                         .Descriptor.String),

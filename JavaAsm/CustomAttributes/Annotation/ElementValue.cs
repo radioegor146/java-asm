@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using BinaryEncoding;
+using JavaAsm.Helpers;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
@@ -49,7 +50,7 @@ namespace JavaAsm.CustomAttributes.Annotation
         {
             var elementValue = new ElementValue
             {
-                Tag = (ElementValueTag) stream.ReadByte()
+                Tag = (ElementValueTag) stream.ReadByteFully()
             };
 
             switch (elementValue.Tag)

@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using BinaryEncoding;
+using JavaAsm.Helpers;
 using JavaAsm.Instructions.Types;
 
 namespace JavaAsm.IO.ConstantPoolEntries
@@ -21,7 +22,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public MethodHandleEntry(Stream stream)
         {
-            ReferenceKind = (ReferenceKindType)stream.ReadByte();
+            ReferenceKind = (ReferenceKindType) stream.ReadByteFully();
             referenceIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 

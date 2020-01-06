@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using JavaAsm.Helpers;
 using JavaAsm.IO;
 
 namespace JavaAsm.CustomAttributes.TypeAnnotation
@@ -26,14 +27,14 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal void Read(Stream stream, ClassReaderState classReaderState)
         {
-            var pathSize = stream.ReadByte();
+            var pathSize = stream.ReadByteFully();
             Path.Capacity = pathSize;
             for (var i = 0; i < pathSize; i++)
             {
                 Path.Add(new PathPart
                 {
-                    TypePathKind = (TypePathKind) stream.ReadByte(),
-                    TypeArgumentIndex = (byte) stream.ReadByte()
+                    TypePathKind = (TypePathKind) stream.ReadByteFully(),
+                    TypeArgumentIndex = stream.ReadByteFully()
                 });
             }
         }
