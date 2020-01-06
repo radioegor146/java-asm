@@ -1,2 +1,2 @@
 # java-asm
-[WIP] Java deobfuscator + Java ASM library written in C#
+[WIP] Java ASM library written in C#
