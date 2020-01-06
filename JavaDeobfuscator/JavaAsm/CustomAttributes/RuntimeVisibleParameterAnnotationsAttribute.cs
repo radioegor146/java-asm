@@ -36,9 +36,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class RuntimeVisibleParameterAnnotationsAttributeFactory : ICustomAttributeFactory<RuntimeVisibleParameterAnnotationsAttribute>
     {
-        public RuntimeVisibleParameterAnnotationsAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public RuntimeVisibleParameterAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var attribute = new RuntimeVisibleParameterAnnotationsAttribute();
 
             var parametersCount = (byte)attributeDataStream.ReadByte();
@@ -52,10 +51,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                     parameter.Annotations.Add(AnnotationNode.Parse(attributeDataStream, readerState));
                 attribute.Parameters.Add(parameter);
             }
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for RuntimeVisibleParameterAnnotations attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

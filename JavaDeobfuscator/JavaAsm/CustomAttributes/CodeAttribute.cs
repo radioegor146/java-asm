@@ -66,9 +66,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class CodeAttributeFactory : ICustomAttributeFactory<CodeAttribute>
     {
-        public CodeAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public CodeAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var maxStack = Binary.BigEndian.ReadUInt16(attributeDataStream);
             var maxLocals = Binary.BigEndian.ReadUInt16(attributeDataStream);
             var code = new byte[Binary.BigEndian.ReadUInt32(attributeDataStream)];
@@ -106,10 +105,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
             attribute.Attributes.Capacity = attributesCount;
             for (var i = 0; i < attributesCount; i++)
                 attribute.Attributes.Add(ClassFile.ParseAttribute(attributeDataStream, readerState, AttributeScope.Code));
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for Code attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using BinaryEncoding;
 using JavaDeobfuscator.JavaAsm.CustomAttributes;
+using JavaDeobfuscator.JavaAsm.Helpers;
 using JavaDeobfuscator.JavaAsm.IO;
 
 namespace JavaDeobfuscator.JavaAsm
@@ -84,10 +87,19 @@ namespace JavaDeobfuscator.JavaAsm
 
         public CustomAttribute ParsedAttribute { get; set; }
 
-        public void Parse(AttributeScope scope, ClassReaderState readerState)
-        { 
+        public void Parse(Stream stream, AttributeScope scope, ClassReaderState readerState)
+        {
+            var dataLength = Binary.BigEndian.ReadUInt32(stream);
             if (predefinedAttributes.ContainsKey((Name, scope)))
-                ParsedAttribute = predefinedAttributes[(Name, scope)].Parse(this, readerState, scope);
+            {
+                var readWriteCounter = new ReadWriteCountStream(stream);
+                ParsedAttribute = predefinedAttributes[(Name, scope)].Parse(readWriteCounter, dataLength, readerState, scope);
+                if (readWriteCounter.ReadBytes != dataLength)
+                    throw new ArgumentOutOfRangeException(
+                        $"Wrong data length of attribute {Name} in {scope}: Given {dataLength}, Read: {readWriteCounter.ReadBytes}");
+            }
+            else
+                Data = stream.ReadBytes(dataLength);
         }
     }
 
@@ -98,7 +110,7 @@ namespace JavaDeobfuscator.JavaAsm
 
     internal interface ICustomAttributeFactory<out T> where T : CustomAttribute
     {
-        T Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope);
+        T Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope);
     }
 
     internal enum AttributeScope

@@ -39,13 +39,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class EnclosingMethodAttributeFactory : ICustomAttributeFactory<EnclosingMethodAttribute>
     {
-        public EnclosingMethodAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public EnclosingMethodAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            if (attributeNode.Data.Length != sizeof(ushort) * 2)
-                throw new ArgumentOutOfRangeException($"Attribute length is incorrect for EnclosingMethod: {attributeNode.Data.Length} != {sizeof(ushort) * 2}");
-
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
-
             var attribute = new EnclosingMethodAttribute
             {
                 Class = new ClassName(readerState.ConstantPool

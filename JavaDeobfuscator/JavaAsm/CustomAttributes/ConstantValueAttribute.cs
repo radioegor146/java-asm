@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using BinaryEncoding;
 using JavaDeobfuscator.JavaAsm.IO;
 using JavaDeobfuscator.JavaAsm.IO.ConstantPoolEntries;
@@ -27,11 +28,9 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class ConstantValueAttributeFactory : ICustomAttributeFactory<ConstantValueAttribute>
     {
-        public ConstantValueAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public ConstantValueAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            if (attributeNode.Data.Length != sizeof(ushort))
-                throw new ArgumentOutOfRangeException($"Attribute length is incorrect for ConstantValue: {attributeNode.Data.Length} != {sizeof(ushort)}");
-            var entry = readerState.ConstantPool.GetEntry<Entry>(Binary.BigEndian.GetUInt16(attributeNode.Data));
+            var entry = readerState.ConstantPool.GetEntry<Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream));
             return new ConstantValueAttribute {
                 Value = entry switch
                     {

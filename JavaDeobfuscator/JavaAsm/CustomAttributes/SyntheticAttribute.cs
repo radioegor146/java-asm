@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using JavaDeobfuscator.JavaAsm.IO;
 
@@ -12,11 +13,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class SyntheticAttributeFactory : ICustomAttributeFactory<SyntheticAttribute>
     {
-        public SyntheticAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
-        {
-            if (attributeNode.Data.Length != 0)
-                throw new ArgumentOutOfRangeException($"Attribute length is incorrect for Synthetic: {attributeNode.Data.Length} != {0}");
-            return new SyntheticAttribute();
-        }
+        public SyntheticAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope) => new SyntheticAttribute();
     }
 }

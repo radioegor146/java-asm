@@ -1,4 +1,5 @@
-﻿using JavaDeobfuscator.JavaAsm.Helpers;
+﻿using System.IO;
+using JavaDeobfuscator.JavaAsm.Helpers;
 using JavaDeobfuscator.JavaAsm.IO;
 
 namespace JavaDeobfuscator.JavaAsm.CustomAttributes
@@ -15,11 +16,11 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class SourceDebugExtensionFactory : ICustomAttributeFactory<SourceDebugExtensionAttribute>
     {
-        public SourceDebugExtensionAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public SourceDebugExtensionAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
             return new SourceDebugExtensionAttribute
             {
-                Value = ModifiedUtf8Helper.Decode(attributeNode.Data)
+                Value = ModifiedUtf8Helper.Decode(attributeDataStream.ReadBytes(attributeDataLength))
             };
         }
     }

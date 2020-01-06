@@ -48,9 +48,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class LocalVariableTypeTableAttributeFactory : ICustomAttributeFactory<LocalVariableTypeTableAttribute>
     {
-        public LocalVariableTypeTableAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public LocalVariableTypeTableAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var attribute = new LocalVariableTypeTableAttribute();
 
             var localVariableTypeTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
@@ -64,10 +63,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                     Signature = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).String,
                     Index = Binary.BigEndian.ReadUInt16(attributeDataStream)
                 });
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for LocalVariableTypeTable attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

@@ -116,9 +116,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
             };
         }
 
-        public StackMapTableAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public StackMapTableAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var attribute = new StackMapTableAttribute();
 
             var parametersCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
@@ -203,10 +202,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
                 attribute.Entries.Add(stackMapFrame);
             }
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for StackMapTable attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

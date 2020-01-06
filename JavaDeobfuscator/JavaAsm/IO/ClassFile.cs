@@ -13,11 +13,9 @@ namespace JavaDeobfuscator.JavaAsm.IO
         {
             var attribute = new AttributeNode
             {
-                Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String,
-                Data = new byte[Binary.BigEndian.ReadUInt32(stream)]
+                Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String
             };
-            stream.Read(attribute.Data);
-            attribute.Parse(scope, state);
+            attribute.Parse(stream, scope, state);
             return attribute;
         }
 

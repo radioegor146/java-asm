@@ -29,19 +29,14 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class RuntimeVisibleAnnotationsAttributeFactory : ICustomAttributeFactory<RuntimeVisibleAnnotationsAttribute>
     {
-        public RuntimeVisibleAnnotationsAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public RuntimeVisibleAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var attribute = new RuntimeVisibleAnnotationsAttribute();
 
             var annotationsCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.Annotations.Capacity = annotationsCount;
             for (var i = 0; i < annotationsCount; i++)
                 attribute.Annotations.Add(AnnotationNode.Parse(attributeDataStream, readerState));
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for RuntimeVisibleAnnotations attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

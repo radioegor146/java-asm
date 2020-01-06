@@ -30,9 +30,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class ExceptionsAttributeFactory : ICustomAttributeFactory<ExceptionsAttribute>
     {
-        public ExceptionsAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public ExceptionsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var attribute = new ExceptionsAttribute();
 
             var count = Binary.BigEndian.ReadUInt16(attributeDataStream);
@@ -40,11 +39,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
             for (var i = 0; i < count; i++)
                 attribute.ExceptionTable.Add(new ClassName(readerState.ConstantPool
                     .GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).Name.String));
-
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for Exceptions attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

@@ -37,9 +37,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class LineNumberTableAttributeFactory : ICustomAttributeFactory<LineNumberTableAttribute>
     {
-        public LineNumberTableAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public LineNumberTableAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var attribute = new LineNumberTableAttribute();
 
             var exceptionTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
@@ -50,10 +49,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                     StartPc = Binary.BigEndian.ReadUInt16(attributeDataStream),
                     LineNumber = Binary.BigEndian.ReadUInt16(attributeDataStream)
                 });
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for LineNumberTable attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

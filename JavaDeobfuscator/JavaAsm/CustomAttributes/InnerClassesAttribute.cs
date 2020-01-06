@@ -51,9 +51,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class InnerClassesAttributeFactory : ICustomAttributeFactory<InnerClassesAttribute>
     {
-        public InnerClassesAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public InnerClassesAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var attribute = new InnerClassesAttribute();
 
             var classesCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
@@ -75,12 +74,7 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                         .GetEntry<Utf8Entry>(innerNameIndex).String;
                 innerClass.Access = (ClassAccessModifiers) Binary.BigEndian.ReadUInt16(attributeDataStream);
                 attribute.Classes.Add(innerClass);
-
             }
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for InnerClasses attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

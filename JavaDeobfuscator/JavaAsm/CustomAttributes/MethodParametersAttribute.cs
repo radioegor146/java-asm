@@ -38,9 +38,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class MethodParametersAttributeFactory : ICustomAttributeFactory<MethodParametersAttribute>
     {
-        public MethodParametersAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public MethodParametersAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
             var attribute = new MethodParametersAttribute();
 
             var exceptionTableSize = (byte) attributeDataStream.ReadByte();
@@ -51,10 +50,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
                     Name = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).String,
                     Access = (ClassAccessModifiers) Binary.BigEndian.ReadUInt16(attributeDataStream)
                 });
-
-            if (attributeDataStream.Position != attributeDataStream.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"Too many bytes for MethodParameters attribute: {attributeDataStream.Length} > {attributeDataStream.Position}");
 
             return attribute;
         }

@@ -23,10 +23,8 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class AnnotationDefaultAttributeFactory : ICustomAttributeFactory<AnnotationDefaultAttribute>
     {
-        public AnnotationDefaultAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
+        public AnnotationDefaultAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream(attributeNode.Data);
-
             return new AnnotationDefaultAttribute
             {
                 Value = ElementValue.Parse(attributeDataStream, readerState)

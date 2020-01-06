@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using JavaDeobfuscator.JavaAsm.IO;
 
 namespace JavaDeobfuscator.JavaAsm.CustomAttributes
@@ -10,11 +11,6 @@ namespace JavaDeobfuscator.JavaAsm.CustomAttributes
 
     internal class DeprecatedAttributeFactory : ICustomAttributeFactory<DeprecatedAttribute>
     {
-        public DeprecatedAttribute Parse(AttributeNode attributeNode, ClassReaderState readerState, AttributeScope scope)
-        {
-            if (attributeNode.Data.Length != 0)
-                throw new ArgumentOutOfRangeException($"Attribute length is incorrect for Deprecated: {attributeNode.Data.Length} != {0}");
-            return new DeprecatedAttribute();
-        }
+        public DeprecatedAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope) => new DeprecatedAttribute();
     }
 }
