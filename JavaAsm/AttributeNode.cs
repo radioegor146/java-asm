@@ -90,16 +90,23 @@ namespace JavaAsm
         internal void Parse(Stream stream, AttributeScope scope, ClassReaderState readerState)
         {
             var dataLength = Binary.BigEndian.ReadUInt32(stream);
-            if (predefinedAttributes.ContainsKey((Name, scope)))
+            var data = stream.ReadBytes(dataLength);
+
+            try
             {
-                var readWriteCounter = new ReadWriteCountStream(stream);
+                if (!predefinedAttributes.ContainsKey((Name, scope)))
+                    throw new ArgumentException($"Attribute {Name} in {scope} not found");
+                var readWriteCounter = new ReadWriteCountStream(new MemoryStream(data));
                 ParsedAttribute = predefinedAttributes[(Name, scope)].Parse(readWriteCounter, dataLength, readerState, scope);
                 if (readWriteCounter.ReadBytes != dataLength)
                     throw new ArgumentOutOfRangeException(nameof(dataLength),
                         $"Wrong data length of attribute {Name} in {scope}: Given {dataLength}, Read: {readWriteCounter.ReadBytes}");
+            } 
+            catch
+            {
+                Data = data;
             }
-            else
-                Data = stream.ReadBytes(dataLength);
+
         }
     }
 
