@@ -2,7 +2,7 @@ name: push-dev
 on:
   push:
     branches:
-    - dev
+    - '!master'
 jobs:
   java-asm:
     name: java-asm
