@@ -173,7 +173,7 @@ namespace JavaAsm
                 });
             }
 
-            if (InvisibleAnnotations.Count > 0)
+            if (InvisibleAnnotations != null && InvisibleAnnotations.Count > 0)
             {
                 if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
                     throw new Exception(
@@ -188,7 +188,7 @@ namespace JavaAsm
                 });
             }
 
-            if (VisibleAnnotations.Count > 0)
+            if (VisibleAnnotations != null && VisibleAnnotations.Count > 0)
             {
                 if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
                     throw new Exception(

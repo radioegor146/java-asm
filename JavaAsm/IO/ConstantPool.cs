@@ -18,9 +18,6 @@ namespace JavaAsm.IO
         {
             if (constantPoolMap.ContainsKey(entry))
             {
-                var index = constantPoolMap[entry];
-                if (!entry.Equals(constantPoolMap.First(x => x.Value == index).Key))
-                    throw new Exception($"WTF?!");
                 return constantPoolMap[entry];
             }
 
@@ -48,7 +45,7 @@ namespace JavaAsm.IO
                 var tag = (EntryTag) stream.ReadByteFully();
                 var entry = tag switch
                 {
-                    EntryTag.Class => (Entry)new ClassEntry(stream),
+                    EntryTag.Class => (Entry) new ClassEntry(stream),
                     EntryTag.FieldReference => new FieldReferenceEntry(stream),
                     EntryTag.MethodReference => new MethodReferenceEntry(stream),
                     EntryTag.InterfaceMethodReference => new InterfaceMethodReferenceEntry(stream),
@@ -66,7 +63,7 @@ namespace JavaAsm.IO
                 };
                 Debug.Assert(entry.Tag == tag);
                 entries.Add(entry);
-                if (!(entry is LongEntry) && !(entry is DoubleEntry)) 
+                if (!(entry is LongEntry) && !(entry is DoubleEntry))
                     continue;
                 entries.Add(new LongDoublePlaceholderEntry());
                 i++;
@@ -80,18 +77,25 @@ namespace JavaAsm.IO
         {
             public override EntryTag Tag => throw new Exception("You shouldn't access that entry");
 
-            public override void ProcessFromConstantPool(ConstantPool constantPool) { }
+            public override void ProcessFromConstantPool(ConstantPool constantPool)
+            {
+            }
 
-            public override void Write(Stream stream) { }
+            public override void Write(Stream stream)
+            {
+            }
 
-            public override void PutToConstantPool(ConstantPool constantPool) { }
+            public override void PutToConstantPool(ConstantPool constantPool)
+            {
+            }
         }
 
         public void Write(Stream stream)
         {
             if (entries.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(entries.Count), $"Too many entries: {entries.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(stream, (ushort)(entries.Count + 1));
+                throw new ArgumentOutOfRangeException(nameof(entries.Count),
+                    $"Too many entries: {entries.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(stream, (ushort) (entries.Count + 1));
             foreach (var entry in entries.Where(entry => !(entry is LongDoublePlaceholderEntry)))
             {
                 stream.WriteByte((byte) entry.Tag);

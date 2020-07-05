@@ -5,7 +5,7 @@ using JavaAsm.IO.ConstantPoolEntries;
 
 namespace JavaAsm.IO
 {
-    public class ClassFile
+    public static class ClassFile
     {
         private const uint Magic = 0xCAFEBABE;
 

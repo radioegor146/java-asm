@@ -2,7 +2,7 @@
 
 namespace JavaAsm.Helpers
 {
-    public class ModifiedUtf8Helper
+    public static class ModifiedUtf8Helper
     {
         public static byte[] Encode(string value)
         {

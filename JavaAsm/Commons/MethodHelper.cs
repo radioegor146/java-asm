@@ -10,7 +10,7 @@ namespace JavaAsm.Commons
     /// <summary>
     /// Helper class for different operations with methods (computing sizes, frames, etc)
     /// </summary>
-    public class MethodHelper
+    public static class MethodHelper
     {
         /// <summary>
         /// Computers max number of locals and stack

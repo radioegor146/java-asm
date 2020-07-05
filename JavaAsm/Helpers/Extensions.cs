@@ -6,7 +6,7 @@ using JavaAsm.Instructions.Types;
 
 namespace JavaAsm.Helpers
 {
-    public static class Extensions
+    internal static class Extensions
     {
         public static bool In<T>(this T value, params T[] values)
         {
@@ -28,7 +28,7 @@ namespace JavaAsm.Helpers
         }
     }
 
-    public static class StreamExtensions
+    internal static class StreamExtensions
     {
         public static byte ReadByteFully(this Stream stream)
         {
@@ -50,7 +50,7 @@ namespace JavaAsm.Helpers
         }
     }
 
-    public static class ReferenceKindTypeExtensions
+    internal static class ReferenceKindTypeExtensions
     {
         public static bool IsMethodReference(this ReferenceKindType referenceKindType)
         {
@@ -70,7 +70,7 @@ namespace JavaAsm.Helpers
         }
     }
 
-    public static class DictionaryExtensions
+    internal static class DictionaryExtensions
     {
         public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue value)
         {

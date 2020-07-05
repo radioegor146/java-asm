@@ -16,7 +16,7 @@ namespace JavaAsm
             return Name.Replace("/", ".");
         }
 
-        public bool Equals(ClassName other)
+        private bool Equals(ClassName other)
         {
             return Name == other.Name;
         }

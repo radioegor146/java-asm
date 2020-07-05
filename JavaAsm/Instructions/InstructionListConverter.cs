@@ -11,9 +11,9 @@ using JavaAsm.IO.ConstantPoolEntries;
 
 namespace JavaAsm.Instructions
 {
-    internal class InstructionListConverter
+    internal static class InstructionListConverter
     {
-        private static AttributeNode GetAttribute(List<AttributeNode> attributes, string name)
+        private static AttributeNode GetAttribute(ICollection<AttributeNode> attributes, string name)
         {
             var attribute = attributes.FirstOrDefault(a => a.Name == name);
             if (attribute != null)
@@ -479,7 +479,7 @@ namespace JavaAsm.Instructions
                             {
                                 Value = constantPoolEntry switch
                                 {
-                                    IntegerEntry integerEntry => (object) integerEntry.Value,
+                                    IntegerEntry integerEntry => integerEntry.Value,
                                     FloatEntry floatEntry => floatEntry.Value,
                                     StringEntry stringEntry => stringEntry.Value.String,
                                     ClassEntry classEntry => new ClassName(classEntry.Name.String),
@@ -500,7 +500,7 @@ namespace JavaAsm.Instructions
                             {
                                 Value = constantPoolEntry switch
                                 {
-                                    IntegerEntry integerEntry when opcode == Opcode.LDC_W => (object) integerEntry.Value,
+                                    IntegerEntry integerEntry when opcode == Opcode.LDC_W => integerEntry.Value,
                                     FloatEntry floatEntry when opcode == Opcode.LDC_W => floatEntry.Value,
                                     StringEntry stringEntry when opcode == Opcode.LDC_W => stringEntry.Value.String,
                                     ClassEntry classEntry when opcode == Opcode.LDC_W => new ClassName(classEntry.Name
@@ -661,6 +661,10 @@ namespace JavaAsm.Instructions
                     parseTo.Instructions.Add(stackMapFrames[stackMapFramesPosition++].Frame);
                 parseTo.Instructions.Add(instruction);
             }
+            while (labelListPosition < labelList.Count)
+                parseTo.Instructions.Add(labelList[labelListPosition++].Value);
+            while (stackMapFramesPosition < stackMapFrames.Count)
+                parseTo.Instructions.Add(stackMapFrames[stackMapFramesPosition++].Frame);
         }
 
         public static CodeAttribute SaveCodeAttribute(MethodNode source, ClassWriterState writerState)
@@ -694,7 +698,7 @@ namespace JavaAsm.Instructions
                     case LdcInstruction ldcInstruction:
                         writerState.ConstantPool.Find(ldcInstruction.Value switch
                         {
-                            int integerValue => (Entry) new IntegerEntry(integerValue),
+                            int integerValue => new IntegerEntry(integerValue),
                             float floatValue => new FloatEntry(floatValue),
                             string stringValue => new StringEntry(new Utf8Entry(stringValue)),
                             long longValue => new LongEntry(longValue),
