@@ -22,14 +22,14 @@ namespace JavaAsm.CustomAttributes.Annotation
 
         internal static AnnotationNode Parse(Stream stream, ClassReaderState readerState)
         {
-            var annotation = new AnnotationNode
+            AnnotationNode annotation = new AnnotationNode
             {
                 Type = TypeDescriptor.Parse(readerState.ConstantPool
                     .GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String)
             };
-            var elementValuePairsCount = Binary.BigEndian.ReadUInt16(stream);
+            ushort elementValuePairsCount = Binary.BigEndian.ReadUInt16(stream);
             annotation.ElementValuePairs.Capacity = elementValuePairsCount;
-            for (var i = 0; i < elementValuePairsCount; i++)
+            for (int i = 0; i < elementValuePairsCount; i++)
                 annotation.ElementValuePairs.Add(new ElementValuePair
                 {
                     ElementName = readerState.ConstantPool
@@ -41,12 +41,12 @@ namespace JavaAsm.CustomAttributes.Annotation
 
         internal void Write(Stream stream, ClassWriterState writerState)
         {
-            Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new Utf8Entry(Type.ToString())));
-            if (ElementValuePairs.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(ElementValuePairs.Count), 
-                    $"Too many ElementValues: {ElementValuePairs.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(stream, (ushort) ElementValuePairs.Count);
-            foreach (var elementValuePair in ElementValuePairs)
+            Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new Utf8Entry(this.Type.ToString())));
+            if (this.ElementValuePairs.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.ElementValuePairs.Count),
+                    $"Too many ElementValues: {this.ElementValuePairs.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(stream, (ushort) this.ElementValuePairs.Count);
+            foreach (ElementValuePair elementValuePair in this.ElementValuePairs)
             {
                 Binary.BigEndian.Write(stream,
                     writerState.ConstantPool.Find(new Utf8Entry(elementValuePair.ElementName)));

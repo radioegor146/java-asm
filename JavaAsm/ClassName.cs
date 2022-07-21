@@ -8,17 +8,17 @@ namespace JavaAsm
 
         public ClassName(string name)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            this.Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
         public override string ToString()
         {
-            return Name.Replace("/", ".");
+            return this.Name.Replace("/", ".");
         }
 
         private bool Equals(ClassName other)
         {
-            return Name == other.Name;
+            return this.Name == other.Name;
         }
 
         public override bool Equals(object obj)
@@ -30,7 +30,7 @@ namespace JavaAsm
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode();
+            return this.Name.GetHashCode();
         }
     }
 }

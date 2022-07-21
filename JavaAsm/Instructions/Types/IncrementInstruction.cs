@@ -10,7 +10,7 @@
 
         public override string ToString()
         {
-            return $"{Opcode} {VariableIndex} {Value}";
+            return $"{this.Opcode} {this.VariableIndex} {this.Value}";
         }
     }
 }

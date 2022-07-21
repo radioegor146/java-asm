@@ -5,52 +5,47 @@ using JavaAsm.Helpers;
 using JavaAsm.Instructions;
 using JavaAsm.Instructions.Types;
 
-namespace JavaAsm.Commons
-{
+namespace JavaAsm.Commons {
     /// <summary>
     /// Helper class for different operations with methods (computing sizes, frames, etc)
     /// </summary>
-    public static class MethodHelper
-    {
+    public static class MethodHelper {
         /// <summary>
         /// Computers max number of locals and stack
         /// </summary>
         /// <param name="methodNode">Method to compute for</param>
         /// <returns>ValueTuple of max number of locals and stack</returns>
-        public static (ushort MaxLocals, ushort MaxStack) ComputeMaxStackAndLocals(MethodNode methodNode)
-        {
+        public static (ushort MaxLocals, ushort MaxStack) ComputeMaxStackAndLocals(MethodNode methodNode) {
             if (methodNode.Instructions == null || methodNode.Access.HasFlag(MethodAccessModifiers.Native) ||
                 methodNode.Access.HasFlag(MethodAccessModifiers.Abstract))
                 throw new ArgumentOutOfRangeException(nameof(methodNode),
                     "Can't compute stack and locals for native or abstract method");
 
-            var maxLocalIndex = Math.Max(methodNode.Instructions.Any(x => x is VariableInstruction) ? 
-                    methodNode.Instructions.Where(x => x is VariableInstruction).Max(x => ((VariableInstruction) x).VariableIndex +
-                                         (x.Opcode.In(Opcode.LLOAD, Opcode.LSTORE, Opcode.DLOAD, Opcode.DSTORE) ? 1 : 0)) + 1 : 0, 
-                                        methodNode.Descriptor.ArgumentTypes.Sum(x => x.SizeOnStack) + (methodNode.Access.HasFlag(MethodAccessModifiers.Static) ? 0 : 1));
+            int maxLocalIndex = Math.Max(methodNode.Instructions.Any(x => x is VariableInstruction)
+                    ? methodNode.Instructions.Where(x => x is VariableInstruction).Max(x => ((VariableInstruction) x).VariableIndex +
+                                                                                            (x.Opcode.In(Opcode.LLOAD, Opcode.LSTORE, Opcode.DLOAD, Opcode.DSTORE) ? 1 : 0)) + 1
+                    : 0,
+                methodNode.Descriptor.ArgumentTypes.Sum(x => x.SizeOnStack) + (methodNode.Access.HasFlag(MethodAccessModifiers.Static) ? 0 : 1));
             if (maxLocalIndex > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(maxLocalIndex),
                     $"Max local index is larger that maximum possible amount: {maxLocalIndex} > {ushort.MaxValue}");
 
-            var maxLocals = (ushort) maxLocalIndex;
+            ushort maxLocals = (ushort) maxLocalIndex;
 
-            var queueToCompute = new Queue<Instruction>();
+            Queue<Instruction> queueToCompute = new Queue<Instruction>();
             queueToCompute.Enqueue(methodNode.Instructions.First);
 
-            var stackSizes = new Dictionary<Instruction, ushort>
-            {
-                { methodNode.Instructions.First, 0 }
+            Dictionary<Instruction, ushort> stackSizes = new Dictionary<Instruction, ushort> {
+                {methodNode.Instructions.First, 0}
             };
-            foreach (var tryCatchBlock in methodNode.TryCatches)
-            {
+            foreach (TryCatchNode tryCatchBlock in methodNode.TryCatches) {
                 if (tryCatchBlock.Handler.OwnerList != methodNode.Instructions)
                     throw new Exception("TryCatch block handler label does not belongs to methodNode's instructions list");
-                if (stackSizes.TryAdd(tryCatchBlock.Handler, 1))
+                if (stackSizes.TryAdd<Instruction, ushort>(tryCatchBlock.Handler, 1))
                     queueToCompute.Enqueue(tryCatchBlock.Handler);
             }
 
-            static void CheckStackSizeAndThrow(int stackSize)
-            {
+            void CheckStackSizeAndThrow(int stackSize) {
                 if (stackSize < 0)
                     throw new ArgumentOutOfRangeException(nameof(stackSize),
                         $"Stack underflow: {stackSize} < {ushort.MinValue}");
@@ -59,8 +54,7 @@ namespace JavaAsm.Commons
                         $"Stack overflow: {stackSize} > {ushort.MaxValue}");
             }
 
-            void EnqueueInstruction(Instruction instruction, int newStackSize)
-            {
+            void EnqueueInstruction(Instruction instruction, int newStackSize) {
                 CheckStackSizeAndThrow(newStackSize);
                 if (stackSizes.TryAdd(instruction, (ushort) newStackSize))
                     queueToCompute.Enqueue(instruction);
@@ -68,15 +62,12 @@ namespace JavaAsm.Commons
                     throw new Exception($"Stack size difference on instruction {instruction}");
             }
 
-            while (queueToCompute.Any())
-            {
-                var currentInstruction = queueToCompute.Dequeue();
-                var newStackSize = (int) stackSizes[currentInstruction];
-                switch (currentInstruction)
-                {
+            while (queueToCompute.Any()) {
+                Instruction currentInstruction = queueToCompute.Dequeue();
+                int newStackSize = stackSizes[currentInstruction];
+                switch (currentInstruction) {
                     case FieldInstruction fieldInstruction:
-                        if (fieldInstruction.Opcode.In(Opcode.GETFIELD, Opcode.PUTFIELD))
-                        {
+                        if (fieldInstruction.Opcode.In(Opcode.GETFIELD, Opcode.PUTFIELD)) {
                             newStackSize--;
                             CheckStackSizeAndThrow(newStackSize);
                         }
@@ -96,8 +87,7 @@ namespace JavaAsm.Commons
                         break;
                     case JumpInstruction jumpInstruction:
                         // ReSharper disable once SwitchStatementMissingSomeCases
-                        switch (jumpInstruction.Opcode)
-                        {
+                        switch (jumpInstruction.Opcode) {
                             case Opcode.IFEQ:
                             case Opcode.IFNE:
                             case Opcode.IFLT:
@@ -127,9 +117,9 @@ namespace JavaAsm.Commons
                             case Opcode.GOTO:
                                 EnqueueInstruction(jumpInstruction.Target, newStackSize);
                                 continue;
-                            default:
-                                throw new ArgumentOutOfRangeException(nameof(jumpInstruction.Opcode));
+                            default: throw new ArgumentOutOfRangeException(nameof(jumpInstruction.Opcode));
                         }
+
                         break;
                     case LdcInstruction ldcInstruction:
                         newStackSize += ldcInstruction.Value is long || ldcInstruction.Value is double ? 2 : 1;
@@ -137,12 +127,11 @@ namespace JavaAsm.Commons
                     case LookupSwitchInstruction lookupSwitchInstruction:
                         newStackSize--;
                         EnqueueInstruction(lookupSwitchInstruction.Default, newStackSize);
-                        foreach (var jumpPoint in lookupSwitchInstruction.MatchLabels)
+                        foreach (KeyValuePair<int, Label> jumpPoint in lookupSwitchInstruction.MatchLabels)
                             EnqueueInstruction(jumpPoint.Value, newStackSize);
                         continue;
                     case MethodInstruction methodInstruction:
-                        if (methodInstruction.Opcode != Opcode.INVOKESTATIC)
-                        {
+                        if (methodInstruction.Opcode != Opcode.INVOKESTATIC) {
                             newStackSize--;
                             CheckStackSizeAndThrow(newStackSize);
                         }
@@ -163,10 +152,8 @@ namespace JavaAsm.Commons
                         break;
                     case SimpleInstruction simpleInstruction:
                         // ReSharper disable once SwitchStatementMissingSomeCases
-                        switch (simpleInstruction.Opcode)
-                        {
-                            case Opcode.NOP:
-	                            break;
+                        switch (simpleInstruction.Opcode) {
+                            case Opcode.NOP: break;
                             case Opcode.ACONST_NULL:
                             case Opcode.ICONST_M1:
                             case Opcode.ICONST_0:
@@ -178,24 +165,24 @@ namespace JavaAsm.Commons
                             case Opcode.FCONST_0:
                             case Opcode.FCONST_1:
                             case Opcode.FCONST_2:
-	                            newStackSize++;
-	                            break;
+                                newStackSize++;
+                                break;
                             case Opcode.LCONST_0:
                             case Opcode.LCONST_1:
                             case Opcode.DCONST_0:
                             case Opcode.DCONST_1:
-	                            newStackSize += 2;
-	                            break;
+                                newStackSize += 2;
+                                break;
                             case Opcode.IALOAD:
                             case Opcode.FALOAD:
                             case Opcode.AALOAD:
                             case Opcode.BALOAD:
                             case Opcode.CALOAD:
                             case Opcode.SALOAD:
-	                            newStackSize -= 2;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize++;
-	                            break;
+                                newStackSize -= 2;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize++;
+                                break;
                             case Opcode.LALOAD:
                             case Opcode.DALOAD:
                                 newStackSize -= 2;
@@ -207,10 +194,10 @@ namespace JavaAsm.Commons
                             case Opcode.I2D:
                             case Opcode.F2L:
                             case Opcode.F2D:
-	                            newStackSize--;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 2;
-	                            break;
+                                newStackSize--;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize += 2;
+                                break;
                             case Opcode.IASTORE:
                             case Opcode.FASTORE:
                             case Opcode.AASTORE:
@@ -220,51 +207,51 @@ namespace JavaAsm.Commons
                                 newStackSize -= 3;
                                 break;
                             case Opcode.POP2:
-	                            newStackSize -= 2;
-	                            break;
+                                newStackSize -= 2;
+                                break;
                             case Opcode.DASTORE:
                             case Opcode.LASTORE:
-	                            newStackSize -= 4;
-	                            break;
+                                newStackSize -= 4;
+                                break;
                             case Opcode.POP:
                             case Opcode.MONITORENTER:
                             case Opcode.MONITOREXIT:
-	                            newStackSize--;
-	                            break;
+                                newStackSize--;
+                                break;
                             case Opcode.DUP_X1:
-	                            newStackSize -= 2;
+                                newStackSize -= 2;
                                 CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 3;
-	                            break;
+                                newStackSize += 3;
+                                break;
                             case Opcode.DUP_X2:
-	                            newStackSize -= 3;
+                                newStackSize -= 3;
                                 CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 4;
-	                            break;
+                                newStackSize += 4;
+                                break;
                             case Opcode.DUP2:
-	                            newStackSize -= 2;
+                                newStackSize -= 2;
                                 CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 4;
-	                            break;
+                                newStackSize += 4;
+                                break;
                             case Opcode.DUP2_X1:
-	                            newStackSize -= 3;
+                                newStackSize -= 3;
                                 CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 5;
-	                            break;
+                                newStackSize += 5;
+                                break;
                             case Opcode.DUP2_X2:
-	                            newStackSize -= 4;
+                                newStackSize -= 4;
                                 CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 6;
-	                            break;
+                                newStackSize += 6;
+                                break;
                             case Opcode.SWAP:
                             case Opcode.LNEG:
                             case Opcode.DNEG:
                             case Opcode.L2D:
                             case Opcode.D2L:
-	                            newStackSize -= 2;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 2;
-	                            break;
+                                newStackSize -= 2;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize += 2;
+                                break;
                             case Opcode.IADD:
                             case Opcode.FADD:
                             case Opcode.ISUB:
@@ -283,10 +270,10 @@ namespace JavaAsm.Commons
                             case Opcode.IUSHR:
                             case Opcode.FCMPL:
                             case Opcode.FCMPG:
-	                            newStackSize -= 2;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize++;
-	                            break;
+                                newStackSize -= 2;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize++;
+                                break;
                             case Opcode.LADD:
                             case Opcode.DADD:
                             case Opcode.LSUB:
@@ -300,10 +287,10 @@ namespace JavaAsm.Commons
                             case Opcode.LAND:
                             case Opcode.LOR:
                             case Opcode.LXOR:
-	                            newStackSize -= 4;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 2;
-	                            break;
+                                newStackSize -= 4;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize += 2;
+                                break;
                             case Opcode.INEG:
                             case Opcode.FNEG:
                             case Opcode.I2F:
@@ -312,61 +299,59 @@ namespace JavaAsm.Commons
                             case Opcode.I2C:
                             case Opcode.I2S:
                             case Opcode.ARRAYLENGTH:
-	                            newStackSize--;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize++;
-	                            break;
+                                newStackSize--;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize++;
+                                break;
                             case Opcode.LSHL:
                             case Opcode.LSHR:
                             case Opcode.LUSHR:
-	                            newStackSize -= 3;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize += 2;
-	                            break;
+                                newStackSize -= 3;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize += 2;
+                                break;
                             case Opcode.L2I:
                             case Opcode.L2F:
                             case Opcode.D2I:
                             case Opcode.D2F:
-	                            newStackSize -= 2;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize++;
-	                            break;
+                                newStackSize -= 2;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize++;
+                                break;
                             case Opcode.LCMP:
                             case Opcode.DCMPL:
                             case Opcode.DCMPG:
-	                            newStackSize -= 4;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            newStackSize++;
-	                            break;
+                                newStackSize -= 4;
+                                CheckStackSizeAndThrow(newStackSize);
+                                newStackSize++;
+                                break;
                             case Opcode.ARETURN:
                             case Opcode.IRETURN:
                             case Opcode.FRETURN:
                             case Opcode.ATHROW:
-	                            newStackSize--;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            continue;
+                                newStackSize--;
+                                CheckStackSizeAndThrow(newStackSize);
+                                continue;
                             case Opcode.LRETURN:
                             case Opcode.DRETURN:
-	                            newStackSize -= 2;
-	                            CheckStackSizeAndThrow(newStackSize);
-	                            continue;
-                            case Opcode.RETURN:
-	                            continue;
-                            default:
-	                            throw new ArgumentOutOfRangeException(nameof(simpleInstruction.Opcode));
+                                newStackSize -= 2;
+                                CheckStackSizeAndThrow(newStackSize);
+                                continue;
+                            case Opcode.RETURN: continue;
+                            default: throw new ArgumentOutOfRangeException(nameof(simpleInstruction.Opcode));
                         }
+
                         break;
                     case TableSwitchInstruction tableSwitchInstruction:
                         newStackSize--;
                         CheckStackSizeAndThrow(newStackSize);
                         EnqueueInstruction(tableSwitchInstruction.Default, newStackSize);
-                        foreach (var jumpPoint in tableSwitchInstruction.Labels)
+                        foreach (Label jumpPoint in tableSwitchInstruction.Labels)
                             EnqueueInstruction(jumpPoint, newStackSize);
                         continue;
                     case TypeInstruction typeInstruction:
                         // ReSharper disable once SwitchStatementMissingSomeCases
-                        switch (typeInstruction.Opcode)
-                        {
+                        switch (typeInstruction.Opcode) {
                             case Opcode.NEW:
                                 newStackSize++;
                                 break;
@@ -377,14 +362,13 @@ namespace JavaAsm.Commons
                                 CheckStackSizeAndThrow(newStackSize);
                                 newStackSize++;
                                 break;
-                            default:
-                                throw new ArgumentOutOfRangeException(nameof(typeInstruction.Opcode));
+                            default: throw new ArgumentOutOfRangeException(nameof(typeInstruction.Opcode));
                         }
+
                         break;
                     case VariableInstruction variableInstruction:
                         // ReSharper disable once SwitchStatementMissingSomeCases
-                        switch (variableInstruction.Opcode)
-                        {
+                        switch (variableInstruction.Opcode) {
                             case Opcode.ALOAD:
                             case Opcode.ILOAD:
                             case Opcode.FLOAD:
@@ -403,21 +387,19 @@ namespace JavaAsm.Commons
                             case Opcode.DSTORE:
                                 newStackSize -= 2;
                                 break;
-                            case Opcode.RET:
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException(nameof(variableInstruction.Opcode));
+                            case Opcode.RET: break;
+                            default: throw new ArgumentOutOfRangeException(nameof(variableInstruction.Opcode));
                         }
+
                         break;
                     case StackMapFrame _:
                     case IncrementInstruction _:
                     case LineNumber _:
                     case Label _:
                         break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(currentInstruction));
+                    default: throw new ArgumentOutOfRangeException(nameof(currentInstruction));
                 }
-                
+
                 EnqueueInstruction(currentInstruction.Next, newStackSize);
             }
 
@@ -428,8 +410,7 @@ namespace JavaAsm.Commons
         /// Computes stack frames
         /// </summary>
         /// <param name="methodNode">Method to compute for</param>
-        public static void ComputeStackMapFrames(MethodNode methodNode)
-        {
+        public static void ComputeStackMapFrames(MethodNode methodNode) {
             throw new NotImplementedException();
         }
     }

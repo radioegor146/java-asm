@@ -8,10 +8,10 @@
 
         public override string ToString()
         {
-            var stringValue = Value.ToString();
-            if (Value is string)
+            string stringValue = this.Value.ToString();
+            if (this.Value is string)
                 stringValue = $"\"{stringValue}\"";
-            return $"{Opcode} {stringValue}";
+            return $"{this.Opcode} {stringValue}";
         }
     }
 }

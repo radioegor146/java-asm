@@ -15,37 +15,37 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         protected ReferenceEntry(ClassEntry @class, NameAndTypeEntry nameAndType)
         {
-            Class = @class ?? throw new ArgumentNullException(nameof(@class));
-            NameAndType = nameAndType ?? throw new ArgumentNullException(nameof(nameAndType));
+            this.Class = @class ?? throw new ArgumentNullException(nameof(@class));
+            this.NameAndType = nameAndType ?? throw new ArgumentNullException(nameof(nameAndType));
         }
 
         protected ReferenceEntry(Stream stream)
         {
-            classIndex = Binary.BigEndian.ReadUInt16(stream);
-            nameAndTypeIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.classIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.nameAndTypeIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 
         public override void ProcessFromConstantPool(ConstantPool constantPool)
         {
-            Class = constantPool.GetEntry<ClassEntry>(classIndex);
-            NameAndType = constantPool.GetEntry<NameAndTypeEntry>(nameAndTypeIndex);
+            this.Class = constantPool.GetEntry<ClassEntry>(this.classIndex);
+            this.NameAndType = constantPool.GetEntry<NameAndTypeEntry>(this.nameAndTypeIndex);
         }
 
         public override void Write(Stream stream)
         {
-            Binary.BigEndian.Write(stream, classIndex);
-            Binary.BigEndian.Write(stream, nameAndTypeIndex);
+            Binary.BigEndian.Write(stream, this.classIndex);
+            Binary.BigEndian.Write(stream, this.nameAndTypeIndex);
         }
 
         public override void PutToConstantPool(ConstantPool constantPool)
         {
-            classIndex = constantPool.Find(Class);
-            nameAndTypeIndex = constantPool.Find(NameAndType);
+            this.classIndex = constantPool.Find(this.Class);
+            this.nameAndTypeIndex = constantPool.Find(this.NameAndType);
         }
 
         private bool Equals(ReferenceEntry other)
         {
-            return Class.Equals(other.Class) && NameAndType.Equals(other.NameAndType);
+            return this.Class.Equals(other.Class) && this.NameAndType.Equals(other.NameAndType);
         }
 
         public override bool Equals(object obj)
@@ -60,7 +60,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
         {
             unchecked
             {
-                return (Class.GetHashCode() * 397) ^ NameAndType.GetHashCode();
+                return (this.Class.GetHashCode() * 397) ^ this.NameAndType.GetHashCode();
             }
         }
     }

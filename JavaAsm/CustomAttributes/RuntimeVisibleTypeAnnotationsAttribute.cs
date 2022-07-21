@@ -13,15 +13,15 @@ namespace JavaAsm.CustomAttributes
 
         internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream();
+            using (MemoryStream attributeDataStream = new MemoryStream()) {
+                if (this.Annotations.Count > ushort.MaxValue)
+                    throw new ArgumentOutOfRangeException(nameof(this.Annotations.Count), $"Number of annotations is too big: {this.Annotations.Count} > {ushort.MaxValue}");
+                Binary.BigEndian.Write(attributeDataStream, (ushort) this.Annotations.Count);
+                foreach (TypeAnnotationNode annotation in this.Annotations)
+                    annotation.Write(attributeDataStream, writerState, scope);
 
-            if (Annotations.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(Annotations.Count), $"Number of annotations is too big: {Annotations.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(attributeDataStream, (ushort)Annotations.Count);
-            foreach (var annotation in Annotations)
-                annotation.Write(attributeDataStream, writerState, scope);
-
-            return attributeDataStream.ToArray();
+                return attributeDataStream.ToArray();
+            }
         }
     }
 
@@ -29,11 +29,11 @@ namespace JavaAsm.CustomAttributes
     {
         public RuntimeVisibleTypeAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            var attribute = new RuntimeVisibleTypeAnnotationsAttribute();
+            RuntimeVisibleTypeAnnotationsAttribute attribute = new RuntimeVisibleTypeAnnotationsAttribute();
 
-            var annotationsCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
+            ushort annotationsCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.Annotations.Capacity = annotationsCount;
-            for (var i = 0; i < annotationsCount; i++)
+            for (int i = 0; i < annotationsCount; i++)
                 attribute.Annotations.Add(TypeAnnotationNode.Parse(attributeDataStream, readerState, scope));
 
             return attribute;

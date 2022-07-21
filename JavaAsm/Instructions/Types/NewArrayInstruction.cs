@@ -8,7 +8,7 @@
 
         public override string ToString()
         {
-            return $"{Opcode} {ArrayType}";
+            return $"{this.Opcode} {this.ArrayType}";
         }
     }
 

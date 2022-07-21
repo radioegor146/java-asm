@@ -12,12 +12,12 @@ namespace JavaAsm.Instructions.Types
         {
             opcode.CheckInAndThrow(nameof(opcode), Opcode.ILOAD, Opcode.LLOAD, Opcode.FLOAD, Opcode.DLOAD, Opcode.ALOAD,
                 Opcode.ISTORE, Opcode.LSTORE, Opcode.FSTORE, Opcode.DSTORE, Opcode.ASTORE, Opcode.RET);
-            Opcode = opcode;
+            this.Opcode = opcode;
         }
 
         public override string ToString()
         {
-            return $"{Opcode} {VariableIndex}";
+            return $"{this.Opcode} {this.VariableIndex}";
         }
     }
 }

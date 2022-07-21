@@ -13,13 +13,13 @@ namespace JavaAsm.CustomAttributes
 
         internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream();
+            MemoryStream attributeDataStream = new MemoryStream();
 
-            if (ExceptionTable.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(ExceptionTable.Count),
-                    $"Exception table size too big: {ExceptionTable.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(attributeDataStream, (ushort) ExceptionTable.Count);
-            foreach (var exceptionClassName in ExceptionTable)
+            if (this.ExceptionTable.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.ExceptionTable.Count),
+                    $"Exception table size too big: {this.ExceptionTable.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(attributeDataStream, (ushort) this.ExceptionTable.Count);
+            foreach (ClassName exceptionClassName in this.ExceptionTable)
                 Binary.BigEndian.Write(attributeDataStream,
                     writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(exceptionClassName.Name))));
 
@@ -31,11 +31,11 @@ namespace JavaAsm.CustomAttributes
     {
         public ExceptionsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            var attribute = new ExceptionsAttribute();
+            ExceptionsAttribute attribute = new ExceptionsAttribute();
 
-            var count = Binary.BigEndian.ReadUInt16(attributeDataStream);
+            ushort count = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.ExceptionTable.Capacity = count;
-            for (var i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
                 attribute.ExceptionTable.Add(new ClassName(readerState.ConstantPool
                     .GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).Name.String));
 

@@ -11,12 +11,12 @@ namespace JavaAsm.Instructions.Types
         public TypeInstruction(Opcode opcode)
         {
             opcode.CheckInAndThrow(nameof(opcode), Opcode.NEW, Opcode.ANEWARRAY, Opcode.CHECKCAST, Opcode.INSTANCEOF);
-            Opcode = opcode;
+            this.Opcode = opcode;
         }
 
         public override string ToString()
         {
-            return $"{Opcode} {Type}";
+            return $"{this.Opcode} {this.Type}";
         }
     }
 }

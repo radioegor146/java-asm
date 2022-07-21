@@ -102,9 +102,9 @@ namespace JavaAsm
         /// <returns>null, if attribute does not exist or AttributeNode if exists</returns>
         private AttributeNode GetAttribute(string name)
         {
-            var attribute = Attributes.FirstOrDefault(a => a.Name == name);
+            AttributeNode attribute = this.Attributes.FirstOrDefault(a => a.Name == name);
             if (attribute != null)
-                Attributes.Remove(attribute);
+                this.Attributes.Remove(attribute);
             return attribute;
         }
 
@@ -114,30 +114,30 @@ namespace JavaAsm
         /// <param name="readerState">Class reader state</param>
         internal void Parse(ClassReaderState readerState)
         {
-            Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
+            this.Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.Code);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.Code);
                 if (attribute?.ParsedAttribute is CodeAttribute codeAttribute)
                     InstructionListConverter.ParseCodeAttribute(this, readerState, codeAttribute);
             }
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.RuntimeInvisibleAnnotations);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.RuntimeInvisibleAnnotations);
                 if (attribute != null)
-                    InvisibleAnnotations = (attribute.ParsedAttribute as RuntimeInvisibleAnnotationsAttribute)?.Annotations;
+                    this.InvisibleAnnotations = (attribute.ParsedAttribute as RuntimeInvisibleAnnotationsAttribute)?.Annotations;
             }
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.RuntimeVisibleAnnotations);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.RuntimeVisibleAnnotations);
                 if (attribute != null)
-                    VisibleAnnotations = (attribute.ParsedAttribute as RuntimeVisibleAnnotationsAttribute)?.Annotations;
+                    this.VisibleAnnotations = (attribute.ParsedAttribute as RuntimeVisibleAnnotationsAttribute)?.Annotations;
             }
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.Exceptions);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.Exceptions);
                 if (attribute != null)
-                    Throws = (attribute.ParsedAttribute as ExceptionsAttribute)?.ExceptionTable;
+                    this.Throws = (attribute.ParsedAttribute as ExceptionsAttribute)?.ExceptionTable;
             }
-            AnnotationDefaultValue =
+            this.AnnotationDefaultValue =
                 (GetAttribute(PredefinedAttributeNames.AnnotationDefault)?.ParsedAttribute as AnnotationDefaultAttribute)?.Value;
-            IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
+            this.IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
         }
 
         /// <summary>
@@ -146,100 +146,100 @@ namespace JavaAsm
         /// <param name="writerState">Class writer state</param>
         internal void Save(ClassWriterState writerState)
         {
-            if (Signature != null)
+            if (this.Signature != null)
             {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
                     throw new Exception(
                         $"{PredefinedAttributeNames.Signature} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
+                this.Attributes.Add(new AttributeNode
                 {
                     Name = PredefinedAttributeNames.Signature,
                     ParsedAttribute = new SignatureAttribute
                     {
-                        Value = Signature
+                        Value = this.Signature
                     }
                 });
             }
 
-            if (!Access.HasFlag(MethodAccessModifiers.Abstract) && !Access.HasFlag(MethodAccessModifiers.Native) && Instructions != null)
+            if (!this.Access.HasFlag(MethodAccessModifiers.Abstract) && !this.Access.HasFlag(MethodAccessModifiers.Native) && this.Instructions != null)
             {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Code))
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Code))
                     throw new Exception(
                         $"{PredefinedAttributeNames.Code} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
+                this.Attributes.Add(new AttributeNode
                 {
                     Name = PredefinedAttributeNames.Code,
                     ParsedAttribute = InstructionListConverter.SaveCodeAttribute(this, writerState)
                 });
             }
 
-            if (InvisibleAnnotations != null && InvisibleAnnotations.Count > 0)
+            if (this.InvisibleAnnotations != null && this.InvisibleAnnotations.Count > 0)
             {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
                     throw new Exception(
                         $"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
+                this.Attributes.Add(new AttributeNode
                 {
                     Name = PredefinedAttributeNames.RuntimeInvisibleAnnotations,
                     ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute
                     {
-                        Annotations = InvisibleAnnotations
+                        Annotations = this.InvisibleAnnotations
                     }
                 });
             }
 
-            if (VisibleAnnotations != null && VisibleAnnotations.Count > 0)
+            if (this.VisibleAnnotations != null && this.VisibleAnnotations.Count > 0)
             {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
                     throw new Exception(
                         $"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
+                this.Attributes.Add(new AttributeNode
                 {
                     Name = PredefinedAttributeNames.RuntimeVisibleAnnotations,
                     ParsedAttribute = new RuntimeVisibleAnnotationsAttribute
                     {
-                        Annotations = VisibleAnnotations
+                        Annotations = this.VisibleAnnotations
                     }
                 });
             }
 
-            if (Throws.Count > 0)
+            if (this.Throws.Count > 0)
             {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Exceptions))
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Exceptions))
                     throw new Exception(
                         $"{PredefinedAttributeNames.Exceptions} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
+                this.Attributes.Add(new AttributeNode
                 {
                     Name = PredefinedAttributeNames.Exceptions,
                     ParsedAttribute = new ExceptionsAttribute
                     {
-                        ExceptionTable = Throws
+                        ExceptionTable = this.Throws
                     }
                 });
             }
 
-            if (AnnotationDefaultValue != null)
+            if (this.AnnotationDefaultValue != null)
             {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.AnnotationDefault))
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.AnnotationDefault))
                     throw new Exception(
                         $"{PredefinedAttributeNames.AnnotationDefault} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
+                this.Attributes.Add(new AttributeNode
                 {
                     Name = PredefinedAttributeNames.AnnotationDefault,
                     ParsedAttribute = new AnnotationDefaultAttribute
                     {
-                        Value = AnnotationDefaultValue
+                        Value = this.AnnotationDefaultValue
                     }
                 });
             }
 
             // ReSharper disable once InvertIf
-            if (IsDeprecated)
+            if (this.IsDeprecated)
             {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
                     throw new Exception(
                         $"{PredefinedAttributeNames.Deprecated} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
+                this.Attributes.Add(new AttributeNode
                 {
                     Name = PredefinedAttributeNames.Deprecated,
                     ParsedAttribute = new DeprecatedAttribute()
@@ -250,7 +250,7 @@ namespace JavaAsm
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{AccessModifiersExtensions.ToString(Access)} {Name}{Descriptor}";
+            return $"{AccessModifiersExtensions.ToString(this.Access)} {this.Name}{this.Descriptor}";
         }
     }
 }

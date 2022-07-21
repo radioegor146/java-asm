@@ -10,7 +10,7 @@ namespace JavaAsm.CustomAttributes
 
         internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            return ModifiedUtf8Helper.Encode(Value);
+            return ModifiedUtf8Helper.Encode(this.Value);
         }
     }
 

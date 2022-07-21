@@ -10,12 +10,12 @@
 
         public Label()
         {
-            Index = globalLabelIndex++;
+            this.Index = globalLabelIndex++;
         }
 
         public override string ToString()
         {
-            return $"LABEL L{Index}";
+            return $"LABEL L{this.Index}";
         }
     }
 }

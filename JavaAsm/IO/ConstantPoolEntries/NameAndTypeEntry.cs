@@ -15,39 +15,39 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public NameAndTypeEntry(Utf8Entry name, Utf8Entry descriptor)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
+            this.Name = name ?? throw new ArgumentNullException(nameof(name));
+            this.Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
         }
 
         public NameAndTypeEntry(Stream stream)
         {
-            nameIndex = Binary.BigEndian.ReadUInt16(stream);
-            descriptorIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.nameIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.descriptorIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 
         public override EntryTag Tag => EntryTag.NameAndType;
 
         public override void ProcessFromConstantPool(ConstantPool constantPool)
         {
-            Name = constantPool.GetEntry<Utf8Entry>(nameIndex);
-            Descriptor = constantPool.GetEntry<Utf8Entry>(descriptorIndex);
+            this.Name = constantPool.GetEntry<Utf8Entry>(this.nameIndex);
+            this.Descriptor = constantPool.GetEntry<Utf8Entry>(this.descriptorIndex);
         }
 
         public override void Write(Stream stream)
         {
-            Binary.BigEndian.Write(stream, nameIndex);
-            Binary.BigEndian.Write(stream, descriptorIndex);
+            Binary.BigEndian.Write(stream, this.nameIndex);
+            Binary.BigEndian.Write(stream, this.descriptorIndex);
         }
 
         public override void PutToConstantPool(ConstantPool constantPool)
         {
-            nameIndex = constantPool.Find(Name);
-            descriptorIndex = constantPool.Find(Descriptor);
+            this.nameIndex = constantPool.Find(this.Name);
+            this.descriptorIndex = constantPool.Find(this.Descriptor);
         }
 
         private bool Equals(NameAndTypeEntry other)
         {
-            return Name.Equals(other.Name) && Descriptor.Equals(other.Descriptor);
+            return this.Name.Equals(other.Name) && this.Descriptor.Equals(other.Descriptor);
         }
 
         public override bool Equals(object obj)
@@ -62,7 +62,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
         {
             unchecked
             {
-                return (Name.GetHashCode() * 397) ^ Descriptor.GetHashCode();
+                return (this.Name.GetHashCode() * 397) ^ this.Descriptor.GetHashCode();
             }
         }
     }

@@ -12,34 +12,34 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public ClassEntry(Utf8Entry name)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            this.Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
         public ClassEntry(Stream stream)
         {
-            nameIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.nameIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 
         public override EntryTag Tag => EntryTag.Class;
 
         public override void ProcessFromConstantPool(ConstantPool constantPool)
         {
-            Name = constantPool.GetEntry<Utf8Entry>(nameIndex);
+            this.Name = constantPool.GetEntry<Utf8Entry>(this.nameIndex);
         }
 
         public override void Write(Stream stream)
         {
-            Binary.BigEndian.Write(stream, nameIndex);
+            Binary.BigEndian.Write(stream, this.nameIndex);
         }
 
         public override void PutToConstantPool(ConstantPool constantPool)
         {
-            nameIndex = constantPool.Find(Name);
+            this.nameIndex = constantPool.Find(this.Name);
         }
 
         private bool Equals(ClassEntry other)
         {
-            return Name.Equals(other.Name);
+            return this.Name.Equals(other.Name);
         }
 
         public override bool Equals(object obj)
@@ -52,7 +52,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
         public override int GetHashCode()
         {
-            return Name.GetHashCode();
+            return this.Name.GetHashCode();
         }
     }
 }

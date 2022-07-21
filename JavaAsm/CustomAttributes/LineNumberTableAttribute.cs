@@ -19,12 +19,12 @@ namespace JavaAsm.CustomAttributes
 
         internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream();
+            MemoryStream attributeDataStream = new MemoryStream();
 
-            if (LineNumberTable.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(LineNumberTable.Count), $"Line number table too big: {LineNumberTable.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(attributeDataStream, (ushort)LineNumberTable.Count);
-            foreach (var exceptionTableEntry in LineNumberTable)
+            if (this.LineNumberTable.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.LineNumberTable.Count), $"Line number table too big: {this.LineNumberTable.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(attributeDataStream, (ushort) this.LineNumberTable.Count);
+            foreach (LineNumberTableEntry exceptionTableEntry in this.LineNumberTable)
             {
                 Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.StartPc);
                 Binary.BigEndian.Write(attributeDataStream, exceptionTableEntry.LineNumber);
@@ -38,11 +38,11 @@ namespace JavaAsm.CustomAttributes
     {
         public LineNumberTableAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            var attribute = new LineNumberTableAttribute();
+            LineNumberTableAttribute attribute = new LineNumberTableAttribute();
 
-            var exceptionTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
+            ushort exceptionTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.LineNumberTable.Capacity = exceptionTableSize;
-            for (var i = 0; i < exceptionTableSize; i++)
+            for (int i = 0; i < exceptionTableSize; i++)
                 attribute.LineNumberTable.Add(new LineNumberTableAttribute.LineNumberTableEntry
                 {
                     StartPc = Binary.BigEndian.ReadUInt16(attributeDataStream),

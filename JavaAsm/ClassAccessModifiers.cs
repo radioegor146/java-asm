@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Linq;
 
-namespace JavaAsm
-{
+namespace JavaAsm {
     [Flags]
-    public enum ClassAccessModifiers : ushort
-    {
+    public enum ClassAccessModifiers : ushort {
         Public = 0x0001,
         Protected = 0x0004,
         Private = 0x0002,
@@ -21,8 +19,7 @@ namespace JavaAsm
     }
 
     [Flags]
-    public enum MethodAccessModifiers : ushort
-    {
+    public enum MethodAccessModifiers : ushort {
         Public = 0x0001,
         Protected = 0x0004,
         Private = 0x0002,
@@ -38,8 +35,7 @@ namespace JavaAsm
     }
 
     [Flags]
-    public enum FieldAccessModifiers : ushort
-    {
+    public enum FieldAccessModifiers : ushort {
         Public = 0x0001,
         Protected = 0x0004,
         Private = 0x0002,
@@ -52,25 +48,10 @@ namespace JavaAsm
 
     public static class AccessModifiersExtensions {
 
-        public static string ToString(ClassAccessModifiers accessModifiers)
-        {
-            return string.Join(' ',
-                Enum.GetValues(typeof(ClassAccessModifiers)).OfType<ClassAccessModifiers>().Where(x => accessModifiers.HasFlag(x))
-                    .Select(x => x.ToString().ToLower()));
-        }
+        public static string ToString(ClassAccessModifiers accessModifiers) => string.Join(" ", Enum.GetValues(typeof(ClassAccessModifiers)).OfType<ClassAccessModifiers>().Where(x => accessModifiers.HasFlag(x)).Select(x => x.ToString().ToLower()));
 
-        public static string ToString(MethodAccessModifiers accessModifiers)
-        {
-            return string.Join(' ',
-                Enum.GetValues(typeof(MethodAccessModifiers)).OfType<MethodAccessModifiers>().Where(x => accessModifiers.HasFlag(x))
-                    .Select(x => x.ToString().ToLower()));
-        }
+        public static string ToString(MethodAccessModifiers accessModifiers) => string.Join(" ", Enum.GetValues(typeof(MethodAccessModifiers)).OfType<MethodAccessModifiers>().Where(x => accessModifiers.HasFlag(x)).Select(x => x.ToString().ToLower()));
 
-        public static string ToString(FieldAccessModifiers accessModifiers)
-        {
-            return string.Join(' ',
-                Enum.GetValues(typeof(FieldAccessModifiers)).OfType<FieldAccessModifiers>().Where(x => accessModifiers.HasFlag(x))
-                    .Select(x => x.ToString().ToLower()));
-        }
+        public static string ToString(FieldAccessModifiers accessModifiers) => string.Join(" ", Enum.GetValues(typeof(FieldAccessModifiers)).OfType<FieldAccessModifiers>().Where(x => accessModifiers.HasFlag(x)).Select(x => x.ToString().ToLower()));
     }
 }

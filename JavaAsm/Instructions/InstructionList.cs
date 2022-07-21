@@ -10,32 +10,32 @@ namespace JavaAsm.Instructions
         {
             public InstructionListEnumerator(Instruction start)
             {
-                Start = start;
+                this.Start = start;
             }
 
             public bool MoveNext()
             {
-                if (Start != null && Current == null)
+                if (this.Start != null && this.Current == null)
                 {
-                    Current = Start;
+                    this.Current = this.Start;
                     return true;
                 }
-                if (Current?.Next == null)
+                if (this.Current?.Next == null)
                     return false;
-                Current = Current.Next;
+                this.Current = this.Current.Next;
                 return true;
             }
 
             public void Reset()
             {
-                Current = null;
+                this.Current = null;
             }
 
             public Instruction Current { get; private set; }
 
             private Instruction Start { get; }
 
-            object IEnumerator.Current => Current;
+            object IEnumerator.Current => this.Current;
 
             public void Dispose() { }
         }
@@ -50,13 +50,13 @@ namespace JavaAsm.Instructions
         {
             instruction.OwnerList = this;
             instruction.Next = null;
-            if (First == null)
-                First = instruction;
-            instruction.Previous = Last;
-            Last = instruction;
+            if (this.First == null)
+                this.First = instruction;
+            instruction.Previous = this.Last;
+            this.Last = instruction;
             if (instruction.Previous != null)
                 instruction.Previous.Next = instruction;
-            Count++;
+            this.Count++;
         }
 
         public void InsertBefore(Instruction instruction, Instruction toInsert)
@@ -71,9 +71,9 @@ namespace JavaAsm.Instructions
                 toInsert.Previous.Next = toInsert;
             toInsert.Next.Previous = toInsert;
 
-            if (ReferenceEquals(instruction, First))
-                First = toInsert;
-            Count++;
+            if (ReferenceEquals(instruction, this.First))
+                this.First = toInsert;
+            this.Count++;
         }
 
         public void InsertAfter(Instruction instruction, Instruction toInsert)
@@ -88,9 +88,9 @@ namespace JavaAsm.Instructions
                 toInsert.Next.Previous = toInsert;
             toInsert.Previous.Next = toInsert;
 
-            if (ReferenceEquals(instruction, Last))
-                Last = toInsert;
-            Count++;
+            if (ReferenceEquals(instruction, this.Last))
+                this.Last = toInsert;
+            this.Count++;
         }
 
         public void Remove(Instruction instruction)
@@ -102,16 +102,16 @@ namespace JavaAsm.Instructions
                 instruction.Next.Previous = instruction.Previous;
             if (instruction.Previous != null)
                 instruction.Previous.Next = instruction.Next;
-            if (ReferenceEquals(instruction, First))
-                First = instruction.Next;
-            if (ReferenceEquals(instruction, Last))
-                Last = instruction.Previous;
-            Count--;
+            if (ReferenceEquals(instruction, this.First))
+                this.First = instruction.Next;
+            if (ReferenceEquals(instruction, this.Last))
+                this.Last = instruction.Previous;
+            this.Count--;
         }
 
         public IEnumerator<Instruction> GetEnumerator()
         {
-            return new InstructionListEnumerator(First);
+            return new InstructionListEnumerator(this.First);
         }
 
         IEnumerator IEnumerable.GetEnumerator()

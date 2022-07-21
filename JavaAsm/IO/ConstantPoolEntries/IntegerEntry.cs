@@ -9,12 +9,12 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public IntegerEntry(int value)
         {
-            Value = value;
+            this.Value = value;
         }
 
         public IntegerEntry(Stream stream)
         {
-            Value = Binary.BigEndian.ReadInt32(stream);
+            this.Value = Binary.BigEndian.ReadInt32(stream);
         }
 
         public override EntryTag Tag => EntryTag.Integer;
@@ -23,14 +23,14 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public override void Write(Stream stream)
         {
-            Binary.BigEndian.Write(stream, Value);
+            Binary.BigEndian.Write(stream, this.Value);
         }
 
         public override void PutToConstantPool(ConstantPool constantPool) { }
 
         private bool Equals(IntegerEntry other)
         {
-            return Value == other.Value;
+            return this.Value == other.Value;
         }
 
         public override bool Equals(object obj)
@@ -42,7 +42,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public override int GetHashCode()
         {
-            return Value;
+            return this.Value;
         }
     }
 }

@@ -29,7 +29,7 @@ namespace JavaAsm.Instructions.Types
         {
             type.CheckInAndThrow(nameof(type), VerificationElementType.Top, VerificationElementType.Integer,
                 VerificationElementType.Float, VerificationElementType.Long, VerificationElementType.Double, VerificationElementType.Null, VerificationElementType.UnitializedThis);
-            Type = type;
+            this.Type = type;
         }
     }
 

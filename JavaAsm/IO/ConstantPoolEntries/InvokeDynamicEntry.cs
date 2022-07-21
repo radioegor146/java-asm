@@ -14,37 +14,37 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public InvokeDynamicEntry(ushort bootstrapMethodAttributeIndex, NameAndTypeEntry nameAndType)
         {
-            BootstrapMethodAttributeIndex = bootstrapMethodAttributeIndex;
-            NameAndType = nameAndType ?? throw new ArgumentNullException(nameof(nameAndType));
+            this.BootstrapMethodAttributeIndex = bootstrapMethodAttributeIndex;
+            this.NameAndType = nameAndType ?? throw new ArgumentNullException(nameof(nameAndType));
         }
 
         public InvokeDynamicEntry(Stream stream)
         {
-            BootstrapMethodAttributeIndex = Binary.BigEndian.ReadUInt16(stream);
-            nameAndTypeIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.BootstrapMethodAttributeIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.nameAndTypeIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 
         public override EntryTag Tag => EntryTag.InvokeDynamic;
 
         public override void ProcessFromConstantPool(ConstantPool constantPool)
         {
-            NameAndType = constantPool.GetEntry<NameAndTypeEntry>(nameAndTypeIndex);
+            this.NameAndType = constantPool.GetEntry<NameAndTypeEntry>(this.nameAndTypeIndex);
         }
 
         public override void Write(Stream stream)
         {
-            Binary.BigEndian.Write(stream, BootstrapMethodAttributeIndex);
-            Binary.BigEndian.Write(stream, nameAndTypeIndex);
+            Binary.BigEndian.Write(stream, this.BootstrapMethodAttributeIndex);
+            Binary.BigEndian.Write(stream, this.nameAndTypeIndex);
         }
 
         public override void PutToConstantPool(ConstantPool constantPool)
         {
-            nameAndTypeIndex = constantPool.Find(NameAndType);
+            this.nameAndTypeIndex = constantPool.Find(this.NameAndType);
         }
 
         private bool Equals(InvokeDynamicEntry other)
         {
-            return BootstrapMethodAttributeIndex == other.BootstrapMethodAttributeIndex && Equals(NameAndType, other.NameAndType);
+            return this.BootstrapMethodAttributeIndex == other.BootstrapMethodAttributeIndex && Equals(this.NameAndType, other.NameAndType);
         }
 
         public override bool Equals(object obj)
@@ -59,7 +59,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
         {
             unchecked
             {
-                return (BootstrapMethodAttributeIndex.GetHashCode() * 397) ^ (NameAndType != null ? NameAndType.GetHashCode() : 0);
+                return (this.BootstrapMethodAttributeIndex.GetHashCode() * 397) ^ (this.NameAndType != null ? this.NameAndType.GetHashCode() : 0);
             }
         }
     }

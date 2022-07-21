@@ -11,14 +11,14 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public Utf8Entry(string @string)
         {
-            String = @string ?? throw new ArgumentNullException(nameof(@string));
+            this.String = @string ?? throw new ArgumentNullException(nameof(@string));
         }
 
         public Utf8Entry(Stream stream)
         {
-            var data = new byte[Binary.BigEndian.ReadUInt16(stream)];
-            stream.Read(data);
-            String = ModifiedUtf8Helper.Decode(data);
+            byte[] data = new byte[Binary.BigEndian.ReadUInt16(stream)];
+            stream.Read(data, 0, data.Length);
+            this.String = ModifiedUtf8Helper.Decode(data);
         }
 
         public override EntryTag Tag => EntryTag.Utf8;
@@ -27,15 +27,15 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public override void Write(Stream stream)
         {
-            Binary.BigEndian.Write(stream, ModifiedUtf8Helper.GetBytesCount(String));
-            stream.Write(ModifiedUtf8Helper.Encode(String));
+            Binary.BigEndian.Write(stream, ModifiedUtf8Helper.GetBytesCount(this.String));
+            stream.Write(ModifiedUtf8Helper.Encode(this.String));
         }
 
         public override void PutToConstantPool(ConstantPool constantPool) { }
 
         private bool Equals(Utf8Entry other)
         {
-            return String == other.String;
+            return this.String == other.String;
         }
 
         public override bool Equals(object obj)
@@ -47,7 +47,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public override int GetHashCode()
         {
-            return String.GetHashCode();
+            return this.String.GetHashCode();
         }
     }
 }

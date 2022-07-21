@@ -12,34 +12,34 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public MethodTypeEntry(Utf8Entry descriptor)
         {
-            Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
+            this.Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
         }
 
         public MethodTypeEntry(Stream stream)
         {
-            descriptorIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.descriptorIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 
         public override EntryTag Tag => EntryTag.MethodType;
 
         public override void ProcessFromConstantPool(ConstantPool constantPool)
         {
-            Descriptor = constantPool.GetEntry<Utf8Entry>(descriptorIndex);
+            this.Descriptor = constantPool.GetEntry<Utf8Entry>(this.descriptorIndex);
         }
 
         public override void Write(Stream stream)
         {
-            Binary.BigEndian.Write(stream, descriptorIndex);
+            Binary.BigEndian.Write(stream, this.descriptorIndex);
         }
 
         public override void PutToConstantPool(ConstantPool constantPool)
         {
-            descriptorIndex = constantPool.Find(Descriptor);
+            this.descriptorIndex = constantPool.Find(this.Descriptor);
         }
 
         private bool Equals(MethodTypeEntry other)
         {
-            return Equals(Descriptor, other.Descriptor);
+            return Equals(this.Descriptor, other.Descriptor);
         }
 
         public override bool Equals(object obj)
@@ -52,7 +52,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
         public override int GetHashCode()
         {
-            return Descriptor != null ? Descriptor.GetHashCode() : 0;
+            return this.Descriptor != null ? this.Descriptor.GetHashCode() : 0;
         }
     }
 }

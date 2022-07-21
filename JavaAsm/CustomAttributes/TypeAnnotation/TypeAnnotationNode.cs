@@ -30,42 +30,64 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal static TypeAnnotationNode Parse(Stream stream, ClassReaderState readerState, AttributeScope scope)
         {
-            var typeAnnotation = new TypeAnnotationNode
+            TypeAnnotationNode typeAnnotation = new TypeAnnotationNode
             {
                 TargetType = (TargetType) stream.ReadByteFully()
             };
-            typeAnnotation.Target = typeAnnotation.TargetType switch
-            {
-                TargetType.GenericClassOrInterfaceDeclaration when scope == AttributeScope.Class => (TypeAnnotationTarget) new TypeParameterTarget(),
-                TargetType.GenericMethodOrConstructorDeclaration when scope == AttributeScope.Method => new TypeParameterTarget(),
-                TargetType.ExtendsOrImplements when scope == AttributeScope.Class => new SupertypeTarget(),
-                TargetType.TypeInBoundInGenericClassOrInterface when scope == AttributeScope.Class => new TypeParameterBoundTarget(),
-                TargetType.TypeInBoundInGenericMethodOrConstructor when scope == AttributeScope.Method => new TypeParameterBoundTarget(),
-                TargetType.FieldDeclaration when scope == AttributeScope.Field => new EmptyTarget(),
-                TargetType.ReturnTypeOrNewObject when scope == AttributeScope.Method => new EmptyTarget(),
-                TargetType.ReceiverTypeOfMethodOrConstructor when scope == AttributeScope.Method => new EmptyTarget(),
-                TargetType.TypeInFormalParameterOfMethodOrConstructorOrLambda when scope == AttributeScope.Method => new FormalParameterTarget(),
-                TargetType.ThrowsClause when scope == AttributeScope.Method => new ThrowsTarget(),
-                TargetType.LocalVariableDeclaration when scope == AttributeScope.Code => new LocalvarTarget(),
-                TargetType.ResourceVariableDeclaration when scope == AttributeScope.Code => new LocalvarTarget(),
-                TargetType.ExceptionParameterDeclaration when scope == AttributeScope.Code => new CatchTarget(),
-                TargetType.InstanceOfExpression when scope == AttributeScope.Code => new OffsetTarget(),
-                TargetType.NewExpression when scope == AttributeScope.Code => new OffsetTarget(),
-                TargetType.MethodReferenceExpressionNew when scope == AttributeScope.Code => new OffsetTarget(),
-                TargetType.MethodReferenceExpressionIdentifier when scope == AttributeScope.Code => new OffsetTarget(),
-                TargetType.CastExpression when scope == AttributeScope.Code => new TypeArgumentTarget(),
-                TargetType.ArgumentForGenericConstructorInvocation when scope == AttributeScope.Code => new TypeArgumentTarget(),
-                TargetType.ArgumentForGenericMethodInvocation when scope == AttributeScope.Code => new TypeArgumentTarget(),
-                TargetType.ArgumentForGenericMethodReferenceExpressionNew when scope == AttributeScope.Code => new TypeArgumentTarget(),
-                TargetType.ArgumentForGenericMethodReferenceExpressionIdentifier when scope == AttributeScope.Code => new TypeArgumentTarget(),
-                _ => throw new ArgumentOutOfRangeException(nameof(TargetType))
-            };
+            switch (typeAnnotation.TargetType) {
+                case TargetType.GenericClassOrInterfaceDeclaration when scope == AttributeScope.Class:
+                    typeAnnotation.Target = new TypeParameterTarget();
+                    break;
+                case TargetType.GenericMethodOrConstructorDeclaration when scope == AttributeScope.Method:
+                    typeAnnotation.Target = new TypeParameterTarget();
+                    break;
+                case TargetType.ExtendsOrImplements when scope == AttributeScope.Class:
+                    typeAnnotation.Target = new SupertypeTarget();
+                    break;
+                case TargetType.TypeInBoundInGenericClassOrInterface when scope == AttributeScope.Class:
+                case TargetType.TypeInBoundInGenericMethodOrConstructor when scope == AttributeScope.Method:
+                    typeAnnotation.Target = new TypeParameterBoundTarget();
+                    break;
+                case TargetType.FieldDeclaration when scope == AttributeScope.Field:
+                case TargetType.ReturnTypeOrNewObject when scope == AttributeScope.Method:
+                case TargetType.ReceiverTypeOfMethodOrConstructor when scope == AttributeScope.Method:
+                    typeAnnotation.Target = new EmptyTarget();
+                    break;
+                case TargetType.TypeInFormalParameterOfMethodOrConstructorOrLambda when scope == AttributeScope.Method:
+                    typeAnnotation.Target = new FormalParameterTarget();
+                    break;
+                case TargetType.ThrowsClause when scope == AttributeScope.Method:
+                    typeAnnotation.Target = new ThrowsTarget();
+                    break;
+                case TargetType.LocalVariableDeclaration when scope == AttributeScope.Code:
+                case TargetType.ResourceVariableDeclaration when scope == AttributeScope.Code:
+                    typeAnnotation.Target = new LocalvarTarget();
+                    break;
+                case TargetType.ExceptionParameterDeclaration when scope == AttributeScope.Code:
+                    typeAnnotation.Target = new CatchTarget();
+                    break;
+                case TargetType.InstanceOfExpression when scope == AttributeScope.Code:
+                case TargetType.NewExpression when scope == AttributeScope.Code:
+                case TargetType.MethodReferenceExpressionNew when scope == AttributeScope.Code:
+                case TargetType.MethodReferenceExpressionIdentifier when scope == AttributeScope.Code:
+                    typeAnnotation.Target = new OffsetTarget();
+                    break;
+                case TargetType.CastExpression when scope == AttributeScope.Code:
+                case TargetType.ArgumentForGenericConstructorInvocation when scope == AttributeScope.Code:
+                case TargetType.ArgumentForGenericMethodInvocation when scope == AttributeScope.Code:
+                case TargetType.ArgumentForGenericMethodReferenceExpressionNew when scope == AttributeScope.Code:
+                case TargetType.ArgumentForGenericMethodReferenceExpressionIdentifier when scope == AttributeScope.Code:
+                    typeAnnotation.Target = new TypeArgumentTarget();
+                    break;
+                default: throw new ArgumentOutOfRangeException(nameof(TargetType));
+            }
+
             typeAnnotation.Target.Read(stream, readerState);
             typeAnnotation.TypePath = new TypePath();
             typeAnnotation.TypePath.Read(stream, readerState);
-            var elementValuePairsCount = Binary.BigEndian.ReadUInt16(stream);
+            ushort elementValuePairsCount = Binary.BigEndian.ReadUInt16(stream);
             typeAnnotation.ElementValuePairs.Capacity = elementValuePairsCount;
-            for (var i = 0; i < elementValuePairsCount; i++)
+            for (int i = 0; i < elementValuePairsCount; i++)
                 typeAnnotation.ElementValuePairs.Add(new ElementValuePair
                 {
                     ElementName = readerState.ConstantPool
@@ -77,44 +99,44 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal void Write(Stream stream, ClassWriterState writerState, AttributeScope scope)
         {
-            stream.WriteByte((byte) TargetType);
-            switch (TargetType)
+            stream.WriteByte((byte) this.TargetType);
+            switch (this.TargetType)
             {
-                case TargetType.GenericClassOrInterfaceDeclaration when Target.TargetTypeKind == TargetTypeKind.TypeParameter && scope == AttributeScope.Class:
-                case TargetType.GenericMethodOrConstructorDeclaration when Target.TargetTypeKind == TargetTypeKind.TypeParameter && scope == AttributeScope.Method:
-                case TargetType.ExtendsOrImplements when Target.TargetTypeKind == TargetTypeKind.Supertype && scope == AttributeScope.Class:
-                case TargetType.TypeInBoundInGenericClassOrInterface when Target.TargetTypeKind == TargetTypeKind.TypeParameterBound && scope == AttributeScope.Class:
-                case TargetType.TypeInBoundInGenericMethodOrConstructor when Target.TargetTypeKind == TargetTypeKind.TypeParameterBound && scope == AttributeScope.Method:
-                case TargetType.FieldDeclaration when Target.TargetTypeKind == TargetTypeKind.Empty && scope == AttributeScope.Field:
-                case TargetType.ReturnTypeOrNewObject when Target.TargetTypeKind == TargetTypeKind.Empty && scope == AttributeScope.Method:
-                case TargetType.ReceiverTypeOfMethodOrConstructor when Target.TargetTypeKind == TargetTypeKind.Empty && scope == AttributeScope.Method:
-                case TargetType.TypeInFormalParameterOfMethodOrConstructorOrLambda when Target.TargetTypeKind == TargetTypeKind.FormalParameter && scope == AttributeScope.Method:
-                case TargetType.ThrowsClause when Target.TargetTypeKind == TargetTypeKind.Throws && scope == AttributeScope.Method:
-                case TargetType.LocalVariableDeclaration when Target.TargetTypeKind == TargetTypeKind.Localvar && scope == AttributeScope.Code:
-                case TargetType.ResourceVariableDeclaration when Target.TargetTypeKind == TargetTypeKind.Localvar && scope == AttributeScope.Code:
-                case TargetType.ExceptionParameterDeclaration when Target.TargetTypeKind == TargetTypeKind.Catch && scope == AttributeScope.Code:
-                case TargetType.InstanceOfExpression when Target.TargetTypeKind == TargetTypeKind.Offset && scope == AttributeScope.Code:
-                case TargetType.NewExpression when Target.TargetTypeKind == TargetTypeKind.Offset && scope == AttributeScope.Code:
-                case TargetType.MethodReferenceExpressionNew when Target.TargetTypeKind == TargetTypeKind.Offset && scope == AttributeScope.Code:
-                case TargetType.MethodReferenceExpressionIdentifier when Target.TargetTypeKind == TargetTypeKind.Offset && scope == AttributeScope.Code:
-                case TargetType.CastExpression when Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
-                case TargetType.ArgumentForGenericConstructorInvocation when Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
-                case TargetType.ArgumentForGenericMethodInvocation when Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
-                case TargetType.ArgumentForGenericMethodReferenceExpressionNew when Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
-                case TargetType.ArgumentForGenericMethodReferenceExpressionIdentifier when Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
-                    Target.Write(stream, writerState);
+                case TargetType.GenericClassOrInterfaceDeclaration when this.Target.TargetTypeKind == TargetTypeKind.TypeParameter && scope == AttributeScope.Class:
+                case TargetType.GenericMethodOrConstructorDeclaration when this.Target.TargetTypeKind == TargetTypeKind.TypeParameter && scope == AttributeScope.Method:
+                case TargetType.ExtendsOrImplements when this.Target.TargetTypeKind == TargetTypeKind.Supertype && scope == AttributeScope.Class:
+                case TargetType.TypeInBoundInGenericClassOrInterface when this.Target.TargetTypeKind == TargetTypeKind.TypeParameterBound && scope == AttributeScope.Class:
+                case TargetType.TypeInBoundInGenericMethodOrConstructor when this.Target.TargetTypeKind == TargetTypeKind.TypeParameterBound && scope == AttributeScope.Method:
+                case TargetType.FieldDeclaration when this.Target.TargetTypeKind == TargetTypeKind.Empty && scope == AttributeScope.Field:
+                case TargetType.ReturnTypeOrNewObject when this.Target.TargetTypeKind == TargetTypeKind.Empty && scope == AttributeScope.Method:
+                case TargetType.ReceiverTypeOfMethodOrConstructor when this.Target.TargetTypeKind == TargetTypeKind.Empty && scope == AttributeScope.Method:
+                case TargetType.TypeInFormalParameterOfMethodOrConstructorOrLambda when this.Target.TargetTypeKind == TargetTypeKind.FormalParameter && scope == AttributeScope.Method:
+                case TargetType.ThrowsClause when this.Target.TargetTypeKind == TargetTypeKind.Throws && scope == AttributeScope.Method:
+                case TargetType.LocalVariableDeclaration when this.Target.TargetTypeKind == TargetTypeKind.Localvar && scope == AttributeScope.Code:
+                case TargetType.ResourceVariableDeclaration when this.Target.TargetTypeKind == TargetTypeKind.Localvar && scope == AttributeScope.Code:
+                case TargetType.ExceptionParameterDeclaration when this.Target.TargetTypeKind == TargetTypeKind.Catch && scope == AttributeScope.Code:
+                case TargetType.InstanceOfExpression when this.Target.TargetTypeKind == TargetTypeKind.Offset && scope == AttributeScope.Code:
+                case TargetType.NewExpression when this.Target.TargetTypeKind == TargetTypeKind.Offset && scope == AttributeScope.Code:
+                case TargetType.MethodReferenceExpressionNew when this.Target.TargetTypeKind == TargetTypeKind.Offset && scope == AttributeScope.Code:
+                case TargetType.MethodReferenceExpressionIdentifier when this.Target.TargetTypeKind == TargetTypeKind.Offset && scope == AttributeScope.Code:
+                case TargetType.CastExpression when this.Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
+                case TargetType.ArgumentForGenericConstructorInvocation when this.Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
+                case TargetType.ArgumentForGenericMethodInvocation when this.Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
+                case TargetType.ArgumentForGenericMethodReferenceExpressionNew when this.Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
+                case TargetType.ArgumentForGenericMethodReferenceExpressionIdentifier when this.Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
+                    this.Target.Write(stream, writerState);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(TargetType));
+                    throw new ArgumentOutOfRangeException(nameof(this.TargetType));
             }
 
-            TypePath.Write(stream, writerState);
+            this.TypePath.Write(stream, writerState);
 
-            if (ElementValuePairs.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(ElementValuePairs.Count),
-                    $"Too many ElementValues: {ElementValuePairs.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(stream, (ushort)ElementValuePairs.Count);
-            foreach (var elementValuePair in ElementValuePairs)
+            if (this.ElementValuePairs.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.ElementValuePairs.Count),
+                    $"Too many ElementValues: {this.ElementValuePairs.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(stream, (ushort) this.ElementValuePairs.Count);
+            foreach (ElementValuePair elementValuePair in this.ElementValuePairs)
             {
                 Binary.BigEndian.Write(stream,
                     writerState.ConstantPool.Find(new Utf8Entry(elementValuePair.ElementName)));

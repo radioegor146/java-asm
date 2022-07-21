@@ -21,12 +21,12 @@ namespace JavaAsm.CustomAttributes
 
         internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream();
+            MemoryStream attributeDataStream = new MemoryStream();
 
-            if (Parameters.Count > byte.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(Parameters.Count), $"Too many parameters: {Parameters.Count} > {byte.MaxValue}");
-            attributeDataStream.WriteByte((byte) Parameters.Count);
-            foreach (var parameter in Parameters)
+            if (this.Parameters.Count > byte.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.Parameters.Count), $"Too many parameters: {this.Parameters.Count} > {byte.MaxValue}");
+            attributeDataStream.WriteByte((byte) this.Parameters.Count);
+            foreach (Parameter parameter in this.Parameters)
             {
                 Binary.BigEndian.Write(attributeDataStream,
                     writerState.ConstantPool.Find(new Utf8Entry(parameter.Name)));
@@ -41,11 +41,11 @@ namespace JavaAsm.CustomAttributes
     {
         public MethodParametersAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            var attribute = new MethodParametersAttribute();
+            MethodParametersAttribute attribute = new MethodParametersAttribute();
 
-            var exceptionTableSize = attributeDataStream.ReadByteFully();
+            byte exceptionTableSize = attributeDataStream.ReadByteFully();
             attribute.Parameters.Capacity = exceptionTableSize;
-            for (var i = 0; i < exceptionTableSize; i++)
+            for (int i = 0; i < exceptionTableSize; i++)
                 attribute.Parameters.Add(new MethodParametersAttribute.Parameter
                 {
                     Name = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).String,

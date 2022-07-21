@@ -17,13 +17,13 @@ namespace JavaAsm.Helpers
 
         public override void Flush()
         {
-            baseStream.Flush();
+            this.baseStream.Flush();
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var result = baseStream.Read(buffer, offset, count);
-            ReadBytes += Math.Max(0, result);
+            int result = this.baseStream.Read(buffer, offset, count);
+            this.ReadBytes += Math.Max(0, result);
             return result;
         }
 
@@ -33,22 +33,22 @@ namespace JavaAsm.Helpers
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            baseStream.Write(buffer, offset, count);
-            WrittenBytes += count;
+            this.baseStream.Write(buffer, offset, count);
+            this.WrittenBytes += count;
         }
 
-        public override bool CanRead => baseStream.CanRead;
+        public override bool CanRead => this.baseStream.CanRead;
 
         public override bool CanSeek => false;
 
-        public override bool CanWrite => baseStream.CanWrite;
+        public override bool CanWrite => this.baseStream.CanWrite;
 
-        public override long Length => baseStream.Length;
+        public override long Length => this.baseStream.Length;
 
         public override long Position
         {
-            get => baseStream.Position;
-            set => baseStream.Position = value;
+            get => this.baseStream.Position;
+            set => this.baseStream.Position = value;
         }
     }
 }

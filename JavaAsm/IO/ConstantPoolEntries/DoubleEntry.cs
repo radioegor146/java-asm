@@ -10,12 +10,12 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public DoubleEntry(double value)
         {
-            Value = value;
+            this.Value = value;
         }
 
         public DoubleEntry(Stream stream)
         {
-            Value = BitConverter.Int64BitsToDouble(Binary.BigEndian.ReadInt64(stream));
+            this.Value = BitConverter.Int64BitsToDouble(Binary.BigEndian.ReadInt64(stream));
         }
 
         public override EntryTag Tag => EntryTag.Double;
@@ -24,14 +24,14 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public override void Write(Stream stream)
         {
-            Binary.BigEndian.Write(stream, BitConverter.DoubleToInt64Bits(Value));
+            Binary.BigEndian.Write(stream, BitConverter.DoubleToInt64Bits(this.Value));
         }
 
         public override void PutToConstantPool(ConstantPool constantPool) { }
 
         private bool Equals(DoubleEntry other)
         {
-            return Value.Equals(other.Value);
+            return this.Value.Equals(other.Value);
         }
 
         public override bool Equals(object obj)
@@ -43,7 +43,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return this.Value.GetHashCode();
         }
     }
 }

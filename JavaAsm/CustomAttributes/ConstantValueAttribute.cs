@@ -10,18 +10,19 @@ namespace JavaAsm.CustomAttributes
     {
         public object Value { get; set; }
 
-        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
-        {
-            var result = new byte[2];
-            Binary.BigEndian.Set(Value switch
-            {
-                long longValue => writerState.ConstantPool.Find(new LongEntry(longValue)),
-                float floatValue => writerState.ConstantPool.Find(new FloatEntry(floatValue)),
-                double doubleValue => writerState.ConstantPool.Find(new DoubleEntry(doubleValue)),
-                int integerValue => writerState.ConstantPool.Find(new IntegerEntry(integerValue)),
-                string stringValue => writerState.ConstantPool.Find(new StringEntry(new Utf8Entry(stringValue))),
-                _ => throw new ArgumentOutOfRangeException(nameof(Value), $"Can't encode value of type {Value.GetType()}")
-            }, result);
+        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope) {
+            ushort value;
+            switch (this.Value) {
+                case long longValue:     value = writerState.ConstantPool.Find(new LongEntry(longValue)); break;
+                case float floatValue:   value = writerState.ConstantPool.Find(new FloatEntry(floatValue)); break;
+                case double doubleValue: value = writerState.ConstantPool.Find(new DoubleEntry(doubleValue)); break;
+                case int integerValue:   value = writerState.ConstantPool.Find(new IntegerEntry(integerValue)); break;
+                case string stringValue: value = writerState.ConstantPool.Find(new StringEntry(new Utf8Entry(stringValue))); break;
+                default: throw new ArgumentOutOfRangeException(nameof(this.Value), $"Can't encode value of type {this.Value.GetType()}");
+            }
+
+            byte[] result = new byte[2];
+            Binary.BigEndian.Set(value, result);
             return result;
         }
     }
@@ -30,19 +31,18 @@ namespace JavaAsm.CustomAttributes
     {
         public ConstantValueAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            var entry = readerState.ConstantPool.GetEntry<Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream));
-            return new ConstantValueAttribute {
-                Value = entry switch
-                    {
-                        LongEntry longEntry => (longEntry.Value as object),
-                        FloatEntry floatEntry => floatEntry.Value,
-                        DoubleEntry doubleEntry => doubleEntry.Value,
-                        IntegerEntry integerEntry => integerEntry.Value,
-                        StringEntry stringEntry => stringEntry.Value.String,
-                        _ => throw new ArgumentOutOfRangeException(nameof(entry),
-                            $"Can't use constant pool entry of type {entry.GetType()} as constant value")
-                    }
-            };
+            Entry entry = readerState.ConstantPool.GetEntry<Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream));
+            object value;
+            switch (entry) {
+                case LongEntry longEntry:       value = longEntry.Value; break;
+                case FloatEntry floatEntry:     value = floatEntry.Value; break;
+                case DoubleEntry doubleEntry:   value = doubleEntry.Value; break;
+                case IntegerEntry integerEntry: value = integerEntry.Value; break;
+                case StringEntry stringEntry:   value = stringEntry.Value.String; break;
+                default: throw new ArgumentOutOfRangeException(nameof(entry), $"Can't use constant pool entry of type {entry.GetType()} as constant value");
+            }
+
+            return new ConstantValueAttribute {Value = value};
         }
     }
 }

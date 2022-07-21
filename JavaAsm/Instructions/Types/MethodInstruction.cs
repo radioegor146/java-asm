@@ -16,11 +16,11 @@ namespace JavaAsm.Instructions.Types
         {
             opcode.CheckInAndThrow(nameof(opcode), Opcode.INVOKESTATIC, Opcode.INVOKEVIRTUAL, Opcode.INVOKEINTERFACE,
                 Opcode.INVOKESPECIAL);
-            Opcode = opcode;
+            this.Opcode = opcode;
         }
         public override string ToString()
         {
-            return $"{Opcode} {Owner}.{Name}{Descriptor}";
+            return $"{this.Opcode} {this.Owner}.{this.Name}{this.Descriptor}";
         }
     }
 }

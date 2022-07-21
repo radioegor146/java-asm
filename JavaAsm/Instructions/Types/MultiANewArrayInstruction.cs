@@ -10,7 +10,7 @@
 
         public override string ToString()
         {
-            return $"{Opcode} {Type} {Dimensions}";
+            return $"{this.Opcode} {this.Type} {this.Dimensions}";
         }
     }
 }

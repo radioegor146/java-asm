@@ -58,24 +58,31 @@ namespace JavaAsm.Instructions.Types
 
         internal MethodHandleEntry ToConstantPool()
         {
-            var referenceOwner = new ClassEntry(new Utf8Entry(Owner.Name));
-            var referenceNameAndType = new NameAndTypeEntry(new Utf8Entry(Name), new Utf8Entry(Descriptor.ToString()));
-            var reference = Type switch
-            {
-                ReferenceKindType.GetField => (ReferenceEntry) new FieldReferenceEntry(referenceOwner,
-                    referenceNameAndType),
-                ReferenceKindType.GetStatic => new FieldReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.PutField => new FieldReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.PutStatic => new FieldReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.InvokeVirtual => new MethodReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.NewInvokeSpecial => new MethodReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.InvokeStatic => new MethodReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.InvokeSpecial => new MethodReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.InvokeReference => new InterfaceMethodReferenceEntry(referenceOwner,
-                    referenceNameAndType),
-                _ => throw new ArgumentOutOfRangeException(nameof(Type))
-            };
-            return new MethodHandleEntry(Type, reference);
+            ClassEntry referenceOwner = new ClassEntry(new Utf8Entry(this.Owner.Name));
+            NameAndTypeEntry referenceNameAndType = new NameAndTypeEntry(new Utf8Entry(this.Name), new Utf8Entry(this.Descriptor.ToString()));
+            ReferenceEntry reference;
+            switch (this.Type) {
+                case ReferenceKindType.GetField:
+                    reference = new FieldReferenceEntry(referenceOwner, referenceNameAndType);
+                    break;
+                case ReferenceKindType.GetStatic:
+                case ReferenceKindType.PutField:
+                case ReferenceKindType.PutStatic:
+                    reference = new FieldReferenceEntry(referenceOwner, referenceNameAndType);
+                    break;
+                case ReferenceKindType.InvokeVirtual:
+                case ReferenceKindType.NewInvokeSpecial:
+                case ReferenceKindType.InvokeStatic:
+                case ReferenceKindType.InvokeSpecial:
+                    reference = new MethodReferenceEntry(referenceOwner, referenceNameAndType);
+                    break;
+                case ReferenceKindType.InvokeReference:
+                    reference = new InterfaceMethodReferenceEntry(referenceOwner, referenceNameAndType);
+                    break;
+                default: throw new ArgumentOutOfRangeException(nameof(this.Type));
+            }
+
+            return new MethodHandleEntry(this.Type, reference);
         }
     }
 }

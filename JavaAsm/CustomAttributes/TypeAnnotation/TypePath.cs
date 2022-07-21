@@ -27,11 +27,11 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal void Read(Stream stream, ClassReaderState classReaderState)
         {
-            var pathSize = stream.ReadByteFully();
-            Path.Capacity = pathSize;
-            for (var i = 0; i < pathSize; i++)
+            byte pathSize = stream.ReadByteFully();
+            this.Path.Capacity = pathSize;
+            for (int i = 0; i < pathSize; i++)
             {
-                Path.Add(new PathPart
+                this.Path.Add(new PathPart
                 {
                     TypePathKind = (TypePathKind) stream.ReadByteFully(),
                     TypeArgumentIndex = stream.ReadByteFully()
@@ -41,10 +41,10 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal void Write(Stream stream, ClassWriterState writerState)
         {
-            if (Path.Count > byte.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(Path.Count), $"Path is too big: {Path.Count} > {byte.MaxValue}");
-            stream.WriteByte((byte) Path.Count);
-            foreach (var part in Path)
+            if (this.Path.Count > byte.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.Path.Count), $"Path is too big: {this.Path.Count} > {byte.MaxValue}");
+            stream.WriteByte((byte) this.Path.Count);
+            foreach (PathPart part in this.Path)
             {
                 stream.WriteByte((byte) part.TypePathKind);
                 stream.WriteByte(part.TypeArgumentIndex);

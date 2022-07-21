@@ -11,7 +11,7 @@ namespace JavaAsm.IO
 
         internal static AttributeNode ParseAttribute(Stream stream, ClassReaderState state, AttributeScope scope)
         {
-            var attribute = new AttributeNode
+            AttributeNode attribute = new AttributeNode
             {
                 Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String
             };
@@ -21,7 +21,7 @@ namespace JavaAsm.IO
 
         private static FieldNode ParseField(Stream stream, ClassReaderState state)
         {
-            var fieldNode = new FieldNode
+            FieldNode fieldNode = new FieldNode
             {
                 Owner = state.ClassNode,
 
@@ -29,16 +29,16 @@ namespace JavaAsm.IO
                 Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String,
                 Descriptor = TypeDescriptor.Parse(state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String)
             };
-            var attributesCount = Binary.BigEndian.ReadUInt16(stream);
+            ushort attributesCount = Binary.BigEndian.ReadUInt16(stream);
             fieldNode.Attributes.Capacity = attributesCount;
-            for (var i = 0; i < attributesCount; i++)
+            for (int i = 0; i < attributesCount; i++)
                 fieldNode.Attributes.Add(ParseAttribute(stream, state, AttributeScope.Field));
             return fieldNode;
         }
 
         private static MethodNode ParseMethod(Stream stream, ClassReaderState state)
         {
-            var methodNode = new MethodNode
+            MethodNode methodNode = new MethodNode
             {
                 Owner = state.ClassNode,
 
@@ -46,55 +46,55 @@ namespace JavaAsm.IO
                 Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String,
                 Descriptor = MethodDescriptor.Parse(state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String)
             };
-            var attributesCount = Binary.BigEndian.ReadUInt16(stream);
+            ushort attributesCount = Binary.BigEndian.ReadUInt16(stream);
             methodNode.Attributes.Capacity = attributesCount;
-            for (var i = 0; i < attributesCount; i++)
+            for (int i = 0; i < attributesCount; i++)
                 methodNode.Attributes.Add(ParseAttribute(stream, state, AttributeScope.Method));
             return methodNode;
         }
 
         public static ClassNode ParseClass(Stream stream)
         {
-            var state = new ClassReaderState();
-            var result = new ClassNode();
+            ClassReaderState state = new ClassReaderState();
+            ClassNode result = new ClassNode();
             state.ClassNode = result;
 
             if (Binary.BigEndian.ReadUInt32(stream) != Magic)
                 throw new IOException("Wrong magic in class");
-            
+
             result.MinorVersion = Binary.BigEndian.ReadUInt16(stream);
             result.MajorVersion = (ClassVersion) Binary.BigEndian.ReadUInt16(stream);
 
             if (result.MajorVersion > ClassVersion.Java8)
                 throw new Exception($"Wrong Java version: {result.MajorVersion}");
 
-            var constantPool = new ConstantPool();
+            ConstantPool constantPool = new ConstantPool();
             constantPool.Read(stream);
             state.ConstantPool = constantPool;
 
             result.Access = (ClassAccessModifiers) Binary.BigEndian.ReadUInt16(stream);
-            
+
             result.Name = new ClassName(constantPool.GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(stream)).Name.String);
             result.SuperName = new ClassName(constantPool.GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(stream)).Name.String);
 
-            var interfacesCount = Binary.BigEndian.ReadUInt16(stream);
+            ushort interfacesCount = Binary.BigEndian.ReadUInt16(stream);
             result.Interfaces.Capacity = interfacesCount;
-            for (var i = 0; i < interfacesCount; i++)
+            for (int i = 0; i < interfacesCount; i++)
                 result.Interfaces.Add(new ClassName(constantPool.GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(stream)).Name.String));
 
-            var fieldsCount = Binary.BigEndian.ReadUInt16(stream);
+            ushort fieldsCount = Binary.BigEndian.ReadUInt16(stream);
             result.Fields.Capacity = fieldsCount;
-            for (var i = 0; i < fieldsCount; i++)
+            for (int i = 0; i < fieldsCount; i++)
                 result.Fields.Add(ParseField(stream, state));
 
-            var methodsCount = Binary.BigEndian.ReadUInt16(stream);
+            ushort methodsCount = Binary.BigEndian.ReadUInt16(stream);
             result.Methods.Capacity = methodsCount;
-            for (var i = 0; i < methodsCount; i++)
+            for (int i = 0; i < methodsCount; i++)
                 result.Methods.Add(ParseMethod(stream, state));
 
-            var attributesCount = Binary.BigEndian.ReadUInt16(stream);
+            ushort attributesCount = Binary.BigEndian.ReadUInt16(stream);
             result.Attributes.Capacity = attributesCount;
-            for (var i = 0; i < attributesCount; i++)
+            for (int i = 0; i < attributesCount; i++)
                 result.Attributes.Add(ParseAttribute(stream, state, AttributeScope.Class));
 
             result.Parse(state);
@@ -109,7 +109,7 @@ namespace JavaAsm.IO
             if (attribute.Data.LongLength > uint.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(attribute.Data.LongLength), $"Attribute data length too big: {attribute.Data.LongLength} > {uint.MaxValue}");
             Binary.BigEndian.Write(stream, (uint) attribute.Data.LongLength);
-            stream.Write(attribute.Data);
+            stream.Write(attribute.Data, 0, attribute.Data.Length);
         }
 
         private static void WriteField(Stream stream, FieldNode fieldNode, ClassWriterState state)
@@ -120,7 +120,7 @@ namespace JavaAsm.IO
             if (fieldNode.Attributes.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(fieldNode.Attributes.Count), $"Too many attributes: {fieldNode.Attributes.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(stream, (ushort) fieldNode.Attributes.Count);
-            foreach (var attriute in fieldNode.Attributes)
+            foreach (AttributeNode attriute in fieldNode.Attributes)
                 WriteAttribute(stream, attriute, state, AttributeScope.Field);
         }
 
@@ -132,7 +132,7 @@ namespace JavaAsm.IO
             if (methodNode.Attributes.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(methodNode.Attributes.Count), $"Too many attributes: {methodNode.Attributes.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(stream, (ushort)methodNode.Attributes.Count);
-            foreach (var attriute in methodNode.Attributes)
+            foreach (AttributeNode attriute in methodNode.Attributes)
                 WriteAttribute(stream, attriute, state, AttributeScope.Method);
         }
 
@@ -141,9 +141,9 @@ namespace JavaAsm.IO
             Binary.BigEndian.Write(stream, Magic);
             Binary.BigEndian.Write(stream, classNode.MinorVersion);
             Binary.BigEndian.Write(stream, (ushort) classNode.MajorVersion);
-            var afterConstantPoolDataStream = new MemoryStream();
-            var constantPool = new ConstantPool();
-            var state = new ClassWriterState
+            MemoryStream afterConstantPoolDataStream = new MemoryStream();
+            ConstantPool constantPool = new ConstantPool();
+            ClassWriterState state = new ClassWriterState
             {
                 ClassNode = classNode,
                 ConstantPool = constantPool
@@ -160,30 +160,31 @@ namespace JavaAsm.IO
             if (classNode.Interfaces.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(classNode.Interfaces.Count), $"Too many interfaces: {classNode.Interfaces.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort) classNode.Interfaces.Count);
-            foreach (var interfaceClassName in classNode.Interfaces)
+            foreach (ClassName interfaceClassName in classNode.Interfaces)
                 Binary.BigEndian.Write(afterConstantPoolDataStream,
                     constantPool.Find(new ClassEntry(new Utf8Entry(interfaceClassName.Name))));
 
             if (classNode.Fields.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(classNode.Fields.Count), $"Too many fields: {classNode.Fields.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort) classNode.Fields.Count);
-            foreach (var field in classNode.Fields)
+            foreach (FieldNode field in classNode.Fields)
                 WriteField(afterConstantPoolDataStream, field, state);
 
             if (classNode.Methods.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(classNode.Methods.Count), $"Too many methods: {classNode.Methods.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort)classNode.Methods.Count);
-            foreach (var method in classNode.Methods)
+            foreach (MethodNode method in classNode.Methods)
                 WriteMethod(afterConstantPoolDataStream, method, state);
 
             if (classNode.Attributes.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(classNode.Attributes.Count), $"Too many attributes: {classNode.Attributes.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort)classNode.Attributes.Count);
-            foreach (var attriute in classNode.Attributes)
+            foreach (AttributeNode attriute in classNode.Attributes)
                 WriteAttribute(afterConstantPoolDataStream, attriute, state, AttributeScope.Class);
 
             constantPool.Write(stream);
-            stream.Write(afterConstantPoolDataStream.ToArray());
+            byte[] data = afterConstantPoolDataStream.ToArray();
+            stream.Write(data, 0, data.Length);
         }
     }
 }

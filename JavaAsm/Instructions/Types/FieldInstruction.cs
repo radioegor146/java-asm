@@ -16,12 +16,12 @@ namespace JavaAsm.Instructions.Types
         {
             opcode.CheckInAndThrow(nameof(opcode), Opcode.GETFIELD, Opcode.GETSTATIC, Opcode.PUTFIELD,
                 Opcode.PUTSTATIC);
-            Opcode = opcode;
+            this.Opcode = opcode;
         }
 
         public override string ToString()
         {
-            return $"{Opcode} {Owner}.{Name} {Descriptor}";
+            return $"{this.Opcode} {this.Owner}.{this.Name} {this.Descriptor}";
         }
     }
 }

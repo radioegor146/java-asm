@@ -10,9 +10,9 @@ namespace JavaAsm.CustomAttributes
 
         internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream();
+            MemoryStream attributeDataStream = new MemoryStream();
 
-            Value.Write(attributeDataStream, writerState);
+            this.Value.Write(attributeDataStream, writerState);
 
             return attributeDataStream.ToArray();
         }

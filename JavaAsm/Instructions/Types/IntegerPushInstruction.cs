@@ -11,12 +11,12 @@ namespace JavaAsm.Instructions.Types
         public IntegerPushInstruction(Opcode opcode)
         {
             opcode.CheckInAndThrow(nameof(opcode), Opcode.BIPUSH, Opcode.SIPUSH);
-            Opcode = opcode;
+            this.Opcode = opcode;
         }
 
         public override string ToString()
         {
-            return $"{Opcode} {Value}";
+            return $"{this.Opcode} {this.Value}";
         }
     }
 }

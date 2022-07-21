@@ -16,65 +16,65 @@ namespace JavaAsm.IO.ConstantPoolEntries
 
         public MethodHandleEntry(ReferenceKindType referenceKind, ReferenceEntry reference)
         {
-            ReferenceKind = referenceKind;
-            Reference = reference ?? throw new ArgumentNullException(nameof(reference));
+            this.ReferenceKind = referenceKind;
+            this.Reference = reference ?? throw new ArgumentNullException(nameof(reference));
         }
 
         public MethodHandleEntry(Stream stream)
         {
-            ReferenceKind = (ReferenceKindType) stream.ReadByteFully();
-            referenceIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.ReferenceKind = (ReferenceKindType) stream.ReadByteFully();
+            this.referenceIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 
         public override EntryTag Tag => EntryTag.MethodHandle;
 
         public override void ProcessFromConstantPool(ConstantPool constantPool)
         {
-            switch (ReferenceKind)
+            switch (this.ReferenceKind)
             {
                 case ReferenceKindType.GetField:
                 case ReferenceKindType.GetStatic:
                 case ReferenceKindType.PutField:
                 case ReferenceKindType.PutStatic:
-                    Reference = constantPool.GetEntry<FieldReferenceEntry>(referenceIndex);
+                    this.Reference = constantPool.GetEntry<FieldReferenceEntry>(this.referenceIndex);
                     break;
                 case ReferenceKindType.InvokeVirtual:
                 case ReferenceKindType.NewInvokeSpecial:
-                    Reference = constantPool.GetEntry<MethodReferenceEntry>(referenceIndex);
+                    this.Reference = constantPool.GetEntry<MethodReferenceEntry>(this.referenceIndex);
                     break;
                 case ReferenceKindType.InvokeStatic:
                 case ReferenceKindType.InvokeSpecial:
                     try
                     {
-                        Reference = constantPool.GetEntry<MethodReferenceEntry>(referenceIndex);
+                        this.Reference = constantPool.GetEntry<MethodReferenceEntry>(this.referenceIndex);
                     }
                     catch (InvalidCastException)
                     {
-                        Reference = constantPool.GetEntry<InterfaceMethodReferenceEntry>(referenceIndex);
+                        this.Reference = constantPool.GetEntry<InterfaceMethodReferenceEntry>(this.referenceIndex);
                     }
                     break;
                 case ReferenceKindType.InvokeReference:
-                    Reference = constantPool.GetEntry<InterfaceMethodReferenceEntry>(referenceIndex);
+                    this.Reference = constantPool.GetEntry<InterfaceMethodReferenceEntry>(this.referenceIndex);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(ReferenceKind));
+                    throw new ArgumentOutOfRangeException(nameof(this.ReferenceKind));
             }
         }
 
         public override void Write(Stream stream)
         {
-            stream.WriteByte((byte)ReferenceKind);
-            Binary.BigEndian.Write(stream, referenceIndex);
+            stream.WriteByte((byte) this.ReferenceKind);
+            Binary.BigEndian.Write(stream, this.referenceIndex);
         }
 
         public override void PutToConstantPool(ConstantPool constantPool)
         {
-            referenceIndex = constantPool.Find(Reference);
+            this.referenceIndex = constantPool.Find(this.Reference);
         }
 
         private bool Equals(MethodHandleEntry other)
         {
-            return ReferenceKind == other.ReferenceKind && Equals(Reference, other.Reference);
+            return this.ReferenceKind == other.ReferenceKind && Equals(this.Reference, other.Reference);
         }
 
         public override bool Equals(object obj)
@@ -89,7 +89,7 @@ namespace JavaAsm.IO.ConstantPoolEntries
         {
             unchecked
             {
-                return ((int)ReferenceKind * 397) ^ (Reference != null ? Reference.GetHashCode() : 0);
+                return ((int) this.ReferenceKind * 397) ^ (this.Reference != null ? this.Reference.GetHashCode() : 0);
             }
         }
     }

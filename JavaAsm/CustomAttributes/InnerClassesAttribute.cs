@@ -13,12 +13,12 @@ namespace JavaAsm.CustomAttributes
 
         internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
         {
-            using var attributeDataStream = new MemoryStream();
+            MemoryStream attributeDataStream = new MemoryStream();
 
-            if (Classes.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(Classes.Count), $"Too many inner classes: {Classes.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(attributeDataStream, (ushort)Classes.Count);
-            foreach (var innerClass in Classes)
+            if (this.Classes.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.Classes.Count), $"Too many inner classes: {this.Classes.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(attributeDataStream, (ushort) this.Classes.Count);
+            foreach (InnerClass innerClass in this.Classes)
             {
                 Binary.BigEndian.Write(attributeDataStream,
                     writerState.ConstantPool.Find(new ClassEntry(new Utf8Entry(innerClass.InnerClassName.Name))));
@@ -45,7 +45,7 @@ namespace JavaAsm.CustomAttributes
 
         public override string ToString()
         {
-            return $"{AccessModifiersExtensions.ToString(Access)} {InnerClassName?.ToString() ?? "null"} {OuterClassName?.ToString() ?? "null"} {InnerName?.ToString() ?? "null"}";
+            return $"{AccessModifiersExtensions.ToString(this.Access)} {this.InnerClassName?.ToString() ?? "null"} {this.OuterClassName?.ToString() ?? "null"} {this.InnerName?.ToString() ?? "null"}";
         }
     }
 
@@ -53,22 +53,22 @@ namespace JavaAsm.CustomAttributes
     {
         public InnerClassesAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
         {
-            var attribute = new InnerClassesAttribute();
+            InnerClassesAttribute attribute = new InnerClassesAttribute();
 
-            var classesCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
+            ushort classesCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.Classes.Capacity = classesCount;
-            for (var i = 0; i < classesCount; i++)
+            for (int i = 0; i < classesCount; i++)
             {
-                var innerClass = new InnerClass
+                InnerClass innerClass = new InnerClass
                 {
                     InnerClassName = new ClassName(readerState.ConstantPool
                         .GetEntry<ClassEntry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).Name.String)
                 };
-                var outerClassIndex = Binary.BigEndian.ReadUInt16(attributeDataStream);
+                ushort outerClassIndex = Binary.BigEndian.ReadUInt16(attributeDataStream);
                 if (outerClassIndex != 0)
                     innerClass.OuterClassName = new ClassName(readerState.ConstantPool
                         .GetEntry<ClassEntry>(outerClassIndex).Name.String);
-                var innerNameIndex = Binary.BigEndian.ReadUInt16(attributeDataStream);
+                ushort innerNameIndex = Binary.BigEndian.ReadUInt16(attributeDataStream);
                 if (innerNameIndex != 0)
                     innerClass.InnerName = readerState.ConstantPool
                         .GetEntry<Utf8Entry>(innerNameIndex).String;

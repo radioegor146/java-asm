@@ -12,12 +12,12 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal override void Write(Stream stream, ClassWriterState writerState)
         {
-            Binary.BigEndian.Write(stream, ExceptionTableIndex);
+            Binary.BigEndian.Write(stream, this.ExceptionTableIndex);
         }
 
         internal override void Read(Stream stream, ClassReaderState readerState)
         {
-            ExceptionTableIndex = Binary.BigEndian.ReadUInt16(stream);
+            this.ExceptionTableIndex = Binary.BigEndian.ReadUInt16(stream);
         }
     }
 }

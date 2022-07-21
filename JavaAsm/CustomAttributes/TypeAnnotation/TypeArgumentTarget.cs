@@ -15,14 +15,14 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal override void Write(Stream stream, ClassWriterState writerState)
         {
-            Binary.BigEndian.Write(stream, Offset);
-            stream.WriteByte(TypeArgumentIndex);
+            Binary.BigEndian.Write(stream, this.Offset);
+            stream.WriteByte(this.TypeArgumentIndex);
         }
 
         internal override void Read(Stream stream, ClassReaderState readerState)
         {
-            Offset = Binary.BigEndian.ReadUInt16(stream);
-            TypeArgumentIndex = stream.ReadByteFully();
+            this.Offset = Binary.BigEndian.ReadUInt16(stream);
+            this.TypeArgumentIndex = stream.ReadByteFully();
         }
     }
 }

@@ -6,9 +6,9 @@ namespace JavaAsm.Helpers
     {
         public static byte[] Encode(string value)
         {
-            var offset = 0;
-            var buffer = new byte[GetBytesCount(value)];
-            foreach (var c in value)
+            int offset = 0;
+            byte[] buffer = new byte[GetBytesCount(value)];
+            foreach (char c in value)
             {
                 if (c != 0 && c <= 127)
                     buffer[offset++] = (byte)c;
@@ -29,8 +29,8 @@ namespace JavaAsm.Helpers
 
         public static ushort GetBytesCount(string value)
         {
-            var bytesCount = 0;
-            foreach (var c in value)
+            int bytesCount = 0;
+            foreach (char c in value)
             {
                 if (c != 0 && c <= 127)
                     bytesCount++;
@@ -47,10 +47,10 @@ namespace JavaAsm.Helpers
 
         public static string Decode(byte[] data)
         {
-            var length = data.Length;
-            var result = new char[length];
-            var count = 0;
-            var numberOfChars = 0;
+            int length = data.Length;
+            char[] result = new char[length];
+            int count = 0;
+            int numberOfChars = 0;
             while (count < length)
             {
                 if ((result[numberOfChars] = (char) data[count++]) < '\u0080')

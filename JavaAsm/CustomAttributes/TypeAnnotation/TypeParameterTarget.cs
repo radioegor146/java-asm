@@ -12,12 +12,12 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         internal override void Write(Stream stream, ClassWriterState writerState)
         {
-            stream.WriteByte(TypeParameterIndex);
+            stream.WriteByte(this.TypeParameterIndex);
         }
 
         internal override void Read(Stream stream, ClassReaderState readerState)
         {
-            TypeParameterIndex = stream.ReadByteFully();
+            this.TypeParameterIndex = stream.ReadByteFully();
         }
     }
 }

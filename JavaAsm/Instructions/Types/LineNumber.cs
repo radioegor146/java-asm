@@ -8,7 +8,7 @@
 
         public override string ToString()
         {
-            return $"LINE {Line}";
+            return $"LINE {this.Line}";
         }
     }
 }
