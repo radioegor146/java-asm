@@ -1,8 +1,13 @@
-﻿namespace JavaAsm.Instructions.Types
+﻿using System;
+
+namespace JavaAsm.Instructions.Types
 {
     public class IncrementInstruction : Instruction
     {
-        public override Opcode Opcode => Opcode.IINC;
+        public override Opcode Opcode {
+            get => Opcode.IINC;
+            set => throw new InvalidOperationException(GetType().Name + " only has 1 opcode");
+        }
 
         public ushort VariableIndex { get; set; }
 

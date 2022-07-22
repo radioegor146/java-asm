@@ -8,6 +8,6 @@
 
         public Instruction Next { get; internal set; }
 
-        public abstract Opcode Opcode { get; }
+        public abstract Opcode Opcode { get; set; }
     }
 }

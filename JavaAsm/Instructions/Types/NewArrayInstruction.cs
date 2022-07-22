@@ -1,8 +1,13 @@
-﻿namespace JavaAsm.Instructions.Types
+﻿using System;
+
+namespace JavaAsm.Instructions.Types
 {
     public class NewArrayInstruction : Instruction
     {
-        public override Opcode Opcode => Opcode.NEWARRAY;
+        public override Opcode Opcode {
+            get => Opcode.NEWARRAY;
+            set => throw new InvalidOperationException(GetType().Name + " only has 1 instruction");
+        }
 
         public NewArrayTypeCode ArrayType { get; set; }
 

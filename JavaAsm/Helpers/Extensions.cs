@@ -15,6 +15,12 @@ namespace JavaAsm.Helpers {
                 throw new ArgumentOutOfRangeException(nameof(valueName), $"{valueName} is not in [{string.Join(", ", values)}]");
         }
 
+        public static T VerifyOpcode<T>(this T value, string valueName, params T[] values) {
+            if (!values.Contains(value))
+                throw new ArgumentOutOfRangeException(nameof(valueName), $"{valueName} is not in [{string.Join(", ", values)}]");
+            return value;
+        }
+
         public static bool TryAdd<T>(this ICollection<T> collection, T value) {
             if (collection.Contains(value))
                 return false;

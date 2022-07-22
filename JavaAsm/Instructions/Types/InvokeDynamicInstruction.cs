@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using JavaAsm.Helpers;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.Instructions.Types
-{
-    public class InvokeDynamicInstruction : Instruction
-    {
-        public override Opcode Opcode => Opcode.INVOKEDYNAMIC;
+namespace JavaAsm.Instructions.Types {
+    public class InvokeDynamicInstruction : Instruction {
+        public override Opcode Opcode {
+            get => Opcode.INVOKEDYNAMIC;
+            set => throw new InvalidOperationException(GetType().Name + " only has 1 instruction");
+        }
 
         public string Name { get; set; }
 
@@ -18,8 +19,7 @@ namespace JavaAsm.Instructions.Types
         public List<object> BootstrapMethodArgs { get; set; }
     }
 
-    public enum ReferenceKindType : byte
-    {
+    public enum ReferenceKindType : byte {
         GetField = 1,
         GetStatic,
         PutField,
@@ -31,8 +31,7 @@ namespace JavaAsm.Instructions.Types
         InvokeReference
     }
 
-    public class Handle
-    {
+    public class Handle {
         public ReferenceKindType Type { get; set; }
 
         public ClassName Owner { get; set; }
@@ -41,23 +40,18 @@ namespace JavaAsm.Instructions.Types
 
         public IDescriptor Descriptor { get; set; }
 
-        internal static Handle FromConstantPool(MethodHandleEntry methodHandleEntry)
-        {
-            return new Handle
-            {
+        internal static Handle FromConstantPool(MethodHandleEntry methodHandleEntry) {
+            return new Handle {
                 Type = methodHandleEntry.ReferenceKind,
                 Descriptor = methodHandleEntry.ReferenceKind.IsFieldReference()
-                    ? TypeDescriptor.Parse(methodHandleEntry.Reference.NameAndType
-                        .Descriptor.String)
-                    : (IDescriptor) MethodDescriptor.Parse(methodHandleEntry.Reference.NameAndType
-                        .Descriptor.String),
+                    ? TypeDescriptor.Parse(methodHandleEntry.Reference.NameAndType.Descriptor.String)
+                    : (IDescriptor) MethodDescriptor.Parse(methodHandleEntry.Reference.NameAndType.Descriptor.String),
                 Name = methodHandleEntry.Reference.NameAndType.Name.String,
                 Owner = new ClassName(methodHandleEntry.Reference.Class.Name.String)
             };
         }
 
-        internal MethodHandleEntry ToConstantPool()
-        {
+        internal MethodHandleEntry ToConstantPool() {
             ClassEntry referenceOwner = new ClassEntry(new Utf8Entry(this.Owner.Name));
             NameAndTypeEntry referenceNameAndType = new NameAndTypeEntry(new Utf8Entry(this.Name), new Utf8Entry(this.Descriptor.ToString()));
             ReferenceEntry reference;
