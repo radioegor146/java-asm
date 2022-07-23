@@ -38,20 +38,48 @@ namespace JavaAsm.IO {
                 EntryTag tag = (EntryTag) stream.ReadByteFully();
                 Entry entry;
                 switch (tag) {
-                    case EntryTag.Class:                    entry = new ClassEntry(stream); break;
-                    case EntryTag.FieldReference:           entry = new FieldReferenceEntry(stream); break;
-                    case EntryTag.MethodReference:          entry = new MethodReferenceEntry(stream); break;
-                    case EntryTag.InterfaceMethodReference: entry = new InterfaceMethodReferenceEntry(stream); break;
-                    case EntryTag.String:                   entry = new StringEntry(stream); break;
-                    case EntryTag.Integer:                  entry = new IntegerEntry(stream); break;
-                    case EntryTag.Float:                    entry = new FloatEntry(stream); break;
-                    case EntryTag.Long:                     entry = new LongEntry(stream); break;
-                    case EntryTag.Double:                   entry = new DoubleEntry(stream); break;
-                    case EntryTag.NameAndType:              entry = new NameAndTypeEntry(stream); break;
-                    case EntryTag.Utf8:                     entry = new Utf8Entry(stream); break;
-                    case EntryTag.MethodHandle:             entry = new MethodHandleEntry(stream); break;
-                    case EntryTag.MethodType:               entry = new MethodTypeEntry(stream); break;
-                    case EntryTag.InvokeDynamic:            entry = new InvokeDynamicEntry(stream); break;
+                    case EntryTag.Class:
+                        entry = new ClassEntry(stream);
+                        break;
+                    case EntryTag.FieldReference:
+                        entry = new FieldReferenceEntry(stream);
+                        break;
+                    case EntryTag.MethodReference:
+                        entry = new MethodReferenceEntry(stream);
+                        break;
+                    case EntryTag.InterfaceMethodReference:
+                        entry = new InterfaceMethodReferenceEntry(stream);
+                        break;
+                    case EntryTag.String:
+                        entry = new StringEntry(stream);
+                        break;
+                    case EntryTag.Integer:
+                        entry = new IntegerEntry(stream);
+                        break;
+                    case EntryTag.Float:
+                        entry = new FloatEntry(stream);
+                        break;
+                    case EntryTag.Long:
+                        entry = new LongEntry(stream);
+                        break;
+                    case EntryTag.Double:
+                        entry = new DoubleEntry(stream);
+                        break;
+                    case EntryTag.NameAndType:
+                        entry = new NameAndTypeEntry(stream);
+                        break;
+                    case EntryTag.Utf8:
+                        entry = new Utf8Entry(stream);
+                        break;
+                    case EntryTag.MethodHandle:
+                        entry = new MethodHandleEntry(stream);
+                        break;
+                    case EntryTag.MethodType:
+                        entry = new MethodTypeEntry(stream);
+                        break;
+                    case EntryTag.InvokeDynamic:
+                        entry = new InvokeDynamicEntry(stream);
+                        break;
                     default: throw new ArgumentOutOfRangeException(nameof(tag));
                 }
 

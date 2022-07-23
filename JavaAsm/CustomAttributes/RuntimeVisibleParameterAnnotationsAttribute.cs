@@ -6,21 +6,17 @@ using JavaAsm.CustomAttributes.Annotation;
 using JavaAsm.Helpers;
 using JavaAsm.IO;
 
-namespace JavaAsm.CustomAttributes
-{
-    public class RuntimeVisibleParameterAnnotationsAttribute : CustomAttribute
-    {
+namespace JavaAsm.CustomAttributes {
+    public class RuntimeVisibleParameterAnnotationsAttribute : CustomAttribute {
         public List<ParameterAnnotations> Parameters { get; set; } = new List<ParameterAnnotations>();
 
-        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
-        {
+        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope) {
             MemoryStream attributeDataStream = new MemoryStream();
 
             if (this.Parameters.Count > byte.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(this.Parameters.Count), $"Number of parameters is too big: {this.Parameters.Count} > {byte.MaxValue}");
             attributeDataStream.WriteByte((byte) this.Parameters.Count);
-            foreach (ParameterAnnotations parameter in this.Parameters)
-            {
+            foreach (ParameterAnnotations parameter in this.Parameters) {
                 if (parameter.Annotations.Count > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(parameter.Annotations.Count),
                         $"Number of annotations is too big: {parameter.Annotations.Count} > {ushort.MaxValue}");
@@ -33,16 +29,13 @@ namespace JavaAsm.CustomAttributes
         }
     }
 
-    internal class RuntimeVisibleParameterAnnotationsAttributeFactory : ICustomAttributeFactory<RuntimeVisibleParameterAnnotationsAttribute>
-    {
-        public RuntimeVisibleParameterAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
-        {
+    internal class RuntimeVisibleParameterAnnotationsAttributeFactory : ICustomAttributeFactory<RuntimeVisibleParameterAnnotationsAttribute> {
+        public RuntimeVisibleParameterAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope) {
             RuntimeVisibleParameterAnnotationsAttribute attribute = new RuntimeVisibleParameterAnnotationsAttribute();
 
             byte parametersCount = attributeDataStream.ReadByteFully();
             attribute.Parameters.Capacity = parametersCount;
-            for (int i = 0; i < parametersCount; i++)
-            {
+            for (int i = 0; i < parametersCount; i++) {
                 ParameterAnnotations parameter = new ParameterAnnotations();
                 ushort annotationsCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
                 parameter.Annotations.Capacity = annotationsCount;

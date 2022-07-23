@@ -4,13 +4,10 @@ using System.IO.Compression;
 using JavaAsm.IO;
 using NUnit.Framework;
 
-namespace JavaAsmTests
-{
-    public class Tests
-    {
+namespace JavaAsmTests {
+    public class Tests {
         [Test]
-        public void Test1()
-        {
+        public void Test1() {
         }
     }
 }

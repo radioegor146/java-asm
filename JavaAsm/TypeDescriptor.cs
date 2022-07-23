@@ -132,15 +132,33 @@ namespace JavaAsm {
             }
             else {
                 switch (this.PrimitiveType.Value) {
-                    case global::JavaAsm.PrimitiveType.Boolean:   result += 'Z'; break;
-                    case global::JavaAsm.PrimitiveType.Byte:      result += 'B'; break;
-                    case global::JavaAsm.PrimitiveType.Character: result += 'C'; break;
-                    case global::JavaAsm.PrimitiveType.Double:    result += 'D'; break;
-                    case global::JavaAsm.PrimitiveType.Float:     result += 'F'; break;
-                    case global::JavaAsm.PrimitiveType.Integer:   result += 'I'; break;
-                    case global::JavaAsm.PrimitiveType.Long:      result += 'J'; break;
-                    case global::JavaAsm.PrimitiveType.Short:     result += 'S'; break;
-                    case global::JavaAsm.PrimitiveType.Void:      result += 'V'; break;
+                    case global::JavaAsm.PrimitiveType.Boolean:
+                        result += 'Z';
+                        break;
+                    case global::JavaAsm.PrimitiveType.Byte:
+                        result += 'B';
+                        break;
+                    case global::JavaAsm.PrimitiveType.Character:
+                        result += 'C';
+                        break;
+                    case global::JavaAsm.PrimitiveType.Double:
+                        result += 'D';
+                        break;
+                    case global::JavaAsm.PrimitiveType.Float:
+                        result += 'F';
+                        break;
+                    case global::JavaAsm.PrimitiveType.Integer:
+                        result += 'I';
+                        break;
+                    case global::JavaAsm.PrimitiveType.Long:
+                        result += 'J';
+                        break;
+                    case global::JavaAsm.PrimitiveType.Short:
+                        result += 'S';
+                        break;
+                    case global::JavaAsm.PrimitiveType.Void:
+                        result += 'V';
+                        break;
                     default: throw new ArgumentOutOfRangeException(nameof(this.PrimitiveType.Value));
                 }
             }

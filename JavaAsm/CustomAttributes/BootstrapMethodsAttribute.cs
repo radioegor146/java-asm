@@ -6,41 +6,35 @@ using JavaAsm.Instructions.Types;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.CustomAttributes
-{
-    public class BootstrapMethod
-    {
+namespace JavaAsm.CustomAttributes {
+    public class BootstrapMethod {
         public Handle BootstrapMethodReference { get; }
 
         public List<object> Arguments { get; } = new List<object>();
 
-        public BootstrapMethod(Handle bootstrapMethodReference)
-        {
+        public BootstrapMethod(Handle bootstrapMethodReference) {
             this.BootstrapMethodReference = bootstrapMethodReference;
         }
 
-        public BootstrapMethod(Handle bootstrapMethodReference, List<object> arguments)
-        {
+        public BootstrapMethod(Handle bootstrapMethodReference, List<object> arguments) {
             this.BootstrapMethodReference = bootstrapMethodReference;
             this.Arguments = arguments;
         }
 
-        public bool Equals(BootstrapMethod other)
-        {
+        public bool Equals(BootstrapMethod other) {
             return this.BootstrapMethodReference.Equals(other.BootstrapMethodReference) && this.Arguments.Equals(other.Arguments);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == GetType() && Equals((BootstrapMethod)obj);
+        public override bool Equals(object obj) {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            return obj.GetType() == GetType() && Equals((BootstrapMethod) obj);
         }
 
-        public override int GetHashCode()
-        {
-            unchecked
-            {
+        public override int GetHashCode() {
+            unchecked {
                 return (this.BootstrapMethodReference.GetHashCode() * 397) ^ this.Arguments.GetHashCode();
             }
         }
@@ -83,7 +77,8 @@ namespace JavaAsm.CustomAttributes
                             val = ((Handle) argument).ToConstantPool();
                         }
                         else if (argument is MethodDescriptor) {
-                            val = new MethodTypeEntry(new Utf8Entry(((MethodDescriptor) argument).ToString())); }
+                            val = new MethodTypeEntry(new Utf8Entry(((MethodDescriptor) argument).ToString()));
+                        }
                         else {
                             throw new ArgumentOutOfRangeException(nameof(argument), $"Can't encode value of type {argument.GetType()}");
                         }
@@ -97,16 +92,13 @@ namespace JavaAsm.CustomAttributes
         }
     }
 
-    internal class BootstrapMethodsAttributeFactory : ICustomAttributeFactory<BootstrapMethodsAttribute>
-    {
-        public BootstrapMethodsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
-        {
+    internal class BootstrapMethodsAttributeFactory : ICustomAttributeFactory<BootstrapMethodsAttribute> {
+        public BootstrapMethodsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope) {
             BootstrapMethodsAttribute attribute = new BootstrapMethodsAttribute();
 
             ushort bootstrapMethodsCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.BootstrapMethods.Capacity = bootstrapMethodsCount;
-            for (int i = 0; i < bootstrapMethodsCount; i++)
-            {
+            for (int i = 0; i < bootstrapMethodsCount; i++) {
                 BootstrapMethod bootstrapMethod = new BootstrapMethod(
                     Handle.FromConstantPool(
                         readerState.ConstantPool.GetEntry<MethodHandleEntry>(
@@ -147,6 +139,7 @@ namespace JavaAsm.CustomAttributes
 
                     bootstrapMethod.Arguments.Add(item);
                 }
+
                 attribute.BootstrapMethods.Add(bootstrapMethod);
             }
 

@@ -84,8 +84,7 @@ namespace JavaAsm {
         internal void Save(ClassWriterState writerState) {
             if (this.SourceFile != null) {
                 if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.SourceFile))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.SourceFile} attribute is already presented on field");
+                    throw new Exception($"{PredefinedAttributeNames.SourceFile} attribute is already presented on field");
                 this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.SourceFile,
                     ParsedAttribute = new SourceFileAttribute {
@@ -96,8 +95,7 @@ namespace JavaAsm {
 
             if (this.SourceDebugExtension != null) {
                 if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.SourceDebugExtension))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.SourceDebugExtension} attribute is already presented on field");
+                    throw new Exception($"{PredefinedAttributeNames.SourceDebugExtension} attribute is already presented on field");
                 this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.SourceDebugExtension,
                     ParsedAttribute = new SourceDebugExtensionAttribute {
@@ -108,8 +106,7 @@ namespace JavaAsm {
 
             if (this.Signature != null) {
                 if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.Signature} attribute is already presented on field");
+                    throw new Exception($"{PredefinedAttributeNames.Signature} attribute is already presented on field");
                 this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.Signature,
                     ParsedAttribute = new SignatureAttribute {
@@ -120,8 +117,7 @@ namespace JavaAsm {
 
             if (this.InvisibleAnnotations != null && this.InvisibleAnnotations.Count > 0) {
                 if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on field");
+                    throw new Exception($"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on field");
                 this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.RuntimeInvisibleAnnotations,
                     ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute {
@@ -132,8 +128,7 @@ namespace JavaAsm {
 
             if (this.VisibleAnnotations != null && this.VisibleAnnotations.Count > 0) {
                 if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on field");
+                    throw new Exception($"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on field");
                 this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.RuntimeVisibleAnnotations,
                     ParsedAttribute = new RuntimeVisibleAnnotationsAttribute {
@@ -144,8 +139,7 @@ namespace JavaAsm {
 
             if (this.IsDeprecated) {
                 if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.Deprecated} attribute is already presented on field");
+                    throw new Exception($"{PredefinedAttributeNames.Deprecated} attribute is already presented on field");
                 this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.Deprecated,
                     ParsedAttribute = new DeprecatedAttribute()
@@ -154,8 +148,7 @@ namespace JavaAsm {
 
             if (this.EnclosingMethod != null) {
                 if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.EnclosingMethod))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.EnclosingMethod} attribute is already presented on field");
+                    throw new Exception($"{PredefinedAttributeNames.EnclosingMethod} attribute is already presented on field");
                 this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.EnclosingMethod,
                     ParsedAttribute = this.EnclosingMethod
@@ -164,8 +157,7 @@ namespace JavaAsm {
 
             if (this.InnerClasses != null && this.InnerClasses.Count > 0) {
                 if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.InnerClasses))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.InnerClasses} attribute is already presented on field");
+                    throw new Exception($"{PredefinedAttributeNames.InnerClasses} attribute is already presented on field");
                 this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.InnerClasses,
                     ParsedAttribute = new InnerClassesAttribute {

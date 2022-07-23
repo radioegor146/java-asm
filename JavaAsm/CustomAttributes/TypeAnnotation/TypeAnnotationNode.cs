@@ -7,10 +7,8 @@ using JavaAsm.Helpers;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.CustomAttributes.TypeAnnotation
-{
-    public class TypeAnnotationNode
-    {
+namespace JavaAsm.CustomAttributes.TypeAnnotation {
+    public class TypeAnnotationNode {
         public TargetType TargetType { get; set; }
 
         public TypeAnnotationTarget Target { get; set; }
@@ -19,8 +17,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         public TypeDescriptor Type { get; set; }
 
-        public class ElementValuePair
-        {
+        public class ElementValuePair {
             public string ElementName { get; set; }
 
             public ElementValue Value { get; set; }
@@ -28,10 +25,8 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
 
         public List<ElementValuePair> ElementValuePairs { get; set; } = new List<ElementValuePair>();
 
-        internal static TypeAnnotationNode Parse(Stream stream, ClassReaderState readerState, AttributeScope scope)
-        {
-            TypeAnnotationNode typeAnnotation = new TypeAnnotationNode
-            {
+        internal static TypeAnnotationNode Parse(Stream stream, ClassReaderState readerState, AttributeScope scope) {
+            TypeAnnotationNode typeAnnotation = new TypeAnnotationNode {
                 TargetType = (TargetType) stream.ReadByteFully()
             };
             switch (typeAnnotation.TargetType) {
@@ -88,20 +83,16 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
             ushort elementValuePairsCount = Binary.BigEndian.ReadUInt16(stream);
             typeAnnotation.ElementValuePairs.Capacity = elementValuePairsCount;
             for (int i = 0; i < elementValuePairsCount; i++)
-                typeAnnotation.ElementValuePairs.Add(new ElementValuePair
-                {
-                    ElementName = readerState.ConstantPool
-                        .GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String,
+                typeAnnotation.ElementValuePairs.Add(new ElementValuePair {
+                    ElementName = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String,
                     Value = ElementValue.Parse(stream, readerState)
                 });
             return typeAnnotation;
         }
 
-        internal void Write(Stream stream, ClassWriterState writerState, AttributeScope scope)
-        {
+        internal void Write(Stream stream, ClassWriterState writerState, AttributeScope scope) {
             stream.WriteByte((byte) this.TargetType);
-            switch (this.TargetType)
-            {
+            switch (this.TargetType) {
                 case TargetType.GenericClassOrInterfaceDeclaration when this.Target.TargetTypeKind == TargetTypeKind.TypeParameter && scope == AttributeScope.Class:
                 case TargetType.GenericMethodOrConstructorDeclaration when this.Target.TargetTypeKind == TargetTypeKind.TypeParameter && scope == AttributeScope.Method:
                 case TargetType.ExtendsOrImplements when this.Target.TargetTypeKind == TargetTypeKind.Supertype && scope == AttributeScope.Class:
@@ -126,8 +117,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
                 case TargetType.ArgumentForGenericMethodReferenceExpressionIdentifier when this.Target.TargetTypeKind == TargetTypeKind.TypeArgument && scope == AttributeScope.Code:
                     this.Target.Write(stream, writerState);
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(this.TargetType));
+                default: throw new ArgumentOutOfRangeException(nameof(this.TargetType));
             }
 
             this.TypePath.Write(stream, writerState);
@@ -136,8 +126,7 @@ namespace JavaAsm.CustomAttributes.TypeAnnotation
                 throw new ArgumentOutOfRangeException(nameof(this.ElementValuePairs.Count),
                     $"Too many ElementValues: {this.ElementValuePairs.Count} > {ushort.MaxValue}");
             Binary.BigEndian.Write(stream, (ushort) this.ElementValuePairs.Count);
-            foreach (ElementValuePair elementValuePair in this.ElementValuePairs)
-            {
+            foreach (ElementValuePair elementValuePair in this.ElementValuePairs) {
                 Binary.BigEndian.Write(stream,
                     writerState.ConstantPool.Find(new Utf8Entry(elementValuePair.ElementName)));
                 elementValuePair.Value.Write(stream, writerState);

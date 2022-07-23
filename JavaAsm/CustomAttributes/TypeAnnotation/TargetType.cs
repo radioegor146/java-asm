@@ -1,7 +1,5 @@
-﻿namespace JavaAsm.CustomAttributes.TypeAnnotation
-{
-    public enum TargetType
-    {
+﻿namespace JavaAsm.CustomAttributes.TypeAnnotation {
+    public enum TargetType {
         // Type in ...
 
         GenericClassOrInterfaceDeclaration = 0x00,

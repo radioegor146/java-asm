@@ -5,14 +5,11 @@ using BinaryEncoding;
 using JavaAsm.CustomAttributes.TypeAnnotation;
 using JavaAsm.IO;
 
-namespace JavaAsm.CustomAttributes
-{
-    public class RuntimeVisibleTypeAnnotationsAttribute : CustomAttribute
-    {
+namespace JavaAsm.CustomAttributes {
+    public class RuntimeVisibleTypeAnnotationsAttribute : CustomAttribute {
         public List<TypeAnnotationNode> Annotations { get; set; } = new List<TypeAnnotationNode>();
 
-        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
-        {
+        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope) {
             using (MemoryStream attributeDataStream = new MemoryStream()) {
                 if (this.Annotations.Count > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(this.Annotations.Count), $"Number of annotations is too big: {this.Annotations.Count} > {ushort.MaxValue}");
@@ -25,10 +22,8 @@ namespace JavaAsm.CustomAttributes
         }
     }
 
-    internal class RuntimeVisibleTypeAnnotationsAttributeFactory : ICustomAttributeFactory<RuntimeVisibleTypeAnnotationsAttribute>
-    {
-        public RuntimeVisibleTypeAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
-        {
+    internal class RuntimeVisibleTypeAnnotationsAttributeFactory : ICustomAttributeFactory<RuntimeVisibleTypeAnnotationsAttribute> {
+        public RuntimeVisibleTypeAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope) {
             RuntimeVisibleTypeAnnotationsAttribute attribute = new RuntimeVisibleTypeAnnotationsAttribute();
 
             ushort annotationsCount = Binary.BigEndian.ReadUInt16(attributeDataStream);

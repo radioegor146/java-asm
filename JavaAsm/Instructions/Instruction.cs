@@ -1,7 +1,5 @@
-﻿namespace JavaAsm.Instructions
-{
-    public abstract class Instruction
-    {
+﻿namespace JavaAsm.Instructions {
+    public abstract class Instruction {
         public InstructionList OwnerList { get; internal set; }
 
         public Instruction Previous { get; internal set; }

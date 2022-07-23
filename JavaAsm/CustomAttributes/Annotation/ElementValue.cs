@@ -6,12 +6,9 @@ using JavaAsm.Helpers;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.CustomAttributes.Annotation
-{
-    public class ElementValue
-    {
-        public enum ElementValueTag
-        {
+namespace JavaAsm.CustomAttributes.Annotation {
+    public class ElementValue {
+        public enum ElementValueTag {
             Byte = 'B',
             Character = 'C',
             Double = 'D',
@@ -31,8 +28,7 @@ namespace JavaAsm.CustomAttributes.Annotation
 
         public object ConstValue { get; set; }
 
-        public class EnumConstValueType
-        {
+        public class EnumConstValueType {
             public TypeDescriptor TypeName { get; set; }
 
             public string ConstName { get; set; }
@@ -46,15 +42,12 @@ namespace JavaAsm.CustomAttributes.Annotation
 
         public List<ElementValue> ArrayValue { get; set; }
 
-        internal static ElementValue Parse(Stream stream, ClassReaderState readerState)
-        {
-            ElementValue elementValue = new ElementValue
-            {
+        internal static ElementValue Parse(Stream stream, ClassReaderState readerState) {
+            ElementValue elementValue = new ElementValue {
                 Tag = (ElementValueTag) stream.ReadByteFully()
             };
 
-            switch (elementValue.Tag)
-            {
+            switch (elementValue.Tag) {
                 case ElementValueTag.Byte:
                 case ElementValueTag.Character:
                 case ElementValueTag.Integer:
@@ -75,17 +68,13 @@ namespace JavaAsm.CustomAttributes.Annotation
                     elementValue.ConstValue = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String;
                     break;
                 case ElementValueTag.Enum:
-                    elementValue.EnumConstValue = new EnumConstValueType
-                    {
-                        TypeName = TypeDescriptor.Parse(readerState.ConstantPool
-                            .GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String),
-                        ConstName = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream))
-                            .String
+                    elementValue.EnumConstValue = new EnumConstValueType {
+                        TypeName = TypeDescriptor.Parse(readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String),
+                        ConstName = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String
                     };
                     break;
                 case ElementValueTag.Class:
-                    elementValue.Class = TypeDescriptor.Parse(readerState.ConstantPool
-                        .GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String, true);
+                    elementValue.Class = TypeDescriptor.Parse(readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String, true);
                     break;
                 case ElementValueTag.Annotation:
                     elementValue.AnnotationNode = AnnotationNode.Parse(stream, readerState);
@@ -96,18 +85,15 @@ namespace JavaAsm.CustomAttributes.Annotation
                     for (int i = 0; i < arraySize; i++)
                         elementValue.ArrayValue.Add(Parse(stream, readerState));
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(elementValue.Tag));
+                default: throw new ArgumentOutOfRangeException(nameof(elementValue.Tag));
             }
 
             return elementValue;
         }
 
-        internal void Write(Stream stream, ClassWriterState writerState)
-        {
+        internal void Write(Stream stream, ClassWriterState writerState) {
             stream.WriteByte((byte) this.Tag);
-            switch (this.Tag)
-            {
+            switch (this.Tag) {
                 case ElementValueTag.Byte:
                 case ElementValueTag.Character:
                 case ElementValueTag.Integer:
@@ -147,8 +133,7 @@ namespace JavaAsm.CustomAttributes.Annotation
                     foreach (ElementValue element in this.ArrayValue)
                         element.Write(stream, writerState);
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(this.Tag));
+                default: throw new ArgumentOutOfRangeException(nameof(this.Tag));
             }
         }
     }

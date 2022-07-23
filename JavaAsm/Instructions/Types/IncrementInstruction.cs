@@ -1,9 +1,7 @@
 ﻿using System;
 
-namespace JavaAsm.Instructions.Types
-{
-    public class IncrementInstruction : Instruction
-    {
+namespace JavaAsm.Instructions.Types {
+    public class IncrementInstruction : Instruction {
         public override Opcode Opcode {
             get => Opcode.IINC;
             set => throw new InvalidOperationException(GetType().Name + " only has 1 opcode");
@@ -13,8 +11,7 @@ namespace JavaAsm.Instructions.Types
 
         public short Value { get; set; }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return $"{this.Opcode} {this.VariableIndex} {this.Value}";
         }
     }

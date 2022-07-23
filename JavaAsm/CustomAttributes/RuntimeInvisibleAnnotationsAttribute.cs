@@ -5,14 +5,11 @@ using BinaryEncoding;
 using JavaAsm.CustomAttributes.Annotation;
 using JavaAsm.IO;
 
-namespace JavaAsm.CustomAttributes
-{
-    public class RuntimeInvisibleAnnotationsAttribute : CustomAttribute
-    {
+namespace JavaAsm.CustomAttributes {
+    public class RuntimeInvisibleAnnotationsAttribute : CustomAttribute {
         public List<AnnotationNode> Annotations { get; set; } = new List<AnnotationNode>();
 
-        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
-        {
+        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope) {
             MemoryStream attributeDataStream = new MemoryStream();
 
             if (this.Annotations.Count > ushort.MaxValue)
@@ -25,10 +22,8 @@ namespace JavaAsm.CustomAttributes
         }
     }
 
-    internal class RuntimeInvisibleAnnotationsAttributeFactory : ICustomAttributeFactory<RuntimeInvisibleAnnotationsAttribute>
-    {
-        public RuntimeInvisibleAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
-        {
+    internal class RuntimeInvisibleAnnotationsAttributeFactory : ICustomAttributeFactory<RuntimeInvisibleAnnotationsAttribute> {
+        public RuntimeInvisibleAnnotationsAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope) {
             RuntimeInvisibleAnnotationsAttribute attribute = new RuntimeInvisibleAnnotationsAttribute();
 
             ushort annotationsCount = Binary.BigEndian.ReadUInt16(attributeDataStream);
@@ -37,7 +32,6 @@ namespace JavaAsm.CustomAttributes
                 attribute.Annotations.Add(AnnotationNode.Parse(attributeDataStream, readerState));
 
             return attribute;
-
         }
     }
 }

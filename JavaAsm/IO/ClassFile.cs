@@ -3,26 +3,20 @@ using System.IO;
 using BinaryEncoding;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.IO
-{
-    public static class ClassFile
-    {
+namespace JavaAsm.IO {
+    public static class ClassFile {
         private const uint Magic = 0xCAFEBABE;
 
-        internal static AttributeNode ParseAttribute(Stream stream, ClassReaderState state, AttributeScope scope)
-        {
-            AttributeNode attribute = new AttributeNode
-            {
+        internal static AttributeNode ParseAttribute(Stream stream, ClassReaderState state, AttributeScope scope) {
+            AttributeNode attribute = new AttributeNode {
                 Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String
             };
             attribute.Parse(stream, scope, state);
             return attribute;
         }
 
-        private static FieldNode ParseField(Stream stream, ClassReaderState state)
-        {
-            FieldNode fieldNode = new FieldNode
-            {
+        private static FieldNode ParseField(Stream stream, ClassReaderState state) {
+            FieldNode fieldNode = new FieldNode {
                 Owner = state.ClassNode,
 
                 Access = (FieldAccessModifiers) Binary.BigEndian.ReadUInt16(stream),
@@ -36,13 +30,11 @@ namespace JavaAsm.IO
             return fieldNode;
         }
 
-        private static MethodNode ParseMethod(Stream stream, ClassReaderState state)
-        {
-            MethodNode methodNode = new MethodNode
-            {
+        private static MethodNode ParseMethod(Stream stream, ClassReaderState state) {
+            MethodNode methodNode = new MethodNode {
                 Owner = state.ClassNode,
 
-                Access = (MethodAccessModifiers)Binary.BigEndian.ReadUInt16(stream),
+                Access = (MethodAccessModifiers) Binary.BigEndian.ReadUInt16(stream),
                 Name = state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String,
                 Descriptor = MethodDescriptor.Parse(state.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String)
             };
@@ -53,8 +45,7 @@ namespace JavaAsm.IO
             return methodNode;
         }
 
-        public static ClassNode ParseClass(Stream stream)
-        {
+        public static ClassNode ParseClass(Stream stream) {
             ClassReaderState state = new ClassReaderState();
             ClassNode result = new ClassNode();
             state.ClassNode = result;
@@ -102,8 +93,7 @@ namespace JavaAsm.IO
             return result;
         }
 
-        internal static void WriteAttribute(Stream stream, AttributeNode attribute, ClassWriterState state, AttributeScope scope)
-        {
+        internal static void WriteAttribute(Stream stream, AttributeNode attribute, ClassWriterState state, AttributeScope scope) {
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(attribute.Name)));
             attribute.Data = attribute.ParsedAttribute?.Save(state, scope) ?? attribute.Data;
             if (attribute.Data.LongLength > uint.MaxValue)
@@ -112,8 +102,7 @@ namespace JavaAsm.IO
             stream.Write(attribute.Data, 0, attribute.Data.Length);
         }
 
-        private static void WriteField(Stream stream, FieldNode fieldNode, ClassWriterState state)
-        {
+        private static void WriteField(Stream stream, FieldNode fieldNode, ClassWriterState state) {
             Binary.BigEndian.Write(stream, (ushort) fieldNode.Access);
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(fieldNode.Name)));
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(fieldNode.Descriptor.ToString())));
@@ -124,27 +113,24 @@ namespace JavaAsm.IO
                 WriteAttribute(stream, attriute, state, AttributeScope.Field);
         }
 
-        private static void WriteMethod(Stream stream, MethodNode methodNode, ClassWriterState state)
-        {
-            Binary.BigEndian.Write(stream, (ushort)methodNode.Access);
+        private static void WriteMethod(Stream stream, MethodNode methodNode, ClassWriterState state) {
+            Binary.BigEndian.Write(stream, (ushort) methodNode.Access);
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(methodNode.Name)));
             Binary.BigEndian.Write(stream, state.ConstantPool.Find(new Utf8Entry(methodNode.Descriptor.ToString())));
             if (methodNode.Attributes.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(methodNode.Attributes.Count), $"Too many attributes: {methodNode.Attributes.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(stream, (ushort)methodNode.Attributes.Count);
+            Binary.BigEndian.Write(stream, (ushort) methodNode.Attributes.Count);
             foreach (AttributeNode attriute in methodNode.Attributes)
                 WriteAttribute(stream, attriute, state, AttributeScope.Method);
         }
 
-        public static void WriteClass(Stream stream, ClassNode classNode)
-        {
+        public static void WriteClass(Stream stream, ClassNode classNode) {
             Binary.BigEndian.Write(stream, Magic);
             Binary.BigEndian.Write(stream, classNode.MinorVersion);
             Binary.BigEndian.Write(stream, (ushort) classNode.MajorVersion);
             MemoryStream afterConstantPoolDataStream = new MemoryStream();
             ConstantPool constantPool = new ConstantPool();
-            ClassWriterState state = new ClassWriterState
-            {
+            ClassWriterState state = new ClassWriterState {
                 ClassNode = classNode,
                 ConstantPool = constantPool
             };
@@ -172,13 +158,13 @@ namespace JavaAsm.IO
 
             if (classNode.Methods.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(classNode.Methods.Count), $"Too many methods: {classNode.Methods.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort)classNode.Methods.Count);
+            Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort) classNode.Methods.Count);
             foreach (MethodNode method in classNode.Methods)
                 WriteMethod(afterConstantPoolDataStream, method, state);
 
             if (classNode.Attributes.Count > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(classNode.Attributes.Count), $"Too many attributes: {classNode.Attributes.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort)classNode.Attributes.Count);
+            Binary.BigEndian.Write(afterConstantPoolDataStream, (ushort) classNode.Attributes.Count);
             foreach (AttributeNode attriute in classNode.Attributes)
                 WriteAttribute(afterConstantPoolDataStream, attriute, state, AttributeScope.Class);
 

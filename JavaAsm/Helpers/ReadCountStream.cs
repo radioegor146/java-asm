@@ -1,27 +1,22 @@
 ﻿using System;
 using System.IO;
 
-namespace JavaAsm.Helpers
-{
-    public class ReadWriteCountStream : Stream
-    {
+namespace JavaAsm.Helpers {
+    public class ReadWriteCountStream : Stream {
         private readonly Stream baseStream;
 
         public long ReadBytes { get; private set; }
         public long WrittenBytes { get; private set; }
 
-        public ReadWriteCountStream(Stream baseStream)
-        {
+        public ReadWriteCountStream(Stream baseStream) {
             this.baseStream = baseStream;
         }
 
-        public override void Flush()
-        {
+        public override void Flush() {
             this.baseStream.Flush();
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
+        public override int Read(byte[] buffer, int offset, int count) {
             int result = this.baseStream.Read(buffer, offset, count);
             this.ReadBytes += Math.Max(0, result);
             return result;
@@ -31,8 +26,7 @@ namespace JavaAsm.Helpers
 
         public override void SetLength(long value) => throw new InvalidOperationException();
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
+        public override void Write(byte[] buffer, int offset, int count) {
             this.baseStream.Write(buffer, offset, count);
             this.WrittenBytes += count;
         }
@@ -45,8 +39,7 @@ namespace JavaAsm.Helpers
 
         public override long Length => this.baseStream.Length;
 
-        public override long Position
-        {
+        public override long Position {
             get => this.baseStream.Position;
             set => this.baseStream.Position = value;
         }

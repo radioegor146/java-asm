@@ -2,32 +2,26 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace JavaAsm.Instructions
-{
-    public class InstructionList : IEnumerable<Instruction>
-    {
-        private class InstructionListEnumerator : IEnumerator<Instruction>
-        {
-            public InstructionListEnumerator(Instruction start)
-            {
+namespace JavaAsm.Instructions {
+    public class InstructionList : IEnumerable<Instruction> {
+        private class InstructionListEnumerator : IEnumerator<Instruction> {
+            public InstructionListEnumerator(Instruction start) {
                 this.Start = start;
             }
 
-            public bool MoveNext()
-            {
-                if (this.Start != null && this.Current == null)
-                {
+            public bool MoveNext() {
+                if (this.Start != null && this.Current == null) {
                     this.Current = this.Start;
                     return true;
                 }
+
                 if (this.Current?.Next == null)
                     return false;
                 this.Current = this.Current.Next;
                 return true;
             }
 
-            public void Reset()
-            {
+            public void Reset() {
                 this.Current = null;
             }
 
@@ -46,8 +40,7 @@ namespace JavaAsm.Instructions
 
         public int Count { get; private set; }
 
-        public void Add(Instruction instruction)
-        {
+        public void Add(Instruction instruction) {
             instruction.OwnerList = this;
             instruction.Next = null;
             if (this.First == null)
@@ -59,8 +52,7 @@ namespace JavaAsm.Instructions
             this.Count++;
         }
 
-        public void InsertBefore(Instruction instruction, Instruction toInsert)
-        {
+        public void InsertBefore(Instruction instruction, Instruction toInsert) {
             if (instruction.OwnerList != this)
                 throw new ArgumentException("Position instruction does not belong to that list", nameof(instruction.OwnerList));
             toInsert.OwnerList = this;
@@ -76,8 +68,7 @@ namespace JavaAsm.Instructions
             this.Count++;
         }
 
-        public void InsertAfter(Instruction instruction, Instruction toInsert)
-        {
+        public void InsertAfter(Instruction instruction, Instruction toInsert) {
             if (instruction.OwnerList != this)
                 throw new ArgumentException("Position instruction does not belong to that list", nameof(instruction.OwnerList));
             toInsert.OwnerList = this;
@@ -93,8 +84,7 @@ namespace JavaAsm.Instructions
             this.Count++;
         }
 
-        public void Remove(Instruction instruction)
-        {
+        public void Remove(Instruction instruction) {
             if (instruction.OwnerList != this)
                 throw new ArgumentException("Instruction does not belong to that list", nameof(instruction.OwnerList));
             instruction.OwnerList = null;
@@ -109,13 +99,11 @@ namespace JavaAsm.Instructions
             this.Count--;
         }
 
-        public IEnumerator<Instruction> GetEnumerator()
-        {
+        public IEnumerator<Instruction> GetEnumerator() {
             return new InstructionListEnumerator(this.First);
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
+        IEnumerator IEnumerable.GetEnumerator() {
             return GetEnumerator();
         }
     }

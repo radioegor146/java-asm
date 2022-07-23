@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace JavaAsm.Instructions.Types
-{
-    public class TableSwitchInstruction : Instruction
-    {
+namespace JavaAsm.Instructions.Types {
+    public class TableSwitchInstruction : Instruction {
         public override Opcode Opcode {
             get => Opcode.TABLESWITCH;
             set => throw new InvalidOperationException(GetType().Name + " only has 1 opcode");

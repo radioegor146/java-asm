@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace JavaAsm.Instructions
-{
+namespace JavaAsm.Instructions {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public enum Opcode : byte
-    {
+    public enum Opcode : byte {
         None = 0xFF,
 
         AALOAD = 0x32,

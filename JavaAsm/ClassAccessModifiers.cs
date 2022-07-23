@@ -47,7 +47,6 @@ namespace JavaAsm {
     }
 
     public static class AccessModifiersExtensions {
-
         public static string ToString(ClassAccessModifiers accessModifiers) => string.Join(" ", Enum.GetValues(typeof(ClassAccessModifiers)).OfType<ClassAccessModifiers>().Where(x => accessModifiers.HasFlag(x)).Select(x => x.ToString().ToLower()));
 
         public static string ToString(MethodAccessModifiers accessModifiers) => string.Join(" ", Enum.GetValues(typeof(MethodAccessModifiers)).OfType<MethodAccessModifiers>().Where(x => accessModifiers.HasFlag(x)).Select(x => x.ToString().ToLower()));
