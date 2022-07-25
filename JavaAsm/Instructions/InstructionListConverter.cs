@@ -453,7 +453,7 @@ namespace JavaAsm.Instructions {
                             default: throw new ArgumentOutOfRangeException(nameof(constantPoolEntry), $"Tried to {opcode} wrong type of CP entry: {constantPoolEntry.Tag}");
                         }
 
-                        instructions.Add(currentPosition, new LdcInstruction {Value = ldcVal});
+                        instructions.Add(currentPosition, new LdcInstruction {Value = ldcVal, Opcode = opcode});
                     }
                         break;
                     case Opcode.LDC_W:
@@ -489,7 +489,8 @@ namespace JavaAsm.Instructions {
                         }
 
                         instructions.Add(currentPosition, new LdcInstruction {
-                            Value = ldcValue
+                            Value = ldcValue,
+                            Opcode = opcode
                         });
                     }
                         break;
@@ -760,7 +761,7 @@ namespace JavaAsm.Instructions {
                         currentPosition += sizeof(ushort);
                         break;
                     case LdcInstruction ldcInstruction:
-                        if (ldcInstruction.Value is long || ldcInstruction.Value is double)
+                        if (ldcInstruction.Value is long || ldcInstruction.Value is double || ldcInstruction.Opcode == Opcode.LDC2_W || ldcInstruction.Opcode == Opcode.LDC_W)
                             currentPosition += sizeof(ushort);
                         else {
                             ushort constantPoolEntryIndex;
@@ -963,15 +964,38 @@ namespace JavaAsm.Instructions {
                         }
 
                         if (ldcInstruction.Value is long || ldcInstruction.Value is double) {
+                            if (ldcInstruction.Opcode != Opcode.LDC2_W) {
+                                throw new InvalidOperationException("LDC Instruction's value is a long/double, but it's op-code is not LDC2_W. Value: " + ldcInstruction.Value);
+                            }
+
                             codeDataStream.WriteByte((byte) Opcode.LDC2_W);
                             Binary.BigEndian.Write(codeDataStream, constantPoolEntryIndex);
                         }
                         else {
-                            codeDataStream.WriteByte((byte) (constantPoolEntryIndex > byte.MaxValue ? Opcode.LDC_W : Opcode.LDC));
-                            if (constantPoolEntryIndex > byte.MaxValue)
+                            // TODO: What to do here?
+                            // If the original const pool index was, for example, below or equal to 255, but the new
+                            // index is is above 255, LDC_W will be required and therefore may lead to the LVT (local variable table) being offset
+                            // Overall problem: The LVT may contain an entry whose length is near or at the end of the code
+                            // Therefore, if LDC_W is converted to LDC, then the LVT length is past the size of the bytecode,
+                            // which can cause errors in in asm libraries and possibly in classloading (usually array index out of bounds)
+
+                            // Old code:
+                            //  codeDataStream.WriteByte((byte) ((constantPoolEntryIndex > byte.MaxValue) ? Opcode.LDC_W : Opcode.LDC));
+                            // New code:
+                            //  write the instruction's original opcode only if wide is not required
+                            //  the original opcode may be wide anyway. To clarify, this is to prefent an original LDC_W being
+                            //  converted to LDC, possilby causing the LVT being offset
+                            //  The way the LVT is stored could be modified in this library, so it's not actually a table/map,
+                            //  but is actually stored in the instructions themselves maybe? not sure... but the way it is,
+                            //  seems very fiddily to actually fix this problem
+                            bool isWideRequired = (byte) constantPoolEntryIndex > byte.MaxValue;
+                            codeDataStream.WriteByte((byte) (isWideRequired ? Opcode.LDC_W : ldcInstruction.Opcode));
+                            if (isWideRequired || ldcInstruction.Opcode != Opcode.LDC) {
                                 Binary.BigEndian.Write(codeDataStream, constantPoolEntryIndex);
-                            else
+                            }
+                            else {
                                 codeDataStream.WriteByte((byte) constantPoolEntryIndex);
+                            }
                         }
 
                         break;
