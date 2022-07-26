@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using BinaryEncoding;
 using JavaAsm.CustomAttributes;
 using JavaAsm.Helpers;
@@ -761,8 +762,12 @@ namespace JavaAsm.Instructions {
                         currentPosition += sizeof(ushort);
                         break;
                     case LdcInstruction ldcInstruction:
-                        if (ldcInstruction.Value is long || ldcInstruction.Value is double || ldcInstruction.Opcode == Opcode.LDC2_W || ldcInstruction.Opcode == Opcode.LDC_W)
+                        if (ldcInstruction.Value is long || ldcInstruction.Value is double) {
                             currentPosition += sizeof(ushort);
+                        }
+                        else if (ldcInstruction.Opcode == Opcode.LDC2_W || ldcInstruction.Opcode == Opcode.LDC_W) {
+                            currentPosition += sizeof(ushort);
+                        }
                         else {
                             ushort constantPoolEntryIndex;
                             switch (ldcInstruction.Value) {
@@ -787,7 +792,16 @@ namespace JavaAsm.Instructions {
                                 default: throw new ArgumentOutOfRangeException(nameof(ldcInstruction.Value), $"Can't encode value of type {ldcInstruction.Value.GetType()}");
                             }
 
-                            currentPosition += constantPoolEntryIndex > byte.MaxValue ? sizeof(ushort) : sizeof(byte);
+                            // There's this too... it just has to mutate the LDC instruction, otherwise verification fails
+                            // But then this will probably offset the LVT more so :/
+                            // it's probably easier to figure out a replacement for the LVT
+                            if (constantPoolEntryIndex > byte.MaxValue) {
+                                currentPosition += sizeof(ushort);
+                                ldcInstruction.Opcode = Opcode.LDC_W;
+                            }
+                            else {
+                                currentPosition += sizeof(byte);
+                            }
                         }
 
                         break;
@@ -868,11 +882,39 @@ namespace JavaAsm.Instructions {
 
             MemoryStream codeDataStream = new MemoryStream(currentPosition);
 
+            Dictionary<Instruction, ushort> actualInstructions = new Dictionary<Instruction, ushort>();
+            Instruction prevInstruction = null;
             foreach (Instruction instruction in source.Instructions) {
                 ushort position = (ushort) codeDataStream.Position;
+                actualInstructions[instruction] = position;
 
-                if (position != instructions[instruction])
-                    throw new Exception($"Wrong position: {position} != {instructions[instruction]}");
+                if (position != instructions[instruction]) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"Error writing instructions for {source}");
+                    sb.AppendLine($"Wrong position: {position} != {instructions[instruction]}");
+                    if (prevInstruction != null) {
+                        sb.AppendLine($"    Previous instruction: {prevInstruction.GetType()} -> {prevInstruction}");
+                    }
+
+                    if (prevInstruction != null) {
+                        sb.AppendLine($"    Current instruction: {instruction.GetType()} -> {instruction}");
+                    }
+
+                    sb.AppendLine($"    Verification Instruction map:");
+                    foreach (KeyValuePair<Instruction, ushort> entry in instructions) {
+                        sb.AppendLine($"        {entry.Key.GetType().Name} ({entry.Key}) at position {entry.Value}");
+                    }
+
+                    sb.AppendLine($"    Actual Instruction map:");
+                    foreach (KeyValuePair<Instruction, ushort> entry in actualInstructions) {
+                        sb.AppendLine($"        {entry.Key.GetType().Name} ({entry.Key}) at position {entry.Value}");
+                    }
+
+                    throw new Exception(sb.ToString());
+                }
+
+                prevInstruction = instruction;
+
                 switch (instruction) {
                     case FieldInstruction fieldInstruction:
                         codeDataStream.WriteByte((byte) fieldInstruction.Opcode);
@@ -964,8 +1006,8 @@ namespace JavaAsm.Instructions {
                         }
 
                         if (ldcInstruction.Value is long || ldcInstruction.Value is double) {
-                            if (ldcInstruction.Opcode != Opcode.LDC2_W) {
-                                throw new InvalidOperationException("LDC Instruction's value is a long/double, but it's op-code is not LDC2_W. Value: " + ldcInstruction.Value);
+                            if (ldcInstruction.Opcode == Opcode.LDC) {
+                                throw new InvalidOperationException($"LDC value is a long/double, but it's op-code is not LDC2_W ({ldcInstruction.Opcode}). Value: " + ldcInstruction.Value);
                             }
 
                             codeDataStream.WriteByte((byte) Opcode.LDC2_W);
@@ -988,12 +1030,22 @@ namespace JavaAsm.Instructions {
                             //  The way the LVT is stored could be modified in this library, so it's not actually a table/map,
                             //  but is actually stored in the instructions themselves maybe? not sure... but the way it is,
                             //  seems very fiddily to actually fix this problem
+
+
                             bool isWideRequired = (byte) constantPoolEntryIndex > byte.MaxValue;
-                            codeDataStream.WriteByte((byte) (isWideRequired ? Opcode.LDC_W : ldcInstruction.Opcode));
                             if (isWideRequired || ldcInstruction.Opcode != Opcode.LDC) {
+                                codeDataStream.WriteByte((byte) Opcode.LDC_W);
                                 Binary.BigEndian.Write(codeDataStream, constantPoolEntryIndex);
                             }
+                            // else if (isWideRequired) {
+                            //     // throwing an exception seems bad, because the user has no
+                            //     // control over the precise constant pool index
+                            //     codeDataStream.WriteByte((byte) Opcode.LDC_W);
+                            //     Binary.BigEndian.Write(codeDataStream, constantPoolEntryIndex);
+                            // }
                             else {
+                                // should always be LDC
+                                codeDataStream.WriteByte((byte) ldcInstruction.Opcode);
                                 codeDataStream.WriteByte((byte) constantPoolEntryIndex);
                             }
                         }
