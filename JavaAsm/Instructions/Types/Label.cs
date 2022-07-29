@@ -2,7 +2,7 @@
 
 namespace JavaAsm.Instructions.Types {
     public class Label : Instruction {
-        private static long globalLabelIndex;
+        public static long GlobalLabelIndex { get; set; }
 
         public long Index { get; }
 
@@ -12,7 +12,7 @@ namespace JavaAsm.Instructions.Types {
         }
 
         public Label() {
-            this.Index = globalLabelIndex++;
+            this.Index = GlobalLabelIndex++;
         }
 
         public override string ToString() {

@@ -5,6 +5,23 @@ using System.Linq;
 using JavaAsm.Instructions.Types;
 
 namespace JavaAsm.Helpers {
+    internal static class CollectionUtils {
+        // A small performance helper, because the one used before converted T[] to IEnumerable<T>
+        public static bool Contains<T>(this T[] array, in T value) {
+            return Contains(array, value, EqualityComparer<T>.Default);
+        }
+
+        public static bool Contains<T>(this  T[] array, in T value, EqualityComparer<T> comparer) {
+            for (int i = 0; i < array.Length; i++) {
+                if (comparer.Equals(array[i], value)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
     internal static class Extensions {
         public static bool In<T>(this T value, params T[] values) {
             return values.Contains(value);
@@ -84,6 +101,12 @@ namespace JavaAsm.Helpers {
         public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue value) {
             if (!dictionary.ContainsKey(key))
                 dictionary.Add(key, value);
+            return dictionary[key];
+        }
+
+        public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<TValue> provider) {
+            if (!dictionary.ContainsKey(key))
+                dictionary.Add(key, provider());
             return dictionary[key];
         }
     }

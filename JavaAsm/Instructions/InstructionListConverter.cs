@@ -21,6 +21,8 @@ namespace JavaAsm.Instructions {
         }
 
         public static void ParseCodeAttribute(MethodNode parseTo, ClassReaderState readerState, CodeAttribute codeAttribute) {
+            Label.GlobalLabelIndex = 0;
+
             parseTo.MaxStack = codeAttribute.MaxStack;
             parseTo.MaxLocals = codeAttribute.MaxLocals;
             parseTo.CodeAttributes = codeAttribute.Attributes;
@@ -169,15 +171,19 @@ namespace JavaAsm.Instructions {
                     case Opcode.JSR:
                     case Opcode.IFNULL:
                     case Opcode.IFNONNULL: {
+                        int jumpOffset = Binary.BigEndian.ReadInt16(codeStream);
                         instructions.Add(currentPosition, new JumpInstruction(opcode) {
-                            Target = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt16(codeStream), new Label())
+                            Target = labels.GetOrAdd(currentPosition + jumpOffset, ()=> new Label()),
+                            JumpOffset = jumpOffset
                         });
                     }
                         break;
                     case Opcode.JSR_W:
                     case Opcode.GOTO_W: {
+                        int jumpOffset = Binary.BigEndian.ReadInt32(codeStream);
                         instructions.Add(currentPosition, new JumpInstruction(opcode == Opcode.JSR_W ? Opcode.JSR : Opcode.GOTO) {
-                            Target = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), new Label())
+                            Target = labels.GetOrAdd(currentPosition + jumpOffset, ()=> new Label()),
+                            JumpOffset = jumpOffset
                         });
                     }
                         break;
@@ -186,14 +192,14 @@ namespace JavaAsm.Instructions {
                         while (codeStream.Position % 4 != 0)
                             codeStream.ReadByteFully();
                         LookupSwitchInstruction lookupSwitchInstruction = new LookupSwitchInstruction {
-                            Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), new Label())
+                            Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), ()=> new Label())
                         };
                         int nPairs = Binary.BigEndian.ReadInt32(codeStream);
                         lookupSwitchInstruction.MatchLabels.Capacity = nPairs;
                         for (int i = 0; i < nPairs; i++) {
                             lookupSwitchInstruction.MatchLabels.Add(new KeyValuePair<int, Label>(
                                 Binary.BigEndian.ReadInt32(codeStream),
-                                labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), new Label())));
+                                labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), ()=> new Label())));
                         }
 
                         instructions.Add(currentPosition, lookupSwitchInstruction);
@@ -204,13 +210,13 @@ namespace JavaAsm.Instructions {
                         while (codeStream.Position % 4 != 0)
                             codeStream.ReadByteFully();
                         TableSwitchInstruction tableSwitchInstruction = new TableSwitchInstruction {
-                            Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), new Label()),
+                            Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), ()=> new Label()),
                             LowValue = Binary.BigEndian.ReadInt32(codeStream),
                             HighValue = Binary.BigEndian.ReadInt32(codeStream)
                         };
                         for (int i = tableSwitchInstruction.LowValue; i <= tableSwitchInstruction.HighValue; i++) {
                             tableSwitchInstruction.Labels.Add(
-                                labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), new Label()));
+                                labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), ()=> new Label()));
                         }
 
                         instructions.Add(currentPosition, tableSwitchInstruction);
@@ -520,9 +526,9 @@ namespace JavaAsm.Instructions {
             foreach (CodeAttribute.ExceptionTableEntry exceptionTableEntry in codeAttribute.ExceptionTable) {
                 parseTo.TryCatches.Add(new TryCatchNode {
                     ExceptionClassName = exceptionTableEntry.CatchType,
-                    Start = labels.GetOrAdd(exceptionTableEntry.StartPc, new Label()),
-                    End = labels.GetOrAdd(exceptionTableEntry.EndPc, new Label()),
-                    Handler = labels.GetOrAdd(exceptionTableEntry.HandlerPc, new Label())
+                    Start = labels.GetOrAdd(exceptionTableEntry.StartPc, ()=> new Label()),
+                    End = labels.GetOrAdd(exceptionTableEntry.EndPc, ()=> new Label()),
+                    Handler = labels.GetOrAdd(exceptionTableEntry.HandlerPc, ()=> new Label())
                 });
             }
 
@@ -973,7 +979,12 @@ namespace JavaAsm.Instructions {
                         break;
                     case JumpInstruction jumpInstruction:
                         codeDataStream.WriteByte((byte) jumpInstruction.Opcode);
-                        Binary.BigEndian.Write(codeDataStream, (short) (instructions[jumpInstruction.Target] - instructions[jumpInstruction]));
+                        if (jumpInstruction.UseOverrideOffset) {
+                            Binary.BigEndian.Write(codeDataStream, jumpInstruction.JumpOffset);
+                        }
+                        else {
+                            Binary.BigEndian.Write(codeDataStream, (short) (instructions[jumpInstruction.Target] - instructions[jumpInstruction]));
+                        }
                         break;
                     case LdcInstruction ldcInstruction:
                         ushort constantPoolEntryIndex;
