@@ -6,12 +6,9 @@ using JavaAsm.Helpers;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.CustomAttributes.Annotation
-{
-    public class ElementValue
-    {
-        public enum ElementValueTag
-        {
+namespace JavaAsm.CustomAttributes.Annotation {
+    public class ElementValue {
+        public enum ElementValueTag {
             Byte = 'B',
             Character = 'C',
             Double = 'D',
@@ -29,10 +26,16 @@ namespace JavaAsm.CustomAttributes.Annotation
 
         public ElementValueTag Tag { get; set; }
 
-        public object ConstValue { get; set; }
+        private object constValue;
 
-        public class EnumConstValueType
-        {
+        public object ConstValue {
+            get => this.constValue;
+            set {
+                this.constValue = value;
+            }
+        }
+
+        public class EnumConstValueType {
             public TypeDescriptor TypeName { get; set; }
 
             public string ConstName { get; set; }
@@ -46,15 +49,12 @@ namespace JavaAsm.CustomAttributes.Annotation
 
         public List<ElementValue> ArrayValue { get; set; }
 
-        internal static ElementValue Parse(Stream stream, ClassReaderState readerState)
-        {
-            var elementValue = new ElementValue
-            {
+        internal static ElementValue Parse(Stream stream, ClassReaderState readerState) {
+            ElementValue elementValue = new ElementValue {
                 Tag = (ElementValueTag) stream.ReadByteFully()
             };
 
-            switch (elementValue.Tag)
-            {
+            switch (elementValue.Tag) {
                 case ElementValueTag.Byte:
                 case ElementValueTag.Character:
                 case ElementValueTag.Integer:
@@ -75,80 +75,72 @@ namespace JavaAsm.CustomAttributes.Annotation
                     elementValue.ConstValue = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String;
                     break;
                 case ElementValueTag.Enum:
-                    elementValue.EnumConstValue = new EnumConstValueType
-                    {
-                        TypeName = TypeDescriptor.Parse(readerState.ConstantPool
-                            .GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String),
-                        ConstName = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream))
-                            .String
+                    elementValue.EnumConstValue = new EnumConstValueType {
+                        TypeName = TypeDescriptor.Parse(readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String),
+                        ConstName = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String
                     };
                     break;
                 case ElementValueTag.Class:
-                    elementValue.Class = TypeDescriptor.Parse(readerState.ConstantPool
-                        .GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String, true);
+                    elementValue.Class = TypeDescriptor.Parse(readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(stream)).String, true);
                     break;
                 case ElementValueTag.Annotation:
                     elementValue.AnnotationNode = AnnotationNode.Parse(stream, readerState);
                     break;
                 case ElementValueTag.Array:
-                    var arraySize = Binary.BigEndian.ReadUInt16(stream);
+                    ushort arraySize = Binary.BigEndian.ReadUInt16(stream);
                     elementValue.ArrayValue = new List<ElementValue>(arraySize);
-                    for (var i = 0; i < arraySize; i++)
+                    for (int i = 0; i < arraySize; i++)
                         elementValue.ArrayValue.Add(Parse(stream, readerState));
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(elementValue.Tag));
+                default: throw new ArgumentOutOfRangeException(nameof(elementValue.Tag));
             }
 
             return elementValue;
         }
 
-        internal void Write(Stream stream, ClassWriterState writerState)
-        {
-            stream.WriteByte((byte) Tag);
-            switch (Tag)
-            {
+        internal void Write(Stream stream, ClassWriterState writerState) {
+            stream.WriteByte((byte) this.Tag);
+            switch (this.Tag) {
                 case ElementValueTag.Byte:
                 case ElementValueTag.Character:
                 case ElementValueTag.Integer:
                 case ElementValueTag.Short:
                 case ElementValueTag.Boolean:
-                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new IntegerEntry((int) ConstValue)));
+                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new IntegerEntry((int) this.ConstValue)));
                     break;
                 case ElementValueTag.Double:
-                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new DoubleEntry((double) ConstValue)));
+                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new DoubleEntry((double) this.ConstValue)));
                     break;
                 case ElementValueTag.Float:
-                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new FloatEntry((float) ConstValue)));
+                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new FloatEntry((float) this.ConstValue)));
                     break;
                 case ElementValueTag.Long:
-                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new LongEntry((long) ConstValue)));
+                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new LongEntry((long) this.ConstValue)));
                     break;
                 case ElementValueTag.String:
-                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new Utf8Entry((string) ConstValue)));
+                    Binary.BigEndian.Write(stream, writerState.ConstantPool.Find(new Utf8Entry((string) this.ConstValue)));
                     break;
                 case ElementValueTag.Enum:
                     Binary.BigEndian.Write(stream,
-                        writerState.ConstantPool.Find(new Utf8Entry(EnumConstValue.TypeName.ToString())));
+                        writerState.ConstantPool.Find(new Utf8Entry(this.EnumConstValue.TypeName.ToString())));
                     Binary.BigEndian.Write(stream,
-                        writerState.ConstantPool.Find(new Utf8Entry(EnumConstValue.ConstName)));
+                        writerState.ConstantPool.Find(new Utf8Entry(this.EnumConstValue.ConstName)));
                     break;
                 case ElementValueTag.Class:
                     Binary.BigEndian.Write(stream,
-                        writerState.ConstantPool.Find(new Utf8Entry(Class.ToString())));
+                        writerState.ConstantPool.Find(new Utf8Entry(this.Class.ToString())));
                     break;
                 case ElementValueTag.Annotation:
-                    AnnotationNode.Write(stream, writerState);
+                    this.AnnotationNode.Write(stream, writerState);
                     break;
                 case ElementValueTag.Array:
-                    if (ArrayValue.Count > ushort.MaxValue)
-                        throw new ArgumentOutOfRangeException(nameof(ArrayValue.Count), $"Array size is too big: {ArrayValue.Count} > {ushort.MaxValue}");
-                    Binary.BigEndian.Write(stream, (ushort) ArrayValue.Count);
-                    foreach (var element in ArrayValue)
+                    if (this.ArrayValue.Count > ushort.MaxValue)
+                        throw new ArgumentOutOfRangeException(nameof(this.ArrayValue.Count), $"Array size is too big: {this.ArrayValue.Count} > {ushort.MaxValue}");
+                    Binary.BigEndian.Write(stream, (ushort) this.ArrayValue.Count);
+                    foreach (ElementValue element in this.ArrayValue)
                         element.Write(stream, writerState);
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(Tag));
+                default: throw new ArgumentOutOfRangeException(nameof(this.Tag));
             }
         }
     }

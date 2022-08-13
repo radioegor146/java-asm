@@ -1,7 +1,5 @@
-﻿namespace JavaAsm.IO.ConstantPoolEntries
-{
-    internal enum EntryTag : byte
-    {
+﻿namespace JavaAsm.IO.ConstantPoolEntries {
+    internal enum EntryTag : byte {
         Class = 7,
         FieldReference = 9,
         MethodReference = 10,

@@ -1,22 +1,28 @@
 ﻿using JavaAsm.Helpers;
 
-namespace JavaAsm.Instructions.Types
-{
-    public class TypeInstruction : Instruction
-    {
-        public override Opcode Opcode { get; }
+namespace JavaAsm.Instructions.Types {
+    public class TypeInstruction : Instruction {
+        private Opcode opcode;
+
+        public override Opcode Opcode {
+            get => this.opcode;
+            set => this.opcode = value.VerifyOpcode(nameof(value), Opcode.NEW, Opcode.ANEWARRAY, Opcode.CHECKCAST, Opcode.INSTANCEOF);
+        }
+
+        public override Instruction Copy() {
+            return new TypeInstruction(this.opcode) {
+                Type = this.Type?.Copy()
+            };
+        }
 
         public ClassName Type { get; set; }
 
-        public TypeInstruction(Opcode opcode)
-        {
-            opcode.CheckInAndThrow(nameof(opcode), Opcode.NEW, Opcode.ANEWARRAY, Opcode.CHECKCAST, Opcode.INSTANCEOF);
-            Opcode = opcode;
+        public TypeInstruction(Opcode opcode) {
+            this.Opcode = opcode;
         }
 
-        public override string ToString()
-        {
-            return $"{Opcode} {Type}";
+        public override string ToString() {
+            return $"{this.Opcode} {this.Type}";
         }
     }
 }

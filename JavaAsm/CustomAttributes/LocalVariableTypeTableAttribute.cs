@@ -5,16 +5,15 @@ using BinaryEncoding;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.CustomAttributes
-{
-    public class LocalVariableTypeTableAttribute : CustomAttribute
-    {
-        public class LocalVariableTypeTableEntry
-        {
+namespace JavaAsm.CustomAttributes {
+    public class LocalVariableTypeTableAttribute : CustomAttribute {
+        public class LocalVariableTypeTableEntry {
             public ushort StartPc { get; set; }
 
             public ushort Length { get; set; }
-            
+
+            public uint EndPC => (uint) this.StartPc + (uint) this.Length;
+
             public string Name { get; set; }
 
             public string Signature { get; set; }
@@ -24,15 +23,13 @@ namespace JavaAsm.CustomAttributes
 
         public List<LocalVariableTypeTableEntry> LocalVariableTypeTable { get; set; } = new List<LocalVariableTypeTableEntry>();
 
-        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
-        {
-            using var attributeDataStream = new MemoryStream();
+        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope) {
+            MemoryStream attributeDataStream = new MemoryStream();
 
-            if (LocalVariableTypeTable.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(LocalVariableTypeTable.Count), $"Local variable type table is too big: {LocalVariableTypeTable.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(attributeDataStream, (ushort)LocalVariableTypeTable.Count);
-            foreach (var localVariableTypeTableEntry in LocalVariableTypeTable)
-            {
+            if (this.LocalVariableTypeTable.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.LocalVariableTypeTable.Count), $"Local variable type table is too big: {this.LocalVariableTypeTable.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(attributeDataStream, (ushort) this.LocalVariableTypeTable.Count);
+            foreach (LocalVariableTypeTableEntry localVariableTypeTableEntry in this.LocalVariableTypeTable) {
                 Binary.BigEndian.Write(attributeDataStream, localVariableTypeTableEntry.StartPc);
                 Binary.BigEndian.Write(attributeDataStream, localVariableTypeTableEntry.Length);
                 Binary.BigEndian.Write(attributeDataStream,
@@ -46,17 +43,14 @@ namespace JavaAsm.CustomAttributes
         }
     }
 
-    internal class LocalVariableTypeTableAttributeFactory : ICustomAttributeFactory<LocalVariableTypeTableAttribute>
-    {
-        public LocalVariableTypeTableAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
-        {
-            var attribute = new LocalVariableTypeTableAttribute();
+    internal class LocalVariableTypeTableAttributeFactory : ICustomAttributeFactory<LocalVariableTypeTableAttribute> {
+        public LocalVariableTypeTableAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope) {
+            LocalVariableTypeTableAttribute attribute = new LocalVariableTypeTableAttribute();
 
-            var localVariableTypeTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
+            ushort localVariableTypeTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.LocalVariableTypeTable.Capacity = localVariableTypeTableSize;
-            for (var i = 0; i < localVariableTypeTableSize; i++)
-                attribute.LocalVariableTypeTable.Add(new LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry
-                {
+            for (int i = 0; i < localVariableTypeTableSize; i++)
+                attribute.LocalVariableTypeTable.Add(new LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry {
                     StartPc = Binary.BigEndian.ReadUInt16(attributeDataStream),
                     Length = Binary.BigEndian.ReadUInt16(attributeDataStream),
                     Name = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).String,

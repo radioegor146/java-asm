@@ -5,13 +5,11 @@ using JavaAsm.CustomAttributes;
 using JavaAsm.CustomAttributes.Annotation;
 using JavaAsm.IO;
 
-namespace JavaAsm
-{
+namespace JavaAsm {
     /// <summary>
     /// Class node
     /// </summary>
-    public class ClassNode
-    {
+    public class ClassNode {
         public ClassVersion MajorVersion { get; set; }
 
         public ushort MinorVersion { get; set; }
@@ -47,170 +45,136 @@ namespace JavaAsm
 
         public List<InnerClass> InnerClasses { get; set; } = new List<InnerClass>();
 
-        private AttributeNode GetAttribute(string name)
-        {
-            var attribute = Attributes.FirstOrDefault(a => a.Name == name);
+        private AttributeNode GetAttribute(string name) {
+            AttributeNode attribute = this.Attributes.FirstOrDefault(a => a.Name == name);
             if (attribute != null)
-                Attributes.Remove(attribute);
+                this.Attributes.Remove(attribute);
             return attribute;
         }
 
-        internal void Parse(ClassReaderState readerState)
-        {
-            SourceFile = (GetAttribute(PredefinedAttributeNames.SourceFile)?.ParsedAttribute as SourceFileAttribute)?.Value;
-            SourceDebugExtension = (GetAttribute(PredefinedAttributeNames.SourceDebugExtension)?.ParsedAttribute as SourceFileAttribute)?.Value;
-            Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
+        internal void Parse(ClassReaderState readerState) {
+            this.SourceFile = (GetAttribute(PredefinedAttributeNames.SourceFile)?.ParsedAttribute as SourceFileAttribute)?.Value;
+            this.SourceDebugExtension = (GetAttribute(PredefinedAttributeNames.SourceDebugExtension)?.ParsedAttribute as SourceFileAttribute)?.Value;
+            this.Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.RuntimeInvisibleAnnotations);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.RuntimeInvisibleAnnotations);
                 if (attribute != null)
-                    InvisibleAnnotations = (attribute.ParsedAttribute as RuntimeInvisibleAnnotationsAttribute)?.Annotations;
+                    this.InvisibleAnnotations = (attribute.ParsedAttribute as RuntimeInvisibleAnnotationsAttribute)?.Annotations;
             }
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.RuntimeVisibleAnnotations);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.RuntimeVisibleAnnotations);
                 if (attribute != null)
-                    VisibleAnnotations = (attribute.ParsedAttribute as RuntimeVisibleAnnotationsAttribute)?.Annotations;
+                    this.VisibleAnnotations = (attribute.ParsedAttribute as RuntimeVisibleAnnotationsAttribute)?.Annotations;
             }
-            IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
-            EnclosingMethod = GetAttribute(PredefinedAttributeNames.EnclosingMethod)?.ParsedAttribute as EnclosingMethodAttribute;
+            this.IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
+            this.EnclosingMethod = GetAttribute(PredefinedAttributeNames.EnclosingMethod)?.ParsedAttribute as EnclosingMethodAttribute;
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.InnerClasses);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.InnerClasses);
                 if (attribute != null)
-                    InnerClasses = (attribute.ParsedAttribute as InnerClassesAttribute)?.Classes;
+                    this.InnerClasses = (attribute.ParsedAttribute as InnerClassesAttribute)?.Classes;
             }
 
-            foreach (var method in Methods)
+            foreach (MethodNode method in this.Methods)
                 method.Parse(readerState);
 
-            foreach (var field in Fields)
+            foreach (FieldNode field in this.Fields)
                 field.Parse(readerState);
         }
 
-        internal void Save(ClassWriterState writerState)
-        {
-            if (SourceFile != null)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.SourceFile))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.SourceFile} attribute is already presented on field");
-                Attributes.Add(new AttributeNode
-                {
+        internal void Save(ClassWriterState writerState) {
+            if (this.SourceFile != null) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.SourceFile))
+                    throw new Exception($"{PredefinedAttributeNames.SourceFile} attribute is already presented on field");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.SourceFile,
-                    ParsedAttribute = new SourceFileAttribute
-                    {
-                        Value = SourceFile
+                    ParsedAttribute = new SourceFileAttribute {
+                        Value = this.SourceFile
                     }
                 });
             }
 
-            if (SourceDebugExtension != null)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.SourceDebugExtension))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.SourceDebugExtension} attribute is already presented on field");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.SourceDebugExtension != null) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.SourceDebugExtension))
+                    throw new Exception($"{PredefinedAttributeNames.SourceDebugExtension} attribute is already presented on field");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.SourceDebugExtension,
-                    ParsedAttribute = new SourceDebugExtensionAttribute
-                    {
-                        Value = SourceDebugExtension
+                    ParsedAttribute = new SourceDebugExtensionAttribute {
+                        Value = this.SourceDebugExtension
                     }
                 });
             }
 
-            if (Signature != null)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.Signature} attribute is already presented on field");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.Signature != null) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
+                    throw new Exception($"{PredefinedAttributeNames.Signature} attribute is already presented on field");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.Signature,
-                    ParsedAttribute = new SignatureAttribute
-                    {
-                        Value = Signature
+                    ParsedAttribute = new SignatureAttribute {
+                        Value = this.Signature
                     }
                 });
             }
 
-            if (InvisibleAnnotations != null && InvisibleAnnotations.Count > 0)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on field");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.InvisibleAnnotations != null && this.InvisibleAnnotations.Count > 0) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
+                    throw new Exception($"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on field");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.RuntimeInvisibleAnnotations,
-                    ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute
-                    {
-                        Annotations = InvisibleAnnotations
+                    ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute {
+                        Annotations = this.InvisibleAnnotations
                     }
                 });
             }
 
-            if (VisibleAnnotations != null && VisibleAnnotations.Count > 0)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on field");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.VisibleAnnotations != null && this.VisibleAnnotations.Count > 0) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
+                    throw new Exception($"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on field");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.RuntimeVisibleAnnotations,
-                    ParsedAttribute = new RuntimeVisibleAnnotationsAttribute
-                    {
-                        Annotations = VisibleAnnotations
+                    ParsedAttribute = new RuntimeVisibleAnnotationsAttribute {
+                        Annotations = this.VisibleAnnotations
                     }
                 });
             }
 
-            if (IsDeprecated)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.Deprecated} attribute is already presented on field");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.IsDeprecated) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
+                    throw new Exception($"{PredefinedAttributeNames.Deprecated} attribute is already presented on field");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.Deprecated,
                     ParsedAttribute = new DeprecatedAttribute()
                 });
             }
 
-            if (EnclosingMethod != null)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.EnclosingMethod))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.EnclosingMethod} attribute is already presented on field");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.EnclosingMethod != null) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.EnclosingMethod))
+                    throw new Exception($"{PredefinedAttributeNames.EnclosingMethod} attribute is already presented on field");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.EnclosingMethod,
-                    ParsedAttribute = EnclosingMethod
+                    ParsedAttribute = this.EnclosingMethod
                 });
             }
 
-            if (InnerClasses != null)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.InnerClasses))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.InnerClasses} attribute is already presented on field");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.InnerClasses != null && this.InnerClasses.Count > 0) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.InnerClasses))
+                    throw new Exception($"{PredefinedAttributeNames.InnerClasses} attribute is already presented on field");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.InnerClasses,
-                    ParsedAttribute = new InnerClassesAttribute
-                    {
-                        Classes = InnerClasses
+                    ParsedAttribute = new InnerClassesAttribute {
+                        Classes = this.InnerClasses
                     }
                 });
             }
 
-            foreach (var method in Methods)
+            foreach (MethodNode method in this.Methods)
                 method.Save(writerState);
 
-            foreach (var field in Fields)
+            foreach (FieldNode field in this.Fields)
                 field.Save(writerState);
         }
 
-        public override string ToString()
-        {
-            return $"{AccessModifiersExtensions.ToString(Access)} {Name}";
+        public override string ToString() {
+            return $"{AccessModifiersExtensions.ToString(this.Access)} {this.Name}";
         }
     }
 }

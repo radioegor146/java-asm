@@ -1,7 +1,5 @@
-﻿namespace JavaAsm.CustomAttributes.TypeAnnotation
-{
-    public enum TargetType
-    {
+﻿namespace JavaAsm.CustomAttributes.TypeAnnotation {
+    public enum TargetType {
         // Type in ...
 
         GenericClassOrInterfaceDeclaration = 0x00,
@@ -14,7 +12,7 @@
         ReceiverTypeOfMethodOrConstructor = 0x15,
         TypeInFormalParameterOfMethodOrConstructorOrLambda = 0x16,
         ThrowsClause = 0x17,
-        
+
         LocalVariableDeclaration = 0x40,
         ResourceVariableDeclaration = 0x41,
         ExceptionParameterDeclaration = 0x42,

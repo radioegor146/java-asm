@@ -1,7 +1,5 @@
-﻿namespace JavaAsm.CustomAttributes.TypeAnnotation
-{
-    public enum TargetTypeKind
-    {
+﻿namespace JavaAsm.CustomAttributes.TypeAnnotation {
+    public enum TargetTypeKind {
         TypeParameter,
         Supertype,
         TypeParameterBound,

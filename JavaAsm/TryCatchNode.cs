@@ -1,12 +1,10 @@
 ﻿using JavaAsm.Instructions.Types;
 
-namespace JavaAsm
-{
+namespace JavaAsm {
     /// <summary>
     /// try-catch node
     /// </summary>
-    public class TryCatchNode
-    {
+    public class TryCatchNode {
         /// <summary>
         /// Start label of try-catch block
         /// </summary>

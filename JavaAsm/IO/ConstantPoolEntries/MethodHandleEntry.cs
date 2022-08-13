@@ -5,91 +5,79 @@ using BinaryEncoding;
 using JavaAsm.Helpers;
 using JavaAsm.Instructions.Types;
 
-namespace JavaAsm.IO.ConstantPoolEntries
-{
-    internal class MethodHandleEntry : Entry
-    {
+namespace JavaAsm.IO.ConstantPoolEntries {
+    internal class MethodHandleEntry : Entry {
         public ReferenceKindType ReferenceKind { get; }
 
         public ReferenceEntry Reference { get; private set; }
         private ushort referenceIndex;
 
-        public MethodHandleEntry(ReferenceKindType referenceKind, ReferenceEntry reference)
-        {
-            ReferenceKind = referenceKind;
-            Reference = reference ?? throw new ArgumentNullException(nameof(reference));
+        public MethodHandleEntry(ReferenceKindType referenceKind, ReferenceEntry reference) {
+            this.ReferenceKind = referenceKind;
+            this.Reference = reference ?? throw new ArgumentNullException(nameof(reference));
         }
 
-        public MethodHandleEntry(Stream stream)
-        {
-            ReferenceKind = (ReferenceKindType) stream.ReadByteFully();
-            referenceIndex = Binary.BigEndian.ReadUInt16(stream);
+        public MethodHandleEntry(Stream stream) {
+            this.ReferenceKind = (ReferenceKindType) stream.ReadByteFully();
+            this.referenceIndex = Binary.BigEndian.ReadUInt16(stream);
         }
 
         public override EntryTag Tag => EntryTag.MethodHandle;
 
-        public override void ProcessFromConstantPool(ConstantPool constantPool)
-        {
-            switch (ReferenceKind)
-            {
+        public override void ProcessFromConstantPool(ConstantPool constantPool) {
+            switch (this.ReferenceKind) {
                 case ReferenceKindType.GetField:
                 case ReferenceKindType.GetStatic:
                 case ReferenceKindType.PutField:
                 case ReferenceKindType.PutStatic:
-                    Reference = constantPool.GetEntry<FieldReferenceEntry>(referenceIndex);
+                    this.Reference = constantPool.GetEntry<FieldReferenceEntry>(this.referenceIndex);
                     break;
                 case ReferenceKindType.InvokeVirtual:
                 case ReferenceKindType.NewInvokeSpecial:
-                    Reference = constantPool.GetEntry<MethodReferenceEntry>(referenceIndex);
+                    this.Reference = constantPool.GetEntry<MethodReferenceEntry>(this.referenceIndex);
                     break;
                 case ReferenceKindType.InvokeStatic:
                 case ReferenceKindType.InvokeSpecial:
-                    try
-                    {
-                        Reference = constantPool.GetEntry<MethodReferenceEntry>(referenceIndex);
+                    try {
+                        this.Reference = constantPool.GetEntry<MethodReferenceEntry>(this.referenceIndex);
                     }
-                    catch (InvalidCastException)
-                    {
-                        Reference = constantPool.GetEntry<InterfaceMethodReferenceEntry>(referenceIndex);
+                    catch (InvalidCastException) {
+                        this.Reference = constantPool.GetEntry<InterfaceMethodReferenceEntry>(this.referenceIndex);
                     }
+
                     break;
                 case ReferenceKindType.InvokeReference:
-                    Reference = constantPool.GetEntry<InterfaceMethodReferenceEntry>(referenceIndex);
+                    this.Reference = constantPool.GetEntry<InterfaceMethodReferenceEntry>(this.referenceIndex);
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(ReferenceKind));
+                default: throw new ArgumentOutOfRangeException(nameof(this.ReferenceKind));
             }
         }
 
-        public override void Write(Stream stream)
-        {
-            stream.WriteByte((byte)ReferenceKind);
-            Binary.BigEndian.Write(stream, referenceIndex);
+        public override void Write(Stream stream) {
+            stream.WriteByte((byte) this.ReferenceKind);
+            Binary.BigEndian.Write(stream, this.referenceIndex);
         }
 
-        public override void PutToConstantPool(ConstantPool constantPool)
-        {
-            referenceIndex = constantPool.Find(Reference);
+        public override void PutToConstantPool(ConstantPool constantPool) {
+            this.referenceIndex = constantPool.Find(this.Reference);
         }
 
-        private bool Equals(MethodHandleEntry other)
-        {
-            return ReferenceKind == other.ReferenceKind && Equals(Reference, other.Reference);
+        private bool Equals(MethodHandleEntry other) {
+            return this.ReferenceKind == other.ReferenceKind && Equals(this.Reference, other.Reference);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == GetType() && Equals((MethodHandleEntry)obj);
+        public override bool Equals(object obj) {
+            if (obj is null)
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            return obj.GetType() == GetType() && Equals((MethodHandleEntry) obj);
         }
 
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return ((int)ReferenceKind * 397) ^ (Reference != null ? Reference.GetHashCode() : 0);
+        public override int GetHashCode() {
+            unchecked {
+                return ((int) this.ReferenceKind * 397) ^ (this.Reference != null ? this.Reference.GetHashCode() : 0);
             }
         }
     }

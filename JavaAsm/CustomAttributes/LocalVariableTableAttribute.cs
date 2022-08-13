@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using BinaryEncoding;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.CustomAttributes
-{
-    public class LocalVariableTableAttribute : CustomAttribute
-    {
-        public class LocalVariableTableEntry
-        {
+namespace JavaAsm.CustomAttributes {
+    public class LocalVariableTableAttribute : CustomAttribute {
+        public class LocalVariableTableEntry {
             public ushort StartPc { get; set; }
 
             public ushort Length { get; set; }
@@ -20,19 +18,19 @@ namespace JavaAsm.CustomAttributes
             public TypeDescriptor Descriptor { get; set; }
 
             public ushort Index { get; set; }
+
+            public uint EndPC => (uint) this.StartPc + (uint) this.Length;
         }
 
         public List<LocalVariableTableEntry> LocalVariableTable { get; set; } = new List<LocalVariableTableEntry>();
 
-        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope)
-        {
-            using var attributeDataStream = new MemoryStream();
+        internal override byte[] Save(ClassWriterState writerState, AttributeScope scope) {
+            MemoryStream attributeDataStream = new MemoryStream();
 
-            if (LocalVariableTable.Count > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(LocalVariableTable.Count), $"Local variable table is too big: {LocalVariableTable.Count} > {ushort.MaxValue}");
-            Binary.BigEndian.Write(attributeDataStream, (ushort) LocalVariableTable.Count);
-            foreach (var localVariableTableEntry in LocalVariableTable)
-            {
+            if (this.LocalVariableTable.Count > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(this.LocalVariableTable.Count), $"Local variable table is too big: {this.LocalVariableTable.Count} > {ushort.MaxValue}");
+            Binary.BigEndian.Write(attributeDataStream, (ushort) this.LocalVariableTable.Count);
+            foreach (LocalVariableTableEntry localVariableTableEntry in this.LocalVariableTable) {
                 Binary.BigEndian.Write(attributeDataStream, localVariableTableEntry.StartPc);
                 Binary.BigEndian.Write(attributeDataStream, localVariableTableEntry.Length);
                 Binary.BigEndian.Write(attributeDataStream,
@@ -46,17 +44,14 @@ namespace JavaAsm.CustomAttributes
         }
     }
 
-    internal class LocalVariableTableAttributeFactory : ICustomAttributeFactory<LocalVariableTableAttribute>
-    {
-        public LocalVariableTableAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope)
-        {
-            var attribute = new LocalVariableTableAttribute();
+    internal class LocalVariableTableAttributeFactory : ICustomAttributeFactory<LocalVariableTableAttribute> {
+        public LocalVariableTableAttribute Parse(Stream attributeDataStream, uint attributeDataLength, ClassReaderState readerState, AttributeScope scope) {
+            LocalVariableTableAttribute attribute = new LocalVariableTableAttribute();
 
-            var localVariableTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
+            ushort localVariableTableSize = Binary.BigEndian.ReadUInt16(attributeDataStream);
             attribute.LocalVariableTable.Capacity = localVariableTableSize;
-            for (var i = 0; i < localVariableTableSize; i++)
-                attribute.LocalVariableTable.Add(new LocalVariableTableAttribute.LocalVariableTableEntry
-                {
+            for (int i = 0; i < localVariableTableSize; i++)
+                attribute.LocalVariableTable.Add(new LocalVariableTableAttribute.LocalVariableTableEntry {
                     StartPc = Binary.BigEndian.ReadUInt16(attributeDataStream),
                     Length = Binary.BigEndian.ReadUInt16(attributeDataStream),
                     Name = readerState.ConstantPool.GetEntry<Utf8Entry>(Binary.BigEndian.ReadUInt16(attributeDataStream)).String,

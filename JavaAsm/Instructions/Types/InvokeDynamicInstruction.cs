@@ -3,11 +3,21 @@ using System.Collections.Generic;
 using JavaAsm.Helpers;
 using JavaAsm.IO.ConstantPoolEntries;
 
-namespace JavaAsm.Instructions.Types
-{
-    public class InvokeDynamicInstruction : Instruction
-    {
-        public override Opcode Opcode => Opcode.INVOKEDYNAMIC;
+namespace JavaAsm.Instructions.Types {
+    public class InvokeDynamicInstruction : Instruction {
+        public override Opcode Opcode {
+            get => Opcode.INVOKEDYNAMIC;
+            set => throw new InvalidOperationException(GetType().Name + " only has 1 instruction");
+        }
+
+        public override Instruction Copy() {
+            return new InvokeDynamicInstruction() {
+                Name = this.Name,
+                Descriptor = this.Descriptor.CopyMethodDescriptor(),
+                BootstrapMethod = this.BootstrapMethod.Copy(),
+                BootstrapMethodArgs = new List<object>(this.BootstrapMethodArgs)
+            };
+        }
 
         public string Name { get; set; }
 
@@ -18,8 +28,7 @@ namespace JavaAsm.Instructions.Types
         public List<object> BootstrapMethodArgs { get; set; }
     }
 
-    public enum ReferenceKindType : byte
-    {
+    public enum ReferenceKindType : byte {
         GetField = 1,
         GetStatic,
         PutField,
@@ -31,8 +40,7 @@ namespace JavaAsm.Instructions.Types
         InvokeReference
     }
 
-    public class Handle
-    {
+    public class Handle {
         public ReferenceKindType Type { get; set; }
 
         public ClassName Owner { get; set; }
@@ -41,41 +49,52 @@ namespace JavaAsm.Instructions.Types
 
         public IDescriptor Descriptor { get; set; }
 
-        internal static Handle FromConstantPool(MethodHandleEntry methodHandleEntry)
-        {
-            return new Handle
-            {
+        internal static Handle FromConstantPool(MethodHandleEntry methodHandleEntry) {
+            return new Handle {
                 Type = methodHandleEntry.ReferenceKind,
                 Descriptor = methodHandleEntry.ReferenceKind.IsFieldReference()
-                    ? TypeDescriptor.Parse(methodHandleEntry.Reference.NameAndType
-                        .Descriptor.String)
-                    : (IDescriptor) MethodDescriptor.Parse(methodHandleEntry.Reference.NameAndType
-                        .Descriptor.String),
+                    ? TypeDescriptor.Parse(methodHandleEntry.Reference.NameAndType.Descriptor.String)
+                    : (IDescriptor) MethodDescriptor.Parse(methodHandleEntry.Reference.NameAndType.Descriptor.String),
                 Name = methodHandleEntry.Reference.NameAndType.Name.String,
                 Owner = new ClassName(methodHandleEntry.Reference.Class.Name.String)
             };
         }
 
-        internal MethodHandleEntry ToConstantPool()
-        {
-            var referenceOwner = new ClassEntry(new Utf8Entry(Owner.Name));
-            var referenceNameAndType = new NameAndTypeEntry(new Utf8Entry(Name), new Utf8Entry(Descriptor.ToString()));
-            var reference = Type switch
-            {
-                ReferenceKindType.GetField => (ReferenceEntry) new FieldReferenceEntry(referenceOwner,
-                    referenceNameAndType),
-                ReferenceKindType.GetStatic => new FieldReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.PutField => new FieldReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.PutStatic => new FieldReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.InvokeVirtual => new MethodReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.NewInvokeSpecial => new MethodReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.InvokeStatic => new MethodReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.InvokeSpecial => new MethodReferenceEntry(referenceOwner, referenceNameAndType),
-                ReferenceKindType.InvokeReference => new InterfaceMethodReferenceEntry(referenceOwner,
-                    referenceNameAndType),
-                _ => throw new ArgumentOutOfRangeException(nameof(Type))
+        internal MethodHandleEntry ToConstantPool() {
+            ClassEntry referenceOwner = new ClassEntry(new Utf8Entry(this.Owner.Name));
+            NameAndTypeEntry referenceNameAndType = new NameAndTypeEntry(new Utf8Entry(this.Name), new Utf8Entry(this.Descriptor.ToString()));
+            ReferenceEntry reference;
+            switch (this.Type) {
+                case ReferenceKindType.GetField:
+                    reference = new FieldReferenceEntry(referenceOwner, referenceNameAndType);
+                    break;
+                case ReferenceKindType.GetStatic:
+                case ReferenceKindType.PutField:
+                case ReferenceKindType.PutStatic:
+                    reference = new FieldReferenceEntry(referenceOwner, referenceNameAndType);
+                    break;
+                case ReferenceKindType.InvokeVirtual:
+                case ReferenceKindType.NewInvokeSpecial:
+                case ReferenceKindType.InvokeStatic:
+                case ReferenceKindType.InvokeSpecial:
+                    reference = new MethodReferenceEntry(referenceOwner, referenceNameAndType);
+                    break;
+                case ReferenceKindType.InvokeReference:
+                    reference = new InterfaceMethodReferenceEntry(referenceOwner, referenceNameAndType);
+                    break;
+                default: throw new ArgumentOutOfRangeException(nameof(this.Type));
+            }
+
+            return new MethodHandleEntry(this.Type, reference);
+        }
+
+        public Handle Copy() {
+            return new Handle() {
+                Descriptor = this.Descriptor.Copy(),
+                Name = this.Name,
+                Owner = this.Owner != null ? new ClassName(this.Owner.Name) : null,
+                Type = this.Type
             };
-            return new MethodHandleEntry(Type, reference);
         }
     }
 }

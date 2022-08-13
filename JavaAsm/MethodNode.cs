@@ -6,13 +6,11 @@ using JavaAsm.CustomAttributes.Annotation;
 using JavaAsm.Instructions;
 using JavaAsm.IO;
 
-namespace JavaAsm
-{
+namespace JavaAsm {
     /// <summary>
     /// Method node
     /// </summary>
-    public class MethodNode
-    {
+    public class MethodNode {
         /// <summary>
         /// Owner class of that method
         /// </summary>
@@ -95,16 +93,19 @@ namespace JavaAsm
         /// </summary>
         public ElementValue AnnotationDefaultValue { get; set; }
 
+        public List<LocalVariableTableAttribute.LocalVariableTableEntry> LocalVariableTable { get; set; } = new List<LocalVariableTableAttribute.LocalVariableTableEntry>();
+
+        public List<LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry> LocalVariableTypeTable { get; set; } = new List<LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry>();
+
         /// <summary>
         /// Returns and deletes attribute. Used for internal methods to parse contents
         /// </summary>
         /// <param name="name">Name of annotation</param>
         /// <returns>null, if attribute does not exist or AttributeNode if exists</returns>
-        private AttributeNode GetAttribute(string name)
-        {
-            var attribute = Attributes.FirstOrDefault(a => a.Name == name);
+        private AttributeNode GetAttribute(string name) {
+            AttributeNode attribute = this.Attributes.FirstOrDefault(a => a.Name == name);
             if (attribute != null)
-                Attributes.Remove(attribute);
+                this.Attributes.Remove(attribute);
             return attribute;
         }
 
@@ -112,135 +113,106 @@ namespace JavaAsm
         /// Parses method annotations to fill up information
         /// </summary>
         /// <param name="readerState">Class reader state</param>
-        internal void Parse(ClassReaderState readerState)
-        {
-            Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
+        internal void Parse(ClassReaderState readerState) {
+            this.Signature = (GetAttribute(PredefinedAttributeNames.Signature)?.ParsedAttribute as SignatureAttribute)?.Value;
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.Code);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.Code);
                 if (attribute?.ParsedAttribute is CodeAttribute codeAttribute)
                     InstructionListConverter.ParseCodeAttribute(this, readerState, codeAttribute);
             }
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.RuntimeInvisibleAnnotations);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.RuntimeInvisibleAnnotations);
                 if (attribute != null)
-                    InvisibleAnnotations = (attribute.ParsedAttribute as RuntimeInvisibleAnnotationsAttribute)?.Annotations;
+                    this.InvisibleAnnotations = (attribute.ParsedAttribute as RuntimeInvisibleAnnotationsAttribute)?.Annotations;
             }
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.RuntimeVisibleAnnotations);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.RuntimeVisibleAnnotations);
                 if (attribute != null)
-                    VisibleAnnotations = (attribute.ParsedAttribute as RuntimeVisibleAnnotationsAttribute)?.Annotations;
+                    this.VisibleAnnotations = (attribute.ParsedAttribute as RuntimeVisibleAnnotationsAttribute)?.Annotations;
             }
             {
-                var attribute = GetAttribute(PredefinedAttributeNames.Exceptions);
+                AttributeNode attribute = GetAttribute(PredefinedAttributeNames.Exceptions);
                 if (attribute != null)
-                    Throws = (attribute.ParsedAttribute as ExceptionsAttribute)?.ExceptionTable;
+                    this.Throws = (attribute.ParsedAttribute as ExceptionsAttribute)?.ExceptionTable;
             }
-            AnnotationDefaultValue =
-                (GetAttribute(PredefinedAttributeNames.AnnotationDefault)?.ParsedAttribute as AnnotationDefaultAttribute)?.Value;
-            IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
+            this.AnnotationDefaultValue = (GetAttribute(PredefinedAttributeNames.AnnotationDefault)?.ParsedAttribute as AnnotationDefaultAttribute)?.Value;
+            this.IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
         }
 
         /// <summary>
         /// Saves method information to annotations
         /// </summary>
         /// <param name="writerState">Class writer state</param>
-        internal void Save(ClassWriterState writerState)
-        {
-            if (Signature != null)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.Signature} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
-                {
+        internal void Save(ClassWriterState writerState) {
+            if (this.Signature != null) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Signature))
+                    throw new Exception($"{PredefinedAttributeNames.Signature} attribute is already presented on method");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.Signature,
-                    ParsedAttribute = new SignatureAttribute
-                    {
-                        Value = Signature
+                    ParsedAttribute = new SignatureAttribute {
+                        Value = this.Signature
                     }
                 });
             }
 
-            if (!Access.HasFlag(MethodAccessModifiers.Abstract) && !Access.HasFlag(MethodAccessModifiers.Native) && Instructions != null)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Code))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.Code} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
-                {
+            if (!this.Access.HasFlag(MethodAccessModifiers.Abstract) && !this.Access.HasFlag(MethodAccessModifiers.Native) && this.Instructions != null) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Code))
+                    throw new Exception($"{PredefinedAttributeNames.Code} attribute is already presented on method");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.Code,
                     ParsedAttribute = InstructionListConverter.SaveCodeAttribute(this, writerState)
                 });
             }
 
-            if (InvisibleAnnotations != null && InvisibleAnnotations.Count > 0)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.InvisibleAnnotations != null && this.InvisibleAnnotations.Count > 0) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeInvisibleAnnotations))
+                    throw new Exception($"{PredefinedAttributeNames.RuntimeInvisibleAnnotations} attribute is already presented on method");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.RuntimeInvisibleAnnotations,
-                    ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute
-                    {
-                        Annotations = InvisibleAnnotations
+                    ParsedAttribute = new RuntimeInvisibleAnnotationsAttribute {
+                        Annotations = this.InvisibleAnnotations
                     }
                 });
             }
 
-            if (VisibleAnnotations != null && VisibleAnnotations.Count > 0)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.VisibleAnnotations != null && this.VisibleAnnotations.Count > 0) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.RuntimeVisibleAnnotations))
+                    throw new Exception($"{PredefinedAttributeNames.RuntimeVisibleAnnotations} attribute is already presented on method");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.RuntimeVisibleAnnotations,
-                    ParsedAttribute = new RuntimeVisibleAnnotationsAttribute
-                    {
-                        Annotations = VisibleAnnotations
+                    ParsedAttribute = new RuntimeVisibleAnnotationsAttribute {
+                        Annotations = this.VisibleAnnotations
                     }
                 });
             }
 
-            if (Throws.Count > 0)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Exceptions))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.Exceptions} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.Throws.Count > 0) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Exceptions))
+                    throw new Exception($"{PredefinedAttributeNames.Exceptions} attribute is already presented on method");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.Exceptions,
-                    ParsedAttribute = new ExceptionsAttribute
-                    {
-                        ExceptionTable = Throws
+                    ParsedAttribute = new ExceptionsAttribute {
+                        ExceptionTable = this.Throws
                     }
                 });
             }
 
-            if (AnnotationDefaultValue != null)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.AnnotationDefault))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.AnnotationDefault} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.AnnotationDefaultValue != null) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.AnnotationDefault))
+                    throw new Exception($"{PredefinedAttributeNames.AnnotationDefault} attribute is already presented on method");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.AnnotationDefault,
-                    ParsedAttribute = new AnnotationDefaultAttribute
-                    {
-                        Value = AnnotationDefaultValue
+                    ParsedAttribute = new AnnotationDefaultAttribute {
+                        Value = this.AnnotationDefaultValue
                     }
                 });
             }
 
             // ReSharper disable once InvertIf
-            if (IsDeprecated)
-            {
-                if (Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
-                    throw new Exception(
-                        $"{PredefinedAttributeNames.Deprecated} attribute is already presented on method");
-                Attributes.Add(new AttributeNode
-                {
+            if (this.IsDeprecated) {
+                if (this.Attributes.Any(x => x.Name == PredefinedAttributeNames.Deprecated))
+                    throw new Exception($"{PredefinedAttributeNames.Deprecated} attribute is already presented on method");
+                this.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.Deprecated,
                     ParsedAttribute = new DeprecatedAttribute()
                 });
@@ -248,9 +220,8 @@ namespace JavaAsm
         }
 
         /// <inheritdoc />
-        public override string ToString()
-        {
-            return $"{AccessModifiersExtensions.ToString(Access)} {Name}{Descriptor}";
+        public override string ToString() {
+            return $"{AccessModifiersExtensions.ToString(this.Access)} {this.Name}{this.Descriptor}";
         }
     }
 }
