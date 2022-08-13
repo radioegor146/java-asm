@@ -3,5 +3,6 @@
     /// Common interface for all descriptors
     /// </summary>
     public interface IDescriptor {
+        IDescriptor Copy();
     }
 }

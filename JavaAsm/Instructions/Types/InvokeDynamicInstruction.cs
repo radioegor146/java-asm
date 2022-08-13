@@ -10,6 +10,15 @@ namespace JavaAsm.Instructions.Types {
             set => throw new InvalidOperationException(GetType().Name + " only has 1 instruction");
         }
 
+        public override Instruction Copy() {
+            return new InvokeDynamicInstruction() {
+                Name = this.Name,
+                Descriptor = this.Descriptor.CopyMethodDescriptor(),
+                BootstrapMethod = this.BootstrapMethod.Copy(),
+                BootstrapMethodArgs = new List<object>(this.BootstrapMethodArgs)
+            };
+        }
+
         public string Name { get; set; }
 
         public MethodDescriptor Descriptor { get; set; }
@@ -77,6 +86,15 @@ namespace JavaAsm.Instructions.Types {
             }
 
             return new MethodHandleEntry(this.Type, reference);
+        }
+
+        public Handle Copy() {
+            return new Handle() {
+                Descriptor = this.Descriptor.Copy(),
+                Name = this.Name,
+                Owner = this.Owner != null ? new ClassName(this.Owner.Name) : null,
+                Type = this.Type
+            };
         }
     }
 }

@@ -8,6 +8,15 @@ namespace JavaAsm.Instructions.Types {
             set => throw new InvalidOperationException(GetType().Name + " only has 1 opcode");
         }
 
+        public override Instruction Copy() {
+            return new TableSwitchInstruction() {
+                Default = this.Default,
+                LowValue = this.LowValue,
+                HighValue = this.HighValue,
+                Labels = new List<Label>(this.Labels)
+            };
+        }
+
         public Label Default { get; set; }
 
         public int LowValue { get; set; }

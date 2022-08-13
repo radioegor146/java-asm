@@ -82,5 +82,13 @@ namespace JavaAsm {
                 return (this.ReturnType.GetHashCode() * 397) ^ this.ArgumentTypes.GetHashCode();
             }
         }
+
+        public IDescriptor Copy() {
+            return CopyMethodDescriptor();
+        }
+
+        public MethodDescriptor CopyMethodDescriptor() {
+            return new MethodDescriptor(this.ReturnType?.CopyTypeDescriptor(), this.ArgumentTypes.Select(a => a.CopyTypeDescriptor()).ToList());
+        }
     }
 }

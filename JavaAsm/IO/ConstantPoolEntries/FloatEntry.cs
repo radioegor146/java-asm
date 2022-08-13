@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using BinaryEncoding;
 
 namespace JavaAsm.IO.ConstantPoolEntries {
@@ -13,6 +12,7 @@ namespace JavaAsm.IO.ConstantPoolEntries {
         public FloatEntry(Stream stream) {
             unsafe {
                 int value = Binary.BigEndian.ReadInt32(stream);
+                // get address of value (as int*), cast to float*, get value from float*
                 this.Value = *(float*) &value;
             }
         }
@@ -24,6 +24,7 @@ namespace JavaAsm.IO.ConstantPoolEntries {
         public override void Write(Stream stream) {
             unsafe {
                 float value = this.Value;
+                // get address of value (as float*), cast to int*, get value from int*
                 Binary.BigEndian.Write(stream, *(int*) &value);
             }
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using BinaryEncoding;
 using JavaAsm.IO;
 using JavaAsm.IO.ConstantPoolEntries;
@@ -17,6 +18,8 @@ namespace JavaAsm.CustomAttributes {
             public TypeDescriptor Descriptor { get; set; }
 
             public ushort Index { get; set; }
+
+            public uint EndPC => (uint) this.StartPc + (uint) this.Length;
         }
 
         public List<LocalVariableTableEntry> LocalVariableTable { get; set; } = new List<LocalVariableTableEntry>();

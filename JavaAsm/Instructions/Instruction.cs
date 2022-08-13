@@ -7,5 +7,7 @@
         public Instruction Next { get; internal set; }
 
         public abstract Opcode Opcode { get; set; }
+
+        public abstract Instruction Copy();
     }
 }

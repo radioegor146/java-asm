@@ -99,6 +99,19 @@ namespace JavaAsm.Instructions {
             this.Count--;
         }
 
+        // public void Clear() {
+        //     Instruction current = this.First;
+        //     while (current != null) {
+        //         Instruction temp = current;
+        //         current = current.Next;
+        //         temp.Next = null;
+        //         temp.Previous = null;
+        //         temp.OwnerList = null;
+        //     }
+        //     this.First = null;
+        //     this.Count = 0;
+        // }
+
         public IEnumerator<Instruction> GetEnumerator() {
             return new InstructionListEnumerator(this.First);
         }

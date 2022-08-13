@@ -23,6 +23,12 @@ namespace JavaAsm.Instructions.Types {
             set => this.opcode = value.VerifyOpcode(nameof(value), ALLOW_OPCODES);
         }
 
+        public override Instruction Copy() {
+            return new VariableInstruction(this.opcode) {
+                VariableIndex = this.VariableIndex
+            };
+        }
+
         public ushort VariableIndex { get; set; }
 
         public VariableInstruction(Opcode opcode) {

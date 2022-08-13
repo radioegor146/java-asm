@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
+using JavaAsm.Helpers;
 
 namespace JavaAsm {
     /// <summary>
     /// Type descriptor
     /// </summary>
+    [Serializable]
     public class TypeDescriptor : IDescriptor {
         /// <summary>
         /// Class name. Equals to null if type is primitive
@@ -73,38 +76,22 @@ namespace JavaAsm {
             char typeChar = descriptor[offset];
             PrimitiveType primitiveType;
             switch (typeChar) {
-                case 'B':
-                    primitiveType = global::JavaAsm.PrimitiveType.Byte;
-                    break;
-                case 'C':
-                    primitiveType = global::JavaAsm.PrimitiveType.Character;
-                    break;
-                case 'D':
-                    primitiveType = global::JavaAsm.PrimitiveType.Double;
-                    break;
-                case 'F':
-                    primitiveType = global::JavaAsm.PrimitiveType.Float;
-                    break;
-                case 'I':
-                    primitiveType = global::JavaAsm.PrimitiveType.Integer;
-                    break;
-                case 'J':
-                    primitiveType = global::JavaAsm.PrimitiveType.Long;
-                    break;
-                case 'S':
-                    primitiveType = global::JavaAsm.PrimitiveType.Short;
-                    break;
-                case 'Z':
-                    primitiveType = global::JavaAsm.PrimitiveType.Boolean;
-                    break;
+                case 'B': primitiveType = global::JavaAsm.PrimitiveType.Byte;      break;
+                case 'C': primitiveType = global::JavaAsm.PrimitiveType.Character; break;
+                case 'D': primitiveType = global::JavaAsm.PrimitiveType.Double;    break;
+                case 'F': primitiveType = global::JavaAsm.PrimitiveType.Float;     break;
+                case 'I': primitiveType = global::JavaAsm.PrimitiveType.Integer;   break;
+                case 'J': primitiveType = global::JavaAsm.PrimitiveType.Long;      break;
+                case 'S': primitiveType = global::JavaAsm.PrimitiveType.Short;     break;
+                case 'Z': primitiveType = global::JavaAsm.PrimitiveType.Boolean;   break;
                 case 'V':
                     if (!allowVoid)
                         throw new FormatException("Void is not allowed");
                     primitiveType = global::JavaAsm.PrimitiveType.Void;
                     break;
                 case 'L':
-                    StringBuilder className = new StringBuilder();
                     offset++;
+                    StringBuilder className = new StringBuilder();
                     while (descriptor[offset] != ';') {
                         className.Append(descriptor[offset]);
                         offset++;
@@ -119,6 +106,50 @@ namespace JavaAsm {
             return new TypeDescriptor(primitiveType, arrayDepth);
         }
 
+        public static bool TryParse(string descriptor, ref int offset, out TypeDescriptor value, bool allowVoid = false) {
+            value = null;
+            int arrayDepth = 0;
+            while (descriptor[offset] == '[') {
+                arrayDepth++;
+                offset++;
+            }
+
+            char typeChar = descriptor[offset];
+            PrimitiveType primitiveType;
+            switch (typeChar) {
+                case 'B': primitiveType = global::JavaAsm.PrimitiveType.Byte;      break;
+                case 'C': primitiveType = global::JavaAsm.PrimitiveType.Character; break;
+                case 'D': primitiveType = global::JavaAsm.PrimitiveType.Double;    break;
+                case 'F': primitiveType = global::JavaAsm.PrimitiveType.Float;     break;
+                case 'I': primitiveType = global::JavaAsm.PrimitiveType.Integer;   break;
+                case 'J': primitiveType = global::JavaAsm.PrimitiveType.Long;      break;
+                case 'S': primitiveType = global::JavaAsm.PrimitiveType.Short;     break;
+                case 'Z': primitiveType = global::JavaAsm.PrimitiveType.Boolean;   break;
+                case 'V':
+                    if (!allowVoid)
+                        return false;
+                    primitiveType = global::JavaAsm.PrimitiveType.Void;
+                    break;
+                case 'L':
+                    offset++;
+                    StringBuilder className = new StringBuilder();
+                    while (descriptor[offset] != ';') {
+                        className.Append(descriptor[offset]);
+                        offset++;
+                    }
+
+                    offset++;
+                    value = new TypeDescriptor(new ClassName(className.ToString()), arrayDepth);
+                    return true;
+                default:
+                    return false;
+            }
+
+            offset++;
+            value = new TypeDescriptor(primitiveType, arrayDepth);
+            return true;
+        }
+
         /// <summary>
         /// Returns size of type on stack
         /// </summary>
@@ -126,44 +157,34 @@ namespace JavaAsm {
 
         /// <inheritdoc />
         public override string ToString() {
-            string result = string.Join("", Enumerable.Repeat('[', this.ArrayDepth));
+            StringBuilder sb = new StringBuilder();
+            if (this.ArrayDepth > 0) {
+                sb.Append('[', this.ArrayDepth);
+            }
+
             if (this.PrimitiveType == null) {
-                result += $"L{this.ClassName.Name};";
+                sb.Append('L').Append(this.ClassName.Name).Append(';');
             }
             else {
                 switch (this.PrimitiveType.Value) {
-                    case global::JavaAsm.PrimitiveType.Boolean:
-                        result += 'Z';
-                        break;
-                    case global::JavaAsm.PrimitiveType.Byte:
-                        result += 'B';
-                        break;
-                    case global::JavaAsm.PrimitiveType.Character:
-                        result += 'C';
-                        break;
-                    case global::JavaAsm.PrimitiveType.Double:
-                        result += 'D';
-                        break;
-                    case global::JavaAsm.PrimitiveType.Float:
-                        result += 'F';
-                        break;
-                    case global::JavaAsm.PrimitiveType.Integer:
-                        result += 'I';
-                        break;
-                    case global::JavaAsm.PrimitiveType.Long:
-                        result += 'J';
-                        break;
-                    case global::JavaAsm.PrimitiveType.Short:
-                        result += 'S';
-                        break;
-                    case global::JavaAsm.PrimitiveType.Void:
-                        result += 'V';
-                        break;
+                    case global::JavaAsm.PrimitiveType.Boolean:   sb.Append('Z'); break;
+                    case global::JavaAsm.PrimitiveType.Byte:      sb.Append('B'); break;
+                    case global::JavaAsm.PrimitiveType.Character: sb.Append('C'); break;
+                    case global::JavaAsm.PrimitiveType.Double:    sb.Append('D'); break;
+                    case global::JavaAsm.PrimitiveType.Float:     sb.Append('F'); break;
+                    case global::JavaAsm.PrimitiveType.Integer:   sb.Append('I'); break;
+                    case global::JavaAsm.PrimitiveType.Long:      sb.Append('J'); break;
+                    case global::JavaAsm.PrimitiveType.Short:     sb.Append('S'); break;
+                    case global::JavaAsm.PrimitiveType.Void:      sb.Append('V'); break;
                     default: throw new ArgumentOutOfRangeException(nameof(this.PrimitiveType.Value));
                 }
             }
 
-            return result;
+            return sb.ToString();
+        }
+
+        public IDescriptor Copy() {
+            return CopyTypeDescriptor();
         }
 
         private bool Equals(TypeDescriptor other) {
@@ -187,6 +208,10 @@ namespace JavaAsm {
                 hashCode = (hashCode * 397) ^ (this.PrimitiveType?.GetHashCode() ?? 0);
                 return hashCode;
             }
+        }
+
+        public TypeDescriptor CopyTypeDescriptor() {
+            return this.PrimitiveType.HasValue ? new TypeDescriptor(this.PrimitiveType.Value, this.ArrayDepth) : new TypeDescriptor(this.ClassName, this.ArrayDepth);
         }
     }
 

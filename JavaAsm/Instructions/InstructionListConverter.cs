@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using BinaryEncoding;
 using JavaAsm.CustomAttributes;
@@ -173,7 +173,7 @@ namespace JavaAsm.Instructions {
                     case Opcode.IFNONNULL: {
                         int jumpOffset = Binary.BigEndian.ReadInt16(codeStream);
                         instructions.Add(currentPosition, new JumpInstruction(opcode) {
-                            Target = labels.GetOrAdd(currentPosition + jumpOffset, ()=> new Label()),
+                            Target = labels.GetOrAdd(currentPosition + jumpOffset, () => new Label()),
                             JumpOffset = jumpOffset
                         });
                     }
@@ -182,7 +182,7 @@ namespace JavaAsm.Instructions {
                     case Opcode.GOTO_W: {
                         int jumpOffset = Binary.BigEndian.ReadInt32(codeStream);
                         instructions.Add(currentPosition, new JumpInstruction(opcode == Opcode.JSR_W ? Opcode.JSR : Opcode.GOTO) {
-                            Target = labels.GetOrAdd(currentPosition + jumpOffset, ()=> new Label()),
+                            Target = labels.GetOrAdd(currentPosition + jumpOffset, () => new Label()),
                             JumpOffset = jumpOffset
                         });
                     }
@@ -192,14 +192,14 @@ namespace JavaAsm.Instructions {
                         while (codeStream.Position % 4 != 0)
                             codeStream.ReadByteFully();
                         LookupSwitchInstruction lookupSwitchInstruction = new LookupSwitchInstruction {
-                            Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), ()=> new Label())
+                            Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), () => new Label())
                         };
                         int nPairs = Binary.BigEndian.ReadInt32(codeStream);
                         lookupSwitchInstruction.MatchLabels.Capacity = nPairs;
                         for (int i = 0; i < nPairs; i++) {
                             lookupSwitchInstruction.MatchLabels.Add(new KeyValuePair<int, Label>(
                                 Binary.BigEndian.ReadInt32(codeStream),
-                                labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), ()=> new Label())));
+                                labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), () => new Label())));
                         }
 
                         instructions.Add(currentPosition, lookupSwitchInstruction);
@@ -210,13 +210,13 @@ namespace JavaAsm.Instructions {
                         while (codeStream.Position % 4 != 0)
                             codeStream.ReadByteFully();
                         TableSwitchInstruction tableSwitchInstruction = new TableSwitchInstruction {
-                            Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), ()=> new Label()),
+                            Default = labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), () => new Label()),
                             LowValue = Binary.BigEndian.ReadInt32(codeStream),
                             HighValue = Binary.BigEndian.ReadInt32(codeStream)
                         };
                         for (int i = tableSwitchInstruction.LowValue; i <= tableSwitchInstruction.HighValue; i++) {
                             tableSwitchInstruction.Labels.Add(
-                                labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), ()=> new Label()));
+                                labels.GetOrAdd(currentPosition + Binary.BigEndian.ReadInt32(codeStream), () => new Label()));
                         }
 
                         instructions.Add(currentPosition, tableSwitchInstruction);
@@ -269,7 +269,7 @@ namespace JavaAsm.Instructions {
                         else {
                             instructions.Add(currentPosition, new IncrementInstruction {
                                 VariableIndex = codeStream.ReadByteFully(),
-                                Value = codeStream.ReadByteFully()
+                                Value = (sbyte) codeStream.ReadByteFully()
                             });
                         }
 
@@ -460,7 +460,7 @@ namespace JavaAsm.Instructions {
                             default: throw new ArgumentOutOfRangeException(nameof(constantPoolEntry), $"Tried to {opcode} wrong type of CP entry: {constantPoolEntry.Tag}");
                         }
 
-                        instructions.Add(currentPosition, new LdcInstruction {Value = ldcVal, Opcode = opcode});
+                        instructions.Add(currentPosition, new LdcInstruction(opcode) {Value = ldcVal});
                     }
                         break;
                     case Opcode.LDC_W:
@@ -526,9 +526,9 @@ namespace JavaAsm.Instructions {
             foreach (CodeAttribute.ExceptionTableEntry exceptionTableEntry in codeAttribute.ExceptionTable) {
                 parseTo.TryCatches.Add(new TryCatchNode {
                     ExceptionClassName = exceptionTableEntry.CatchType,
-                    Start = labels.GetOrAdd(exceptionTableEntry.StartPc, ()=> new Label()),
-                    End = labels.GetOrAdd(exceptionTableEntry.EndPc, ()=> new Label()),
-                    Handler = labels.GetOrAdd(exceptionTableEntry.HandlerPc, ()=> new Label())
+                    Start = labels.GetOrAdd(exceptionTableEntry.StartPc, () => new Label()),
+                    End = labels.GetOrAdd(exceptionTableEntry.EndPc, () => new Label()),
+                    Handler = labels.GetOrAdd(exceptionTableEntry.HandlerPc, () => new Label())
                 });
             }
 
@@ -538,23 +538,41 @@ namespace JavaAsm.Instructions {
             if (lineNumberTable.Any(position => !instructions.ContainsKey(position.StartPc)))
                 throw new ArgumentException("Line number is not at the beginning of instruction");
 
-            if (parseTo.LocalVariableNames == null) {
-                parseTo.LocalVariableNames = new Dictionary<int, LocalVariableTableAttribute.LocalVariableTableEntry>();
+            if (parseTo.LocalVariableTable == null) {
+                parseTo.LocalVariableTable = new List<LocalVariableTableAttribute.LocalVariableTableEntry>();
             }
             else {
-                parseTo.LocalVariableNames.Clear();
+                parseTo.LocalVariableTable.Clear();
+            }
+
+            if (parseTo.LocalVariableTypeTable == null) {
+                parseTo.LocalVariableTypeTable = new List<LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry>();
+            }
+            else {
+                parseTo.LocalVariableTypeTable.Clear();
             }
 
             if (GetAttribute(codeAttribute.Attributes, PredefinedAttributeNames.LocalVariableTable)?.ParsedAttribute is LocalVariableTableAttribute lvt && lvt.LocalVariableTable != null) {
-                List<LocalVariableTableAttribute.LocalVariableTableEntry> localVariableTable = lvt.LocalVariableTable.OrderBy(x => x.Index).ToList();
-                foreach (LocalVariableTableAttribute.LocalVariableTableEntry entry in localVariableTable) {
-                    parseTo.LocalVariableNames[entry.Index] = new LocalVariableTableAttribute.LocalVariableTableEntry() {
+                foreach (LocalVariableTableAttribute.LocalVariableTableEntry entry in lvt.LocalVariableTable) {
+                    parseTo.LocalVariableTable.Add(new LocalVariableTableAttribute.LocalVariableTableEntry() {
                         StartPc = entry.StartPc,
                         Length = entry.Length,
                         Name = entry.Name,
                         Descriptor = entry.Descriptor,
                         Index = entry.Index
-                    };
+                    });
+                }
+            }
+
+            if (GetAttribute(codeAttribute.Attributes, PredefinedAttributeNames.LocalVariableTypeTable)?.ParsedAttribute is LocalVariableTypeTableAttribute lvtt && lvtt.LocalVariableTypeTable != null) {
+                foreach (LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry entry in lvtt.LocalVariableTypeTable) {
+                    parseTo.LocalVariableTypeTable.Add(new LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry() {
+                        Index = entry.Index,
+                        StartPc = entry.StartPc,
+                        Length = entry.Length,
+                        Name = entry.Name,
+                        Signature = entry.Signature
+                    });
                 }
             }
 
@@ -737,6 +755,17 @@ namespace JavaAsm.Instructions {
 
             List<LineNumberTableAttribute.LineNumberTableEntry> lineNumbers = new List<LineNumberTableAttribute.LineNumberTableEntry>();
             List<StackMapTableAttribute.StackMapFrame> stackMapFrames = new List<StackMapTableAttribute.StackMapFrame>();
+            // Dictionary<int, Dictionary<int, LVTEntry<TypeDescriptor>>> lvtMap = new Dictionary<int, Dictionary<int, LVTEntry<TypeDescriptor>>>();
+            // LVTEntry<TypeDescriptor> GetLVTEForFrame(int localVariableIndex) {
+            //     if (!lvtMap.TryGetValue(localFrameIndex, out Dictionary<int, LVTEntry<TypeDescriptor>> dict)) {
+            //         lvtMap[localFrameIndex] = dict = new Dictionary<int, LVTEntry<TypeDescriptor>>();
+            //     }
+            //     if (!dict.TryGetValue(localVariableIndex, out LVTEntry<TypeDescriptor> lvte)) {
+            //         dict[localVariableIndex] = lvte = new LVTEntry<TypeDescriptor>();
+            //     }
+            //     return lvte;
+            // }
+
             Dictionary<Instruction, ushort> instructions = new Dictionary<Instruction, ushort>();
             int currentPosition = 0;
             int previousStackMapFramePosition = -1;
@@ -837,12 +866,12 @@ namespace JavaAsm.Instructions {
                             currentPosition++;
                         currentPosition += sizeof(int) * 3 + sizeof(int) * tableSwitchInstruction.Labels.Count;
                         break;
-                    case VariableInstruction variableInstruction:
-                        if (variableInstruction.Opcode != Opcode.RET && variableInstruction.VariableIndex < 4)
+                    case VariableInstruction varInsn:
+                        if (varInsn.Opcode != Opcode.RET && varInsn.VariableIndex < 4)
                             break;
-                        currentPosition += variableInstruction.VariableIndex > byte.MaxValue
-                            ? sizeof(ushort) + sizeof(byte)
-                            : sizeof(byte);
+
+                        currentPosition += varInsn.VariableIndex > byte.MaxValue ? sizeof(ushort) + sizeof(byte) : sizeof(byte);
+
                         break;
                     case InvokeDynamicInstruction _:
                         currentPosition += sizeof(ushort) + sizeof(ushort);
@@ -875,13 +904,42 @@ namespace JavaAsm.Instructions {
                 });
             }
 
-            if (source.LocalVariableNames != null && source.LocalVariableNames.Count > 0) {
+            if (source.LocalVariableTable != null && source.LocalVariableTable.Count > 0) {
                 if (codeAttribute.Attributes.Any(x => x.Name == PredefinedAttributeNames.LocalVariableTable))
                     throw new ArgumentException($"There is already a {PredefinedAttributeNames.LocalVariableTable} attribute");
+
+                foreach (LocalVariableTableAttribute.LocalVariableTableEntry entry in source.LocalVariableTable) {
+                    entry.StartPc = Math.Max((ushort) 0, entry.StartPc);
+                    uint end = entry.EndPC;
+                    if (end > currentPosition) {
+                        entry.Length = (ushort) Math.Max(0, entry.Length - (currentPosition - (int) entry.EndPC));
+                    }
+                }
+
                 codeAttribute.Attributes.Add(new AttributeNode {
                     Name = PredefinedAttributeNames.LocalVariableTable,
                     ParsedAttribute = new LocalVariableTableAttribute() {
-                        LocalVariableTable = source.LocalVariableNames.ToList().Select(e => e.Value).ToList()
+                        LocalVariableTable = source.LocalVariableTable.ToList()
+                    }
+                });
+            }
+
+            if (source.LocalVariableTypeTable != null && source.LocalVariableTypeTable.Count > 0) {
+                if (codeAttribute.Attributes.Any(x => x.Name == PredefinedAttributeNames.LocalVariableTypeTable))
+                    throw new ArgumentException($"There is already a {PredefinedAttributeNames.LocalVariableTypeTable} attribute");
+
+                foreach (LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry entry in source.LocalVariableTypeTable) {
+                    entry.StartPc = Math.Max((ushort) 0, entry.StartPc);
+                    uint end = entry.EndPC;
+                    if (end > currentPosition) {
+                        entry.Length = (ushort) Math.Max(0, entry.Length - (currentPosition - (int) entry.EndPC));
+                    }
+                }
+
+                codeAttribute.Attributes.Add(new AttributeNode {
+                    Name = PredefinedAttributeNames.LocalVariableTypeTable,
+                    ParsedAttribute = new LocalVariableTypeTableAttribute() {
+                        LocalVariableTypeTable = source.LocalVariableTypeTable.ToList()
                     }
                 });
             }
@@ -896,7 +954,7 @@ namespace JavaAsm.Instructions {
 
                 if (position != instructions[instruction]) {
                     StringBuilder sb = new StringBuilder();
-                    sb.AppendLine($"Error writing instructions for {source}");
+                    sb.AppendLine($"Verification error while writing instructions for {source}");
                     sb.AppendLine($"Wrong position: {position} != {instructions[instruction]}");
                     if (prevInstruction != null) {
                         sb.AppendLine($"    Previous instruction: {prevInstruction.GetType()} -> {prevInstruction}");
@@ -979,12 +1037,7 @@ namespace JavaAsm.Instructions {
                         break;
                     case JumpInstruction jumpInstruction:
                         codeDataStream.WriteByte((byte) jumpInstruction.Opcode);
-                        if (jumpInstruction.UseOverrideOffset) {
-                            Binary.BigEndian.Write(codeDataStream, jumpInstruction.JumpOffset);
-                        }
-                        else {
-                            Binary.BigEndian.Write(codeDataStream, (short) (instructions[jumpInstruction.Target] - instructions[jumpInstruction]));
-                        }
+                        Binary.BigEndian.Write(codeDataStream, (short) (instructions[jumpInstruction.Target] - instructions[jumpInstruction]));
                         break;
                     case LdcInstruction ldcInstruction:
                         ushort constantPoolEntryIndex;
@@ -1045,6 +1098,7 @@ namespace JavaAsm.Instructions {
 
                             bool isWideRequired = (byte) constantPoolEntryIndex > byte.MaxValue;
                             if (isWideRequired || ldcInstruction.Opcode != Opcode.LDC) {
+                                // LDC2_W is only used for long/double... afaik
                                 codeDataStream.WriteByte((byte) Opcode.LDC_W);
                                 Binary.BigEndian.Write(codeDataStream, constantPoolEntryIndex);
                             }
@@ -1225,7 +1279,7 @@ namespace JavaAsm.Instructions {
                         }
 
                         if (position - previousStackMapFramePosition <= 0)
-                            throw new ArgumentOutOfRangeException(nameof(position), $"Wrong position delta: {position - previousStackMapFramePosition} <= 0");
+                            throw new ArgumentOutOfRangeException(nameof(position), $"Wrong stack frame position delta: position({position}) - previousStackMapFramePosition({previousStackMapFramePosition}) ({position - previousStackMapFramePosition}) <= 0");
 
                         stackMapTableEntry.OffsetDelta = (ushort) (position - previousStackMapFramePosition - 1);
                         stackMapFrames.Add(stackMapTableEntry);

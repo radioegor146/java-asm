@@ -13,15 +13,14 @@ namespace JavaAsm.Instructions.Types {
                 Opcode.GOTO, Opcode.JSR, Opcode.IFNULL, Opcode.IFNONNULL);
         }
 
-        public Label Target { get; set; }
+        public override Instruction Copy() {
+            return new JumpInstruction(this.opcode) {
+                JumpOffset = this.JumpOffset,
+                Target = this.Target,
+            };
+        }
 
-        /// <summary>
-        /// Use a manual branch offset, instead of a calculated offset
-        /// <para>
-        /// <see cref="JumpOffset"/> will not be checked or verified
-        /// </para>
-        /// </summary>
-        public bool UseOverrideOffset { get; set; }
+        public Label Target { get; set; }
 
         public int JumpOffset { get; set; }
 
@@ -30,7 +29,7 @@ namespace JavaAsm.Instructions.Types {
         }
 
         public override string ToString() {
-            return $"{this.Opcode} L{this.Target.Index}";
+            return $"{this.Opcode} L{(this.Target == null ? "[No target]" : this.Target.Index.ToString())}";
         }
     }
 }

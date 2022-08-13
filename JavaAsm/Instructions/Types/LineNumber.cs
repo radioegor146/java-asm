@@ -7,6 +7,12 @@ namespace JavaAsm.Instructions.Types {
             set => throw new InvalidOperationException(GetType().Name + " does not have an instruction");
         }
 
+        public override Instruction Copy() {
+            return new LineNumber() {
+                Line = this.Line
+            };
+        }
+
         public ushort Line { get; set; }
 
         public override string ToString() {

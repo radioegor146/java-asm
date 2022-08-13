@@ -93,7 +93,9 @@ namespace JavaAsm {
         /// </summary>
         public ElementValue AnnotationDefaultValue { get; set; }
 
-        public Dictionary<int, LocalVariableTableAttribute.LocalVariableTableEntry> LocalVariableNames { get; set; } = new Dictionary<int, LocalVariableTableAttribute.LocalVariableTableEntry>();
+        public List<LocalVariableTableAttribute.LocalVariableTableEntry> LocalVariableTable { get; set; } = new List<LocalVariableTableAttribute.LocalVariableTableEntry>();
+
+        public List<LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry> LocalVariableTypeTable { get; set; } = new List<LocalVariableTypeTableAttribute.LocalVariableTypeTableEntry>();
 
         /// <summary>
         /// Returns and deletes attribute. Used for internal methods to parse contents
@@ -133,8 +135,7 @@ namespace JavaAsm {
                 if (attribute != null)
                     this.Throws = (attribute.ParsedAttribute as ExceptionsAttribute)?.ExceptionTable;
             }
-            this.AnnotationDefaultValue =
-                (GetAttribute(PredefinedAttributeNames.AnnotationDefault)?.ParsedAttribute as AnnotationDefaultAttribute)?.Value;
+            this.AnnotationDefaultValue = (GetAttribute(PredefinedAttributeNames.AnnotationDefault)?.ParsedAttribute as AnnotationDefaultAttribute)?.Value;
             this.IsDeprecated = GetAttribute(PredefinedAttributeNames.Deprecated)?.ParsedAttribute != null;
         }
 

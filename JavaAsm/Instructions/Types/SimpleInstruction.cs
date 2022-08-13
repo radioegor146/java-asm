@@ -27,6 +27,10 @@ namespace JavaAsm.Instructions.Types {
             set => this.opcode = value.VerifyOpcode(nameof(value), ValidOpcodes);
         }
 
+        public override Instruction Copy() {
+            return new SimpleInstruction(this.opcode);
+        }
+
         public SimpleInstruction(Opcode opcode) {
             this.Opcode = opcode;
         }

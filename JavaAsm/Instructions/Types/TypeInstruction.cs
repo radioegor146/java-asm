@@ -9,6 +9,12 @@ namespace JavaAsm.Instructions.Types {
             set => this.opcode = value.VerifyOpcode(nameof(value), Opcode.NEW, Opcode.ANEWARRAY, Opcode.CHECKCAST, Opcode.INSTANCEOF);
         }
 
+        public override Instruction Copy() {
+            return new TypeInstruction(this.opcode) {
+                Type = this.Type?.Copy()
+            };
+        }
+
         public ClassName Type { get; set; }
 
         public TypeInstruction(Opcode opcode) {

@@ -9,6 +9,12 @@ namespace JavaAsm.Instructions.Types {
             set => this.opcode = value.VerifyOpcode(nameof(value), Opcode.BIPUSH, Opcode.SIPUSH);
         }
 
+        public override Instruction Copy() {
+            return new IntegerPushInstruction(this.opcode) {
+                Value = this.Value
+            };
+        }
+
         public ushort Value { get; set; }
 
         public IntegerPushInstruction(Opcode opcode) {

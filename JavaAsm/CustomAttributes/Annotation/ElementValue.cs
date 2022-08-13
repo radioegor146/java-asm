@@ -26,7 +26,14 @@ namespace JavaAsm.CustomAttributes.Annotation {
 
         public ElementValueTag Tag { get; set; }
 
-        public object ConstValue { get; set; }
+        private object constValue;
+
+        public object ConstValue {
+            get => this.constValue;
+            set {
+                this.constValue = value;
+            }
+        }
 
         public class EnumConstValueType {
             public TypeDescriptor TypeName { get; set; }

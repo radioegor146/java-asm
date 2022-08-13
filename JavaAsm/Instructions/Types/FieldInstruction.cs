@@ -9,6 +9,14 @@ namespace JavaAsm.Instructions.Types {
             set => this.opcode = value.VerifyOpcode(nameof(value), Opcode.GETFIELD, Opcode.GETSTATIC, Opcode.PUTFIELD, Opcode.PUTSTATIC);
         }
 
+        public override Instruction Copy() {
+            return new FieldInstruction(this.opcode) {
+                Owner = this.Owner,
+                Name = this.Name,
+                Descriptor = this.Descriptor.CopyTypeDescriptor()
+            };
+        }
+
         public ClassName Owner { get; set; }
 
         public string Name { get; set; }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using JavaAsm.Instructions.Types;
 
 namespace JavaAsm.Helpers {
@@ -11,7 +10,7 @@ namespace JavaAsm.Helpers {
             return Contains(array, value, EqualityComparer<T>.Default);
         }
 
-        public static bool Contains<T>(this  T[] array, in T value, EqualityComparer<T> comparer) {
+        public static bool Contains<T>(this T[] array, in T value, EqualityComparer<T> comparer) {
             for (int i = 0; i < array.Length; i++) {
                 if (comparer.Equals(array[i], value)) {
                     return true;
@@ -20,9 +19,38 @@ namespace JavaAsm.Helpers {
 
             return false;
         }
+
+        public static bool TryGetAt<T>(IList<T> list, int index, out T value) {
+            if (index < 0 || index >= list.Count) {
+                value = default;
+                return false;
+            }
+            else {
+                value = list[index];
+                return true;
+            }
+        }
+
+        public static bool TryGetAtNonNull<T>(IList<T> list, int index, out T value) where T : class {
+            if (index < 0 || index >= list.Count) {
+                value = default;
+                return false;
+            }
+            else {
+                value = list[index];
+                return value != null;
+            }
+        }
     }
 
     internal static class Extensions {
+        public static char[] Repeat(this char character, int count) {
+            char[] array = new char[count];
+            for (int i = 0; i < count; ++i)
+                array[i] = character;
+            return array;
+        }
+
         public static bool In<T>(this T value, params T[] values) {
             return values.Contains(value);
         }

@@ -7,6 +7,12 @@ namespace JavaAsm.Instructions.Types {
             set => throw new InvalidOperationException(GetType().Name + " only has 1 instruction");
         }
 
+        public override Instruction Copy() {
+            return new NewArrayInstruction() {
+                ArrayType = this.ArrayType
+            };
+        }
+
         public NewArrayTypeCode ArrayType { get; set; }
 
         public override string ToString() {

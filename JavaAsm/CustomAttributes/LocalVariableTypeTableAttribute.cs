@@ -12,6 +12,8 @@ namespace JavaAsm.CustomAttributes {
 
             public ushort Length { get; set; }
 
+            public uint EndPC => (uint) this.StartPc + (uint) this.Length;
+
             public string Name { get; set; }
 
             public string Signature { get; set; }
